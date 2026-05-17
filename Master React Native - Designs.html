@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Master React Native — Designs</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    html, body { margin: 0; padding: 0; background: #f0eee9; font-family: 'Manrope', -apple-system, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="mobile-shared.jsx"></script>
+  <script type="text/babel" src="mobile-screens-1.jsx"></script>
+  <script type="text/babel" src="mobile-screens-2.jsx"></script>
+  <script type="text/babel" src="mobile-screens-3.jsx"></script>
+  <script type="text/babel" src="admin-screens.jsx"></script>
+
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard, DCPostIt } = window;
+
+    function Swatch({ c, name, hex, dark }) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ width: 110, height: 110, borderRadius: 18, background: c, border: '1px solid rgba(0,0,0,0.05)' }}/>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#161311' }}>{name}</div>
+          <div style={{ fontSize: 11, fontFamily: '"JetBrains Mono", monospace', color: '#8C8378' }}>{hex}</div>
+        </div>
+      );
+    }
+
+    function SystemCard() {
+      return (
+        <div style={{ width: 720, padding: 28, background: MRN.card, borderRadius: 24, fontFamily: MRN.font }} data-screen-label="00 Design System">
+          <div style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, fontWeight: 700, color: MRN.coralDeep, letterSpacing: 1 }}>DESIGN SYSTEM · MASTER RN</div>
+          <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, letterSpacing: -0.5 }}>Coral, cream & code.</div>
+          <div style={{ fontSize: 13, color: MRN.inkSoft, fontWeight: 500, marginTop: 6, maxWidth: 540, lineHeight: 1.5 }}>
+            A warm, playful learning surface adapted from the reference screenshot. Coral primary, soft cream backgrounds,
+            a confident ink-black tab bar, and abstract geometric "illustrations" stand in for the reference's character art —
+            so the system stays on-brand for a React Native course while you decide on final imagery later.
+          </div>
+
+          <div style={{ display: 'flex', gap: 16, marginTop: 22, flexWrap: 'wrap' }}>
+            <Swatch c={MRN.coral} name="Coral · primary" hex="#F26A4A"/>
+            <Swatch c={MRN.coralDeep} name="Coral deep" hex="#D9532F"/>
+            <Swatch c={MRN.coralSoft} name="Coral soft" hex="#FBD7C8"/>
+            <Swatch c={MRN.cream} name="Cream · bg" hex="#F5EFE6"/>
+            <Swatch c={MRN.card} name="Card" hex="#FBF6EE"/>
+            <Swatch c={MRN.ink} name="Ink" hex="#161311"/>
+            <Swatch c={MRN.yellow} name="Yellow accent" hex="#F5C24B"/>
+            <Swatch c={MRN.mint} name="Mint accent" hex="#9EC9A8"/>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginTop: 26 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MRN.mute, letterSpacing: 0.4 }}>TYPOGRAPHY · MANROPE</div>
+              <div style={{ marginTop: 6, fontSize: 32, fontWeight: 800, letterSpacing: -0.5, color: MRN.ink, lineHeight: 1.1 }}>Display 32 / 800</div>
+              <div style={{ marginTop: 4, fontSize: 22, fontWeight: 800, color: MRN.ink }}>Section 22 / 800</div>
+              <div style={{ marginTop: 4, fontSize: 16, fontWeight: 700, color: MRN.ink }}>Title 16 / 700</div>
+              <div style={{ marginTop: 4, fontSize: 13, fontWeight: 600, color: MRN.inkSoft }}>Body 13 / 600</div>
+              <div style={{ marginTop: 4, fontSize: 11, fontWeight: 700, color: MRN.mute, letterSpacing: 0.4 }}>LABEL 11 / 700 · 0.4 LS</div>
+              <div style={{ marginTop: 6, fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: MRN.coralDeep }}>{`const Component = () => 'code'`}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: MRN.mute, letterSpacing: 0.4 }}>SHAPE & DEPTH</div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+                <div style={{ padding: '10px 16px', borderRadius: 999, background: MRN.coral, color: '#fff', fontWeight: 800, fontSize: 12 }}>Pill · primary</div>
+                <div style={{ padding: '10px 16px', borderRadius: 999, background: MRN.ink, color: '#fff', fontWeight: 800, fontSize: 12 }}>Pill · dark</div>
+                <div style={{ padding: '10px 16px', borderRadius: 999, background: MRN.cardAlt, color: MRN.ink, fontWeight: 800, fontSize: 12 }}>Pill · ghost</div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                <div style={{ width: 80, height: 60, borderRadius: 22, background: MRN.cream, border: `1px solid ${MRN.rule}` }}/>
+                <div style={{ width: 80, height: 60, borderRadius: 16, background: MRN.cream, border: `1px solid ${MRN.rule}` }}/>
+                <div style={{ width: 80, height: 60, borderRadius: 10, background: MRN.cream, border: `1px solid ${MRN.rule}` }}/>
+              </div>
+              <div style={{ marginTop: 10, fontSize: 11, color: MRN.mute, fontFamily: '"JetBrains Mono", monospace' }}>r22 (card) · r16 (chip) · r10 (input)</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <DesignCanvas title="Master React Native" subtitle="Mobile + Admin — coral / cream / ink direction">
+          <DCSection id="system" title="Design system" subtitle="Tokens & visual language">
+            <DCArtboard id="ds" label="System overview" width={720} height={560}>
+              <SystemCard/>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="mobile" title="Mobile app" subtitle="12 screens · React Native / Expo">
+            <DCArtboard id="splash"   label="01 · Splash"           width={320} height={670}><ScreenSplash/></DCArtboard>
+            <DCArtboard id="welcome"  label="02 · Welcome"          width={320} height={670}><ScreenWelcome/></DCArtboard>
+            <DCArtboard id="auth"     label="03 · Sign up / Sign in" width={320} height={670}><ScreenAuth/></DCArtboard>
+            <DCArtboard id="home"     label="04 · Home"             width={320} height={670}><ScreenHome/></DCArtboard>
+            <DCArtboard id="modules"  label="05 · Modules list"     width={320} height={670}><ScreenModules/></DCArtboard>
+            <DCArtboard id="detail"   label="06 · Module detail"    width={320} height={670}><ScreenModuleDetail/></DCArtboard>
+            <DCArtboard id="reader"   label="07 · Lesson reader"    width={320} height={670}><ScreenLessonReader/></DCArtboard>
+            <DCArtboard id="reader2"  label="08 · Lesson (code)"    width={320} height={670}><ScreenLessonCode/></DCArtboard>
+            <DCArtboard id="bookmark" label="09 · Bookmarks"        width={320} height={670}><ScreenBookmarks/></DCArtboard>
+            <DCArtboard id="chat"     label="10 · AI Chat"          width={320} height={670}><ScreenAIChat/></DCArtboard>
+            <DCArtboard id="profile"  label="11 · Profile"          width={320} height={670}><ScreenProfile/></DCArtboard>
+            <DCArtboard id="settings" label="12 · Settings"         width={320} height={670}><ScreenSettings/></DCArtboard>
+          </DCSection>
+
+          <DCSection id="admin" title="Admin panel" subtitle="5 screens · Linear/Notion-style · React + Vite">
+            <DCArtboard id="admin-dash"    label="A1 · Dashboard"        width={1400} height={880}><AdminDashboard/></DCArtboard>
+            <DCArtboard id="admin-mods"    label="A2 · Modules"          width={1400} height={880}><AdminModules/></DCArtboard>
+            <DCArtboard id="admin-medit"   label="A3 · Module edit"      width={1400} height={880}><AdminModuleEdit/></DCArtboard>
+            <DCArtboard id="admin-lessons" label="A4 · Lessons"          width={1400} height={880}><AdminLessons/></DCArtboard>
+            <DCArtboard id="admin-leditor" label="A5 · Lesson editor"    width={1400} height={880}><AdminLessonEditor/></DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
