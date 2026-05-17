@@ -1,0 +1,50 @@
+import axios from 'axios';
+import axiosRetry from 'axios-retry';
+
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const timeout = Number(import.meta.env.VITE_API_TIMEOUT_MS || 20000);
+const retries = Number(import.meta.env.VITE_API_RETRIES || 2);
+
+export const api = axios.create({
+  baseURL,
+  timeout,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+axiosRetry(api, {
+  retries,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) =>
+    axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+    error.code === 'ECONNABORTED',
+});
+
+const unwrap = (res) => (res?.data?.data !== undefined ? res.data.data : res?.data);
+
+export const Modules = {
+  list: () => api.get('/api/modules').then(unwrap),
+  get: (id) => api.get(`/api/modules/${id}`).then(unwrap),
+  lessons: (id) => api.get(`/api/modules/${id}/lessons`).then(unwrap),
+  create: (body) => api.post('/api/modules', body).then(unwrap),
+  update: (id, body) => api.put(`/api/modules/${id}`, body).then(unwrap),
+  remove: (id) => api.delete(`/api/modules/${id}`).then(unwrap),
+};
+
+export const Lessons = {
+  get: (id) => api.get(`/api/lessons/${id}`).then(unwrap),
+  create: (body) => api.post('/api/lessons', body).then(unwrap),
+  update: (id, body) => api.put(`/api/lessons/${id}`, body).then(unwrap),
+  remove: (id) => api.delete(`/api/lessons/${id}`).then(unwrap),
+};
+
+export const AppContent = {
+  get: () => api.get('/api/app-content').then(unwrap),
+  update: (body) => api.put('/api/app-content', body).then(unwrap),
+};
+
+export const Health = {
+  check: () => api.get('/health').then((r) => r.data),
+};
+
+export const apiBaseURL = baseURL;
