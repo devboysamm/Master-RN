@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Master RN",
+    "slug": "master-rn",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "masterrn",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0907"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "dev.masterreactnative.app",
+      "buildNumber": "1",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "dev.masterreactnative.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F26A4A"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      ["expo-splash-screen", { "backgroundColor": "#0B0907" }]
+    ]
+  }
+}
