@@ -1,0 +1,88 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    name: Deploy backend API
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and deploy backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/Master-RN
+            git pull origin main
+            cd backend-api
+            npm install --production
+            pm2 restart api
+
+  deploy-admin:
+    name: Build and deploy admin panel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for admin-panel directory
+        id: check_admin
+        run: |
+          if [ -d "admin-panel" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "admin-panel/ not found — skipping admin deploy."
+          fi
+
+      - name: Set up Node 20
+        if: steps.check_admin.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        if: steps.check_admin.outputs.exists == 'true'
+        working-directory: admin-panel
+        run: npm install
+
+      - name: Write .env.production
+        if: steps.check_admin.outputs.exists == 'true'
+        working-directory: admin-panel
+        run: |
+          echo "VITE_API_BASE_URL=https://api.masterreactnative.dev" > .env.production
+
+      - name: Build admin panel
+        if: steps.check_admin.outputs.exists == 'true'
+        working-directory: admin-panel
+        run: npm run build
+
+      - name: Set up SSH
+        if: steps.check_admin.outputs.exists == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync dist to server
+        if: steps.check_admin.outputs.exists == 'true'
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+            admin-panel/dist/ \
+            root@${{ secrets.SERVER_IP }}:/var/www/admin/
+
+      - name: Reload nginx
+        if: steps.check_admin.outputs.exists == 'true'
+        run: |
+          ssh -i ~/.ssh/id_ed25519 root@${{ secrets.SERVER_IP }} \
+            "nginx -t && systemctl reload nginx"
