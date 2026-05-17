@@ -8,7 +8,7 @@ const items = [
   { to: '/settings', label: 'Settings', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z', key: ',' },
 ];
 
-function Icon({ d, size = 16 }) {
+function Icon({ d, size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d={d} />
@@ -19,16 +19,19 @@ function Icon({ d, size = 16 }) {
 export default function Sidebar() {
   return (
     <aside style={{
-      width: 240,
+      width: 264,
       background: MRN.ink,
       color: '#fff',
       display: 'flex',
       flexDirection: 'column',
-      padding: '18px 14px',
+      padding: '22px 16px',
       flexShrink: 0,
+      position: 'sticky',
+      top: 0,
+      height: '100vh',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 8px 16px' }}>
-        <svg width="30" height="30" viewBox="0 0 220 220">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 10px 22px' }}>
+        <svg width="36" height="36" viewBox="0 0 220 220">
           <path d="M110 6c52 0 78 0 92 14s14 40 14 92-0 78-14 92-40 14-92 14-78 0-92-14S4 174 4 122s-0-78 14-92S58 6 110 6Z" fill={MRN.coral}/>
           <g fill="none" stroke="#1A1410" strokeWidth="12">
             <ellipse cx="110" cy="110" rx="84" ry="32"/>
@@ -38,22 +41,22 @@ export default function Sidebar() {
           <circle cx="110" cy="110" r="16" fill="#1A1410"/>
         </svg>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: -0.2 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.2 }}>
             Master <span style={{ color: MRN.coral }}>RN</span>
           </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 700, fontFamily: MRN.mono, letterSpacing: 0.6 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 700, fontFamily: MRN.mono, letterSpacing: 0.6 }}>
             admin · v1.0
           </div>
         </div>
       </div>
 
       <div style={{
-        fontSize: 10, fontWeight: 700, fontFamily: MRN.mono,
+        fontSize: 11, fontWeight: 700, fontFamily: MRN.mono,
         color: 'rgba(255,255,255,0.4)', letterSpacing: 1,
-        padding: '10px 10px 6px',
+        padding: '14px 12px 8px',
       }}>WORKSPACE</div>
 
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {items.map((it) => (
           <NavLink
             key={it.to}
@@ -62,10 +65,10 @@ export default function Sidebar() {
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
-              gap: 11,
-              padding: '9px 12px',
-              borderRadius: 8,
-              fontSize: 13,
+              gap: 13,
+              padding: '12px 14px',
+              borderRadius: 10,
+              fontSize: 15,
               fontWeight: isActive ? 700 : 600,
               background: isActive ? 'rgba(242,106,74,0.16)' : 'transparent',
               color: isActive ? '#fff' : 'rgba(255,255,255,0.72)',
@@ -77,17 +80,17 @@ export default function Sidebar() {
               <>
                 {isActive && (
                   <div style={{
-                    position: 'absolute', left: -14, top: 8, bottom: 8,
+                    position: 'absolute', left: -16, top: 10, bottom: 10,
                     width: 3, borderRadius: 2, background: MRN.coral,
                   }}/>
                 )}
-                <span style={{ color: isActive ? MRN.coral : 'rgba(255,255,255,0.55)', display: 'flex' }}>
+                <span style={{ color: isActive ? MRN.coral : 'rgba(255,255,255,0.6)', display: 'flex' }}>
                   <Icon d={it.icon} />
                 </span>
                 <span style={{ flex: 1 }}>{it.label}</span>
                 <span style={{
-                  fontFamily: MRN.mono, fontSize: 9, opacity: 0.5,
-                  padding: '1px 5px', borderRadius: 3,
+                  fontFamily: MRN.mono, fontSize: 10, opacity: 0.5,
+                  padding: '2px 6px', borderRadius: 4,
                   border: '1px solid rgba(255,255,255,0.12)', fontWeight: 700,
                 }}>G {it.key}</span>
               </>
@@ -96,17 +99,17 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div style={{ marginTop: 'auto', padding: '10px 8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ marginTop: 'auto', padding: '14px 10px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            width: 30, height: 30, borderRadius: 15,
+            width: 36, height: 36, borderRadius: 18,
             background: `linear-gradient(135deg, ${MRN.coral}, ${MRN.yellow})`,
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 800, fontSize: 13,
+            fontWeight: 800, fontSize: 15,
           }}>A</div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700 }}>Admin</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>admin@masterrn.dev</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Admin</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>admin@masterrn.dev</div>
           </div>
         </div>
       </div>

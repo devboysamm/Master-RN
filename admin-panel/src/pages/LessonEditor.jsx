@@ -130,18 +130,18 @@ export default function LessonEditor() {
   if (loading) return <div style={{ padding: 32 }} className="empty">Loading…</div>;
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 1500, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+    <div style={{ padding: '32px 40px', maxWidth: 1700, margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
         <button className="btn ghost sm" onClick={() => navigate('/lessons')}>← Back</button>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.4 }}>
+          <div className="page-title">
             {isNew ? 'New lesson' : 'Edit lesson'}
           </div>
-          <div style={{ fontSize: 12, color: MRN.mute, fontWeight: 600, marginTop: 2 }}>
+          <div className="page-sub">
             {isNew ? 'Write rich HTML content with a live preview' : `Editing ID ${id}`}
           </div>
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
           <button className="btn ghost" onClick={() => navigate('/lessons')}>Cancel</button>
           <button className="btn" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save lesson'}
@@ -151,10 +151,10 @@ export default function LessonEditor() {
 
       {err && <div className="banner err">{err}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-        <div className="card" style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div className="field" style={{ marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22 }}>
+        <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="field" style={{ marginBottom: 16 }}>
               <label className="label">Module</label>
               <select className="select" value={form.module_id} onChange={set('module_id')}>
                 <option value="">Choose a module…</option>
@@ -163,39 +163,39 @@ export default function LessonEditor() {
                 ))}
               </select>
             </div>
-            <div className="field" style={{ marginBottom: 12 }}>
+            <div className="field" style={{ marginBottom: 16 }}>
               <label className="label">Lesson order</label>
               <input className="input" type="number" value={form.lesson_order ?? 0} onChange={set('lesson_order')}/>
             </div>
           </div>
 
-          <div className="field" style={{ marginBottom: 12 }}>
+          <div className="field" style={{ marginBottom: 16 }}>
             <label className="label">Title</label>
             <input className="input" value={form.title} onChange={set('title')} placeholder="JSX in 5 minutes"/>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: 12 }}>
-            <div className="field" style={{ marginBottom: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px', gap: 16 }}>
+            <div className="field" style={{ marginBottom: 16 }}>
               <label className="label">Description</label>
               <input className="input" value={form.description || ''} onChange={set('description')} placeholder="Quick intro to JSX"/>
             </div>
-            <div className="field" style={{ marginBottom: 12 }}>
+            <div className="field" style={{ marginBottom: 16 }}>
               <label className="label">Read time (min)</label>
               <input className="input" type="number" value={form.read_time ?? 5} onChange={set('read_time')}/>
             </div>
           </div>
 
-          <div className="field" style={{ marginBottom: 8 }}>
+          <div className="field" style={{ marginBottom: 10 }}>
             <label className="label">Content templates</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {TEMPLATES.map((t) => (
                 <button
                   key={t.label}
                   onClick={() => insertSnippet(t.snippet)}
                   style={{
-                    padding: '6px 11px', borderRadius: 8,
+                    padding: '9px 14px', borderRadius: 9,
                     background: MRN.cardAlt, color: MRN.inkSoft,
-                    fontSize: 11, fontWeight: 700,
+                    fontSize: 12.5, fontWeight: 700,
                     border: `1px solid ${MRN.rule}`,
                     fontFamily: MRN.mono,
                   }}>{t.label}</button>
@@ -212,10 +212,10 @@ export default function LessonEditor() {
               onChange={set('content')}
               spellCheck={false}
               style={{
-                flex: 1, minHeight: 360,
-                fontFamily: MRN.mono, fontSize: 12.5, lineHeight: 1.6,
+                flex: 1, minHeight: 440,
+                fontFamily: MRN.mono, fontSize: 14, lineHeight: 1.65,
                 background: MRN.ink, color: '#F5EFE6',
-                border: `1px solid ${MRN.ink}`,
+                border: `1px solid ${MRN.ink}`, padding: 18,
               }}
               placeholder="<h2>Hello</h2>\n<p>Start writing your lesson...</p>"
             />
@@ -224,21 +224,22 @@ export default function LessonEditor() {
 
         <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{
-            padding: '14px 22px', borderBottom: `1px solid ${MRN.rule}`,
+            padding: '20px 26px', borderBottom: `1px solid ${MRN.rule}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: MRN.card,
+            background: MRN.card, borderRadius: '22px 22px 0 0',
           }}>
-            <div style={{ fontSize: 13, fontWeight: 800 }}>Live preview</div>
+            <div className="section-title">Live preview</div>
             <span className="pill">DOMPurify · highlight.js</span>
           </div>
-          <div
-            ref={previewRef}
-            className="preview"
-            style={{ padding: 24, overflowY: 'auto', maxHeight: 'calc(100vh - 180px)' }}
-            dangerouslySetInnerHTML={{ __html: sanitized }}
-          />
-          {!form.content && (
-            <div className="empty" style={{ padding: 30 }}>
+          {form.content ? (
+            <div
+              ref={previewRef}
+              className="preview"
+              style={{ padding: 28, overflowY: 'auto', maxHeight: 'calc(100vh - 220px)' }}
+              dangerouslySetInnerHTML={{ __html: sanitized }}
+            />
+          ) : (
+            <div className="empty">
               Preview will appear here as you type HTML on the left.
             </div>
           )}

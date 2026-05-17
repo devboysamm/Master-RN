@@ -76,10 +76,10 @@ export default function Settings() {
   );
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 1100, margin: '0 auto' }}>
-      <div style={{ marginBottom: 22 }}>
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>Settings</div>
-        <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 4 }}>
+    <div style={{ padding: '32px 40px', maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ marginBottom: 28 }}>
+        <div className="page-title">Settings</div>
+        <div className="page-sub">
           API health and app content shown on the mobile home screen
         </div>
       </div>
@@ -87,39 +87,39 @@ export default function Settings() {
       {err && <div className="banner err">{err}</div>}
       {ok && <div className="banner ok">{ok}</div>}
 
-      <div className="card" style={{ marginBottom: 18 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      <div className="card" style={{ marginBottom: 22 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>API health</div>
-            <div style={{ fontSize: 12, color: MRN.mute, fontWeight: 600, marginTop: 2, fontFamily: MRN.mono }}>
+            <div className="section-title">API health</div>
+            <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 4, fontFamily: MRN.mono }}>
               GET {apiBaseURL}/health
             </div>
           </div>
           <button className="btn ghost" onClick={checkHealth}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12a9 9 0 0115-6.7L21 8M21 3v5h-5M21 12a9 9 0 01-15 6.7L3 16M3 21v-5h5"/>
             </svg>
             Re-check
           </button>
         </div>
         <div style={{
-          padding: 16, borderRadius: 14,
+          padding: 20, borderRadius: 14,
           background: health.status === 'ok' ? '#DCEDE2' : health.status === 'down' ? '#FCD9CF' : MRN.cardAlt,
-          display: 'flex', alignItems: 'center', gap: 14,
+          display: 'flex', alignItems: 'center', gap: 16,
         }}>
           {dot(health.status === 'ok' ? MRN.ok : health.status === 'down' ? MRN.coralDeep : MRN.mute)}
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 800, color: MRN.ink }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: MRN.ink }}>
               {health.status === 'ok' ? 'API is healthy' :
                health.status === 'down' ? 'API is unreachable' :
                health.status === 'checking' ? 'Checking…' : 'Idle'}
             </div>
-            <div style={{ fontSize: 12, color: MRN.inkSoft, marginTop: 2 }}>
+            <div style={{ fontSize: 13, color: MRN.inkSoft, marginTop: 4 }}>
               {health.message || health.error || 'Press re-check to ping the backend.'}
             </div>
           </div>
           {health.at && (
-            <div style={{ fontFamily: MRN.mono, fontSize: 11, color: MRN.mute, fontWeight: 700 }}>
+            <div style={{ fontFamily: MRN.mono, fontSize: 12, color: MRN.mute, fontWeight: 700 }}>
               {health.at}
             </div>
           )}
@@ -127,10 +127,10 @@ export default function Settings() {
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>App content</div>
-            <div style={{ fontSize: 12, color: MRN.mute, fontWeight: 600, marginTop: 2 }}>
+            <div className="section-title">App content</div>
+            <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 4 }}>
               Welcome card and motivation card on the mobile home screen
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function Settings() {
         {loading ? (
           <div className="empty">Loading content…</div>
         ) : (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 20 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
               <div className="field">
                 <label className="label">Welcome title</label>

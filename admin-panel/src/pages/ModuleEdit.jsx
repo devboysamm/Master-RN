@@ -73,18 +73,18 @@ export default function ModuleEdit() {
   if (loading) return <div style={{ padding: 32 }} className="empty">Loading…</div>;
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 900, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+    <div style={{ padding: '32px 40px', maxWidth: 1080, margin: '0 auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
         <button className="btn ghost sm" onClick={() => navigate('/modules')}>← Back</button>
         <div>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>
+          <div className="page-title">
             {isNew ? 'New module' : 'Edit module'}
           </div>
-          <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 2 }}>
+          <div className="page-sub">
             {isNew ? 'Create a new learning module' : `Editing ID ${id}`}
           </div>
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
           <button className="btn ghost" onClick={() => navigate('/modules')}>Cancel</button>
           <button className="btn" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save module'}
@@ -130,27 +130,27 @@ export default function ModuleEdit() {
 
         <div className="field">
           <label className="label">Background color</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <input
               type="color"
               value={form.background_color || '#EAF2FF'}
               onChange={set('background_color')}
-              style={{ width: 52, height: 44, border: `1px solid ${MRN.rule}`, borderRadius: 10, padding: 4, background: '#fff' }}
+              style={{ width: 60, height: 50, border: `1px solid ${MRN.rule}`, borderRadius: 12, padding: 5, background: '#fff' }}
             />
             <input
               className="input"
               value={form.background_color || '#EAF2FF'}
               onChange={set('background_color')}
-              style={{ maxWidth: 140, fontFamily: MRN.mono }}
+              style={{ maxWidth: 160, fontFamily: MRN.mono }}
             />
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {moduleSwatches.map((c) => (
                 <button
                   key={c}
                   onClick={() => set('background_color')(c)}
                   title={c}
                   style={{
-                    width: 26, height: 26, borderRadius: 7,
+                    width: 32, height: 32, borderRadius: 8,
                     background: c, cursor: 'pointer',
                     border: form.background_color?.toLowerCase() === c.toLowerCase()
                       ? `2px solid ${MRN.ink}` : `1px solid ${MRN.rule}`,
@@ -162,17 +162,17 @@ export default function ModuleEdit() {
         </div>
 
         <div style={{
-          marginTop: 18, padding: 16,
-          borderRadius: 14, background: form.background_color || '#EAF2FF',
+          marginTop: 22, padding: 22,
+          borderRadius: 16, background: form.background_color || '#EAF2FF',
           border: `1px solid ${MRN.rule}`,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: MRN.inkSoft, marginBottom: 6, letterSpacing: 0.4 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: MRN.inkSoft, marginBottom: 8, letterSpacing: 0.6 }}>
             PREVIEW
           </div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: MRN.ink }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: MRN.ink, letterSpacing: -0.3 }}>
             {form.title || 'Module title'}
           </div>
-          <div style={{ fontSize: 13, color: MRN.inkSoft, marginTop: 4 }}>
+          <div style={{ fontSize: 15, color: MRN.inkSoft, marginTop: 6 }}>
             {form.description || 'Module description goes here.'}
           </div>
         </div>

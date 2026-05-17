@@ -78,16 +78,16 @@ export default function ModulesPage() {
   };
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+    <div style={{ padding: '32px 40px', maxWidth: 1600, margin: '0 auto' }}>
+      <div className="page-head">
         <div>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>Modules</div>
-          <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 4 }}>
+          <div className="page-title">Modules</div>
+          <div className="page-sub">
             {modules.length} {modules.length === 1 ? 'module' : 'modules'} · organize your course
           </div>
         </div>
         <button className="btn" onClick={() => navigate('/modules/new')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
           New module
         </button>
       </div>
@@ -100,15 +100,15 @@ export default function ModulesPage() {
           placeholder="Search modules…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          style={{ maxWidth: 360 }}
+          style={{ maxWidth: 420 }}
         />
-        <div style={{ display: 'flex', gap: 4, background: MRN.cardAlt, padding: 4, borderRadius: 10 }}>
+        <div style={{ display: 'flex', gap: 4, background: MRN.cardAlt, padding: 5, borderRadius: 12 }}>
           {SORTS.map((s) => (
             <button
               key={s.id}
               onClick={() => setSort(s.id)}
               style={{
-                padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+                padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700,
                 background: sort === s.id ? '#fff' : 'transparent',
                 color: sort === s.id ? MRN.ink : MRN.mute,
                 boxShadow: sort === s.id ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
@@ -143,25 +143,25 @@ export default function ModulesPage() {
                 <tr key={m.id}>
                   <td>
                     <div style={{
-                      width: 28, height: 28, borderRadius: 7,
+                      width: 38, height: 38, borderRadius: 9,
                       background: m.background_color || '#EAF2FF',
                       border: `1px solid ${MRN.rule}`,
                     }}/>
                   </td>
-                  <td style={{ fontWeight: 700, color: MRN.ink }}>
+                  <td style={{ fontWeight: 700, color: MRN.ink, fontSize: 15 }}>
                     <div>{m.title}</div>
-                    <div style={{ fontSize: 11, color: MRN.mute, fontFamily: MRN.mono, fontWeight: 600, marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: MRN.mute, fontFamily: MRN.mono, fontWeight: 600, marginTop: 3 }}>
                       ID {m.id} · order {m.order_index || 0}
                     </div>
                   </td>
                   <td style={{
-                    color: MRN.inkSoft, maxWidth: 380,
+                    color: MRN.inkSoft, maxWidth: 460,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>{m.description || '—'}</td>
-                  <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.inkSoft, fontSize: 12 }}>
+                  <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.inkSoft, fontSize: 14 }}>
                     {counts[m.id] ?? 0}
                   </td>
-                  <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.mute, fontSize: 12 }}>
+                  <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.mute, fontSize: 14 }}>
                     {readTimes[m.id] ?? 0}m
                   </td>
                   <td style={{ textAlign: 'right' }}>
@@ -187,7 +187,7 @@ export default function ModulesPage() {
             <button className="btn" style={{ background: MRN.coralDeep, borderColor: MRN.coralDeep }} onClick={doDelete}>Delete</button>
           </>
         }>
-        <div style={{ fontSize: 14, color: MRN.inkSoft, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 15, color: MRN.inkSoft, lineHeight: 1.6 }}>
           Are you sure you want to delete <strong style={{ color: MRN.ink }}>{toDelete?.title}</strong>?
           This will also delete its lessons. This action cannot be undone.
         </div>

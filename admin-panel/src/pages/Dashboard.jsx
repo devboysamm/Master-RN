@@ -37,7 +37,7 @@ export default function Dashboard() {
       const flat = lessonsByMod.flatMap((arr, i) =>
         (arr || []).map((l) => ({ ...l, module_title: list[i]?.title }))
       );
-      setLatestLessons(flat.slice(-5).reverse());
+      setLatestLessons(flat.slice(-6).reverse());
 
       try {
         const h = await Health.check();
@@ -63,21 +63,19 @@ export default function Dashboard() {
   })();
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+    <div style={{ padding: '32px 40px', maxWidth: 1600, margin: '0 auto' }}>
+      <div className="page-head">
         <div>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>Dashboard</div>
-          <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 4 }}>
-            Welcome back · Master RN admin
-          </div>
+          <div className="page-title">Dashboard</div>
+          <div className="page-sub">Welcome back · Master RN admin</div>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
           <button className="btn ghost" onClick={load}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={ICONS.refresh}/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={ICONS.refresh}/></svg>
             Refresh
           </button>
-          <button className="btn" onClick={() => navigate('/lessons')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d={ICONS.plus}/></svg>
+          <button className="btn" onClick={() => navigate('/lessons/new')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d={ICONS.plus}/></svg>
             New lesson
           </button>
         </div>
@@ -85,21 +83,21 @@ export default function Dashboard() {
 
       {err && <div className="banner err">{err}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 22 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18, marginBottom: 28 }}>
         <KPICard label="Modules" value={loading ? '—' : modules.length} sub="Across the catalog" accent={MRN.coral} icon={ICONS.layers}/>
         <KPICard label="Lessons" value={loading ? '—' : lessonsCount} sub="All authored lessons" accent={MRN.yellow} icon={ICONS.code}/>
         <KPICard label="Avg read time" value={loading ? '—' : avgRead} sub="From latest lessons" accent={MRN.mint} icon={ICONS.clock}/>
         <KPICard label="API health" value={health.status === 'ok' ? 'Healthy' : health.status === 'down' ? 'Down' : '…'} sub={health.message || 'GET /health'} accent={health.status === 'ok' ? MRN.ok : MRN.coralDeep} icon={ICONS.globe}/>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 18 }}>
         <div className="card" style={{ padding: 0 }}>
           <div style={{
-            padding: '16px 22px', borderBottom: `1px solid ${MRN.rule}`,
+            padding: '22px 26px', borderBottom: `1px solid ${MRN.rule}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <div style={{ fontSize: 14, fontWeight: 800 }}>Latest lessons</div>
-            <Link to="/lessons" style={{ fontSize: 12, color: MRN.coral, fontWeight: 700 }}>View all →</Link>
+            <div className="section-title">Latest lessons</div>
+            <Link to="/lessons" style={{ fontSize: 14, color: MRN.coral, fontWeight: 700 }}>View all →</Link>
           </div>
           {latestLessons.length === 0 ? (
             <div className="empty">{loading ? 'Loading…' : 'No lessons yet. Create one to get started.'}</div>
@@ -110,7 +108,7 @@ export default function Dashboard() {
                   <th>Title</th>
                   <th>Module</th>
                   <th style={{ textAlign: 'right' }}>Read time</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th style={{ textAlign: 'right', width: 120 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,7 +116,7 @@ export default function Dashboard() {
                   <tr key={l.id}>
                     <td style={{ fontWeight: 700, color: MRN.ink }}>{l.title}</td>
                     <td style={{ color: MRN.inkSoft }}>{l.module_title}</td>
-                    <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.mute, fontSize: 12 }}>
+                    <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.mute, fontSize: 14 }}>
                       {l.read_time}m
                     </td>
                     <td style={{ textAlign: 'right' }}>
@@ -132,11 +130,11 @@ export default function Dashboard() {
         </div>
 
         <div className="card" style={{ padding: 0 }}>
-          <div style={{ padding: '16px 22px', borderBottom: `1px solid ${MRN.rule}` }}>
-            <div style={{ fontSize: 14, fontWeight: 800 }}>Quick actions</div>
-            <div style={{ fontSize: 12, color: MRN.mute, fontWeight: 600, marginTop: 2 }}>Jump straight in</div>
+          <div style={{ padding: '22px 26px', borderBottom: `1px solid ${MRN.rule}` }}>
+            <div className="section-title">Quick actions</div>
+            <div style={{ fontSize: 14, color: MRN.mute, fontWeight: 600, marginTop: 4 }}>Jump straight in</div>
           </div>
-          <div style={{ padding: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ padding: 22, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <QuickAction label="New module"    icon={ICONS.plus}    onClick={() => navigate('/modules/new')} accent={MRN.coral}/>
             <QuickAction label="New lesson"    icon={ICONS.edit}    onClick={() => navigate('/lessons/new')} accent={MRN.yellow}/>
             <QuickAction label="Manage modules" icon={ICONS.layers} onClick={() => navigate('/modules')}     accent={MRN.mint}/>
@@ -151,21 +149,21 @@ export default function Dashboard() {
 function QuickAction({ label, icon, onClick, accent }) {
   return (
     <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '14px 14px', borderRadius: 14,
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '18px 18px', borderRadius: 16,
       background: '#fff', border: `1px solid ${MRN.rule}`,
-      fontSize: 13, fontWeight: 700, color: MRN.ink,
+      fontSize: 15, fontWeight: 700, color: MRN.ink,
       textAlign: 'left', width: '100%',
       transition: 'background 0.15s, border-color 0.15s',
     }}
     onMouseEnter={(e) => e.currentTarget.style.borderColor = accent}
     onMouseLeave={(e) => e.currentTarget.style.borderColor = MRN.rule}>
       <div style={{
-        width: 32, height: 32, borderRadius: 9,
+        width: 40, height: 40, borderRadius: 11,
         background: `${accent}22`, color: accent,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d={icon}/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d={icon}/></svg>
       </div>
       <span>{label}</span>
     </button>

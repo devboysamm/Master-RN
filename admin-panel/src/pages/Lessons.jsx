@@ -54,11 +54,11 @@ export default function LessonsPage() {
   const total = Object.values(byModule).reduce((sum, arr) => sum + arr.length, 0);
 
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 1400, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+    <div style={{ padding: '32px 40px', maxWidth: 1600, margin: '0 auto' }}>
+      <div className="page-head">
         <div>
-          <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.4 }}>Lessons</div>
-          <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 4 }}>
+          <div className="page-title">Lessons</div>
+          <div className="page-sub">
             {total} {total === 1 ? 'lesson' : 'lessons'} across {modules.length} {modules.length === 1 ? 'module' : 'modules'}
           </div>
         </div>
@@ -66,7 +66,7 @@ export default function LessonsPage() {
           className="btn"
           onClick={() => navigate('/lessons/new')}
           disabled={modules.length === 0}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
           New lesson
         </button>
       </div>
@@ -90,25 +90,25 @@ export default function LessonsPage() {
                 <button
                   onClick={() => setCollapsed((c) => ({ ...c, [m.id]: !c[m.id] }))}
                   style={{
-                    display: 'flex', width: '100%', alignItems: 'center', gap: 14,
-                    padding: '16px 22px', borderBottom: isCollapsed ? 'none' : `1px solid ${MRN.rule}`,
+                    display: 'flex', width: '100%', alignItems: 'center', gap: 16,
+                    padding: '20px 26px', borderBottom: isCollapsed ? 'none' : `1px solid ${MRN.rule}`,
                     cursor: 'pointer', textAlign: 'left',
                   }}>
                   <div style={{
-                    width: 36, height: 36, borderRadius: 10,
+                    width: 44, height: 44, borderRadius: 12,
                     background: m.background_color || '#EAF2FF',
                     flexShrink: 0, border: `1px solid ${MRN.rule}`,
                   }}/>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: MRN.ink }}>{m.title}</div>
-                    <div style={{ fontSize: 12, color: MRN.mute, fontWeight: 600, marginTop: 2 }}>
+                    <div style={{ fontSize: 17, fontWeight: 800, color: MRN.ink, letterSpacing: -0.2 }}>{m.title}</div>
+                    <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 600, marginTop: 3 }}>
                       {lessons.length} {lessons.length === 1 ? 'lesson' : 'lessons'}
                     </div>
                   </div>
                   <span className="pill" style={{ background: MRN.cardAlt }}>
                     {lessons.reduce((s, l) => s + (l.read_time || 0), 0)}m total
                   </span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{
                     color: MRN.mute, transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s',
                   }}>
                     <path d="M6 9l6 6 6-6"/>
@@ -117,33 +117,33 @@ export default function LessonsPage() {
 
                 {!isCollapsed && (
                   lessons.length === 0 ? (
-                    <div style={{ padding: 22, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                      <div style={{ fontSize: 13, color: MRN.mute }}>No lessons in this module yet.</div>
+                    <div style={{ padding: 26, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{ fontSize: 15, color: MRN.mute }}>No lessons in this module yet.</div>
                       <button className="btn sm" onClick={() => navigate(`/lessons/new?module=${m.id}`)}>Add first lesson</button>
                     </div>
                   ) : (
                     <table className="table">
                       <thead>
                         <tr>
-                          <th style={{ width: 60 }}>Order</th>
+                          <th style={{ width: 70 }}>Order</th>
                           <th>Title</th>
                           <th>Description</th>
                           <th style={{ textAlign: 'right' }}>Read</th>
-                          <th style={{ width: 160, textAlign: 'right' }}>Actions</th>
+                          <th style={{ width: 180, textAlign: 'right' }}>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {lessons.map((l) => (
                           <tr key={l.id}>
-                            <td style={{ fontFamily: MRN.mono, color: MRN.mute, fontSize: 12 }}>
+                            <td style={{ fontFamily: MRN.mono, color: MRN.mute, fontSize: 14 }}>
                               {String(l.lesson_order || 0).padStart(2, '0')}
                             </td>
                             <td style={{ fontWeight: 700, color: MRN.ink }}>{l.title}</td>
                             <td style={{
-                              color: MRN.inkSoft, maxWidth: 400,
+                              color: MRN.inkSoft, maxWidth: 460,
                               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                             }}>{l.description || '—'}</td>
-                            <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.mute, fontSize: 12 }}>
+                            <td style={{ textAlign: 'right', fontFamily: MRN.mono, color: MRN.mute, fontSize: 14 }}>
                               {l.read_time || 0}m
                             </td>
                             <td style={{ textAlign: 'right' }}>
@@ -174,7 +174,7 @@ export default function LessonsPage() {
             <button className="btn" style={{ background: MRN.coralDeep, borderColor: MRN.coralDeep }} onClick={doDelete}>Delete</button>
           </>
         }>
-        <div style={{ fontSize: 14, color: MRN.inkSoft, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 15, color: MRN.inkSoft, lineHeight: 1.6 }}>
           Delete <strong style={{ color: MRN.ink }}>{toDelete?.title}</strong>? This cannot be undone.
         </div>
       </Modal>
