@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Master React Native - Full Build Prompt</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #111; padding: 22px; }
+    h1, h2, h3 { color: #0b4a78; margin: 18px 0 10px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 15px; }
+    code, pre { font-family: "Courier New", Courier, monospace; }
+    pre { background: #f6f8fa; padding: 12px; border-radius: 6px; overflow: auto; }
+    code { background: #eef2f5; padding: 2px 6px; border-radius: 4px; }
+    ul, ol { padding-left: 20px; }
+    .note { background: #fff7e6; border: 1px solid #ffd591; padding: 10px 12px; border-radius: 6px; }
+    .grid { display: grid; gap: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Master React Native - Full Build Prompt</h1>
+
+  <p>
+    You are building a full app system that matches the current project described below. Deliver a working clone with the
+    same features, screen behavior, API contract, database schema, and UI intent. Use the same tech stack and folder
+    structure. This document contains everything needed to recreate the app.
+  </p>
+
+  <h2>Summary</h2>
+  <ul>
+    <li><strong>Product</strong>: Course learning platform for React Native content.</li>
+    <li><strong>Parts</strong>: Backend API (Node/Express/MySQL), Admin Panel (React/Vite), Mobile App (React Native/Expo).</li>
+    <li><strong>Core features</strong>: Modules, lessons, lesson reader with HTML content, bookmarks, completion, theming.</li>
+  </ul>
+
+  <h2>Required Tech Stack</h2>
+  <ul>
+    <li>Backend: Node.js (CommonJS), Express, MySQL (mysql2), dotenv, cors.</li>
+    <li>Mobile: React Native (Expo), React Navigation, AsyncStorage, react-native-render-html, Expo LinearGradient.</li>
+    <li>Admin Panel: React + Vite, axios, DOMPurify, highlight.js.</li>
+  </ul>
+
+  <h2>Repository Structure (must match)</h2>
+  <pre>
+Master-react-native/
+  backend-api/
+    index.js
+    package.json
+    schema.sql
+    migrations/
+    src/
+      app.js
+      server.js
+      config/
+        db.js
+        initializeDatabase.js
+      controllers/
+      middlewares/
+      models/
+      routes/
+  admin-panel/
+    index.html
+    package.json
+    public/
+    src/
+      App.jsx
+      main.jsx
+      styles.css
+  mobile-app/
+    App.js
+    app.json
+    package.json
+    assets/
+    src/
+      api/
+      components/
+      navigation/
+      screens/
+      storage/
+      theme/
+  README.md
+  DEPLOYMENT_GUIDE.md
+  PERFORMANCE_FIXES.md
+  promt.html
+  </pre>
+
+  <h2>Backend API</h2>
+
+  <h3>Server behavior</h3>
+  <ul>
+    <li>Express server with JSON body parsing.</li>
+    <li>CORS allowlist includes production domains and localhost ports 5173 and 4173.</li>
+    <li>Health check endpoint: <code>GET /health</code> returns <code>{ success: true, message: "API is running" }</code>.</li>
+    <li>Database schema is auto-initialized on server start via <code>initializeDatabase</code>.</li>
+  </ul>
+
+  <h3>Database schema</h3>
+  <pre>
+modules
+- id (INT, PK, auto-increment)
+- title (VARCHAR, required)
+- description (TEXT)
+- prerequisites (TEXT, comma separated)
+- icon (VARCHAR, default: book)
+- image_url (VARCHAR, nullable)
+- background_color (CHAR(7), default #EAF2FF)
+- order_index (INT, default 0)
+
+lessons
+- id (INT, PK, auto-increment)
+- module_id (INT, FK -> modules.id, on delete cascade)
+- title (VARCHAR, required)
+- description (TEXT)
+- content (LONGTEXT)
+- read_time (INT, default 5)
+- lesson_order (INT, default 0)
+
+app_content
+- id (INT, PK, single row with id=1)
+- welcome_title (VARCHAR, required)
+- welcome_description (TEXT, required)
+- motivation_text (TEXT, required)
+- motivation_quote (TEXT, required)
+  </pre>
+
+  <h3>API endpoints</h3>
+  <pre>
+GET    /api/modules
+GET    /api/modules/:id
+GET    /api/modules/:id/lessons
+POST   /api/modules
+PUT    /api/modules/:id
+DELETE /api/modules/:id
+
+GET    /api/lessons/:id
+GET    /api/lesson/:id   (alias)
+POST   /api/lessons
+PUT    /api/lessons/:id
+DELETE /api/lessons/:id
+
+GET    /api/app-content
+PUT    /api/app-content
+
+POST   /modules          (legacy)
+POST   /lessons          (legacy)
+PUT    /lessons/:id      (legacy)
+DELETE /lessons/:id      (legacy)
+  </pre>
+
+  <h3>Response shape</h3>
+  <ul>
+    <li>All successful responses are JSON: <code>{ success: true, data: ... }</code> or <code>{ success: true, message: ... }</code>.</li>
+    <li>Validation errors return 400 with <code>{ success: false, message: "..." }</code>.</li>
+    <li>Not found returns 404 with <code>{ success: false, message: "..." }</code>.</li>
+  </ul>
+
+  <h3>Important validation rules</h3>
+  <ul>
+    <li>Module <code>title</code> is required, <code>background_color</code> must be 6-digit hex.</li>
+    <li>Module <code>image_url</code> must be http or https when provided.</li>
+    <li>Lesson <code>module_id</code> and <code>title</code> required.</li>
+    <li>Lesson <code>read_time</code> and <code>lesson_order</code> must be numbers when provided.</li>
+    <li>App content requires all fields: welcome title/description and motivation text/quote.</li>
+  </ul>
+
+  <h3>Example payloads</h3>
+  <pre>
+POST /api/modules
+{
+  "title": "React Basics",
+  "description": "Start here",
+  "prerequisites": "JavaScript, ES6",
+  "icon": "book",
+  "image_url": "https://example.com/react.png",
+  "background_color": "#61DAFB",
+  "order_index": 1
+}
+
+POST /api/lessons
+{
+  "module_id": 1,
+  "title": "JSX 101",
+  "description": "Intro to JSX",
+  "content": "<h2>Hello JSX</h2><p>...</p>",
+  "read_time": 6,
+  "lesson_order": 1
+}
+
+PUT /api/app-content
+{
+  "welcome_title": "Master React Native",
+  "welcome_description": "A practical React Native course app...",
+  "motivation_text": "Daily Motivation",
+  "motivation_quote": "Keep up the great work!"
+}
+  </pre>
+
+  <h2>Admin Panel (React + Vite)</h2>
+
+  <h3>Features</h3>
+  <ul>
+    <li>Dashboard: KPI cards for modules and lessons, latest lessons list.</li>
+    <li>Modules page: create, edit, delete modules; search and sort by title, order, lessons, time.</li>
+    <li>Lessons page: create, edit, delete lessons; order by module order and lesson order.</li>
+    <li>Settings page: API health check.</li>
+    <li>Live lesson preview with HTML sanitization and syntax highlighting.</li>
+  </ul>
+
+  <h3>Admin panel behavior details</h3>
+  <ul>
+    <li>Uses <code>axios</code> with retries and timeouts.</li>
+    <li>API base URL via <code>VITE_API_BASE_URL</code> (fallback to production URL).</li>
+    <li>Lesson editor supports templates for headings, paragraphs, lists, and code blocks.</li>
+    <li>Preview uses DOMPurify and highlight.js.</li>
+  </ul>
+
+  <h2>Mobile App (React Native + Expo)</h2>
+
+  <h3>Navigation</h3>
+  <ul>
+    <li>Bottom tab navigator: Home, Modules (stack), Bookmarks, Settings.</li>
+    <li>Modules stack: Modules list -> Module details (lessons) -> Lesson reader.</li>
+  </ul>
+
+  <h3>Screens and functionality</h3>
+  <ul>
+    <li><strong>Home</strong>: welcome card, motivation card, module grid (first 6), view all.</li>
+    <li><strong>Modules</strong>: full module list with icon/image, background color, lesson count, total read time.</li>
+    <li><strong>Module details</strong>: module header, prerequisites chips, lessons list with bookmark and completion status.</li>
+    <li><strong>Lesson reader</strong>: HTML rendering, code styling, bookmark toggle, mark completed.</li>
+    <li><strong>Bookmarks</strong>: list bookmarked lessons, summary count and total minutes.</li>
+    <li><strong>Settings</strong>: theme switcher (light/dark/system), local stats, reset local data.</li>
+    <li><strong>Brand splash</strong>: animated intro screen on launch.</li>
+  </ul>
+
+  <h3>Local storage</h3>
+  <ul>
+    <li>Bookmarks stored as list of lesson IDs in AsyncStorage.</li>
+    <li>Completed lessons stored as list of lesson IDs.</li>
+    <li>Theme preference stored as <code>light</code>, <code>dark</code>, or <code>system</code>.</li>
+  </ul>
+
+  <h3>Mobile API client details</h3>
+  <ul>
+    <li>API base URL from <code>EXPO_PUBLIC_API_BASE_URL</code> or <code>EXPO_PUBLIC_API_URL</code>.</li>
+    <li>Fallback base URL: https://api.masterreactnative.dev</li>
+    <li>Request timeout: 30 seconds using AbortController.</li>
+  </ul>
+
+  <h3>Theming</h3>
+  <ul>
+    <li>Manrope font family with 400, 600, 700, 800 weights.</li>
+    <li>Light and dark color palettes defined in theme tokens.</li>
+    <li>Floating tab bar with card-like styling.</li>
+  </ul>
+
+  <h2>How to Connect Everything</h2>
+  <ol>
+    <li>Start MySQL and create database <code>course_learning</code> (or set a custom DB name in backend env).</li>
+    <li>Backend reads DB config from <code>.env</code>: DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSL.</li>
+    <li>Backend auto-creates tables on start; no manual migration is required for dev.</li>
+    <li>Admin panel points to backend via <code>VITE_API_BASE_URL</code> env.</li>
+    <li>Mobile app points to backend via Expo public env or direct edit in the API client file.</li>
+  </ol>
+
+  <h2>Recommended .env examples</h2>
+  <pre>
+# backend-api/.env
+PORT=5000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=course_learning
+DB_SSL=false
+DB_CONNECT_TIMEOUT=10000
+
+# admin-panel/.env
+VITE_API_BASE_URL=http://localhost:5000
+VITE_API_TIMEOUT_MS=20000
+VITE_API_RETRIES=2
+VITE_SYNC_TIMEOUT_MS=25000
+
+# mobile-app (Expo)
+EXPO_PUBLIC_API_BASE_URL=http://localhost:5000
+  </pre>
+
+  <h2>Run Instructions</h2>
+  <h3>Backend</h3>
+  <pre>
+cd backend-api
+npm install
+cp .env.example .env   (or create .env manually)
+npm start
+  </pre>
+
+  <h3>Admin Panel</h3>
+  <pre>
+cd admin-panel
+npm install
+npm run dev
+  </pre>
+
+  <h3>Mobile App</h3>
+  <pre>
+cd mobile-app
+npm install
+npm run start
+  </pre>
+
+  <h2>Acceptance Criteria</h2>
+  <ul>
+    <li>API endpoints match exactly and return the same shapes.</li>
+    <li>Admin panel supports CRUD for modules and lessons with live preview.</li>
+    <li>Mobile app matches screen flow and behavior.</li>
+    <li>Bookmarks and completion persist locally.</li>
+    <li>Theme toggle works and persists preference.</li>
+    <li>All three parts can run locally with only .env setup.</li>
+  </ul>
+
+  <h2>Prompt to Give Claude (copy/paste)</h2>
+  <pre>
+Build a three-part app system matching the spec in promt.html. Implement backend API (Node/Express/MySQL), admin panel (React/Vite), and mobile app (React Native/Expo). Use the same endpoints, database schema, validation rules, screens, and feature behavior described there. Keep the folder structure the same. Provide full source, README run steps, .env examples, and a basic QA checklist. Ask questions only if an acceptance criterion is unclear.
+  </pre>
+
+  <p class="note">If anything is missing, add it. The goal is a full working clone with the same behavior.</p>
+</body>
+</html>
