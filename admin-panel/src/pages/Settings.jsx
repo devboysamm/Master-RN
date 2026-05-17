@@ -7,7 +7,15 @@ const emptyContent = {
   welcome_description: '',
   motivation_text: '',
   motivation_quote: '',
+  welcome_subtitle: '',
+  welcome_footer: '',
+  app_description: '',
+  terms_url: '',
+  privacy_url: '',
 };
+
+// Only these are server-side required. Welcome screen extras + URLs are optional.
+const REQUIRED_KEYS = ['welcome_title', 'welcome_description', 'motivation_text', 'motivation_quote'];
 
 export default function Settings() {
   const [health, setHealth] = useState({ status: 'idle' });
@@ -53,9 +61,9 @@ export default function Settings() {
   const save = async () => {
     setErr(null);
     setOk(null);
-    for (const k of Object.keys(emptyContent)) {
+    for (const k of REQUIRED_KEYS) {
       if (!(content[k] || '').trim()) {
-        setErr('All fields are required.');
+        setErr('Welcome title, description, motivation heading and quote are required.');
         return;
       }
     }
@@ -160,6 +168,73 @@ export default function Settings() {
             <div className="field">
               <label className="label">Motivation quote</label>
               <textarea className="textarea" rows={3} value={content.motivation_quote} onChange={set('motivation_quote')} placeholder="Keep up the great work!"/>
+            </div>
+
+            <div style={{ height: 1, background: MRN.rule, margin: '12px 0 8px' }} />
+            <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+              Welcome screen (mobile)
+            </div>
+
+            <div className="field">
+              <label className="label">Welcome subtitle</label>
+              <textarea
+                className="textarea"
+                rows={2}
+                value={content.welcome_subtitle}
+                onChange={set('welcome_subtitle')}
+                placeholder="Ship native apps with confidence — bite-sized lessons, real code."
+              />
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Shown under the “Master RN” wordmark on the Welcome screen.
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="label">App description</label>
+              <textarea
+                className="textarea"
+                rows={3}
+                value={content.app_description}
+                onChange={set('app_description')}
+                placeholder="Master RN is a practical, bite-sized course to ship your first native app."
+              />
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Marketing-style description. Used in About / store listings.
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="label">Welcome footer text</label>
+              <input
+                className="input"
+                value={content.welcome_footer}
+                onChange={set('welcome_footer')}
+                placeholder="By continuing you agree to our"
+              />
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Sits before the Terms &amp; Privacy links at the bottom of Welcome.
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+              <div className="field">
+                <label className="label">Terms URL</label>
+                <input
+                  className="input"
+                  value={content.terms_url}
+                  onChange={set('terms_url')}
+                  placeholder="https://masterreactnative.dev/terms-condition"
+                />
+              </div>
+              <div className="field">
+                <label className="label">Privacy URL</label>
+                <input
+                  className="input"
+                  value={content.privacy_url}
+                  onChange={set('privacy_url')}
+                  placeholder="https://masterreactnative.dev/privacy"
+                />
+              </div>
             </div>
           </div>
         )}

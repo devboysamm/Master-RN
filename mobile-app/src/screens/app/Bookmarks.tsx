@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Svg, { Circle, Path } from 'react-native-svg';
 import Icon from '../../components/Icon';
 import Skeleton from '../../components/Skeleton';
 import { I } from '../../theme/icons';
+import { ProgressStackParamList } from '../../navigation/types';
 import { colors, type, radii } from '../../theme/tokens';
 import { useModules } from '../../api/hooks';
 import { getModuleLessons } from '../../api/modules';
@@ -20,7 +23,7 @@ type Aggregated = {
 };
 
 export default function Bookmarks() {
-  const nav = useNavigation();
+  const nav = useNavigation<NativeStackNavigationProp<ProgressStackParamList>>();
   const { bookmarks, toggleBookmark } = useBookmarks();
   const modulesState = useModules();
   const modules = modulesState.data ?? [];
@@ -54,12 +57,25 @@ export default function Bookmarks() {
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Bookmarks</Text>
-        <Text style={styles.sub}>Pick up where you left off.</Text>
+      <View style={styles.titleRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>Saved</Text>
+          <Text style={styles.sub}>Lessons you've bookmarked</Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Filter"
+          style={styles.filterBtn}>
+          <Icon d={I.filter} size={18} color={colors.ink} strokeWidth={2} />
+        </Pressable>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.statsCard}>
-          <View style={styles.statsDecor} />
+          <Svg width="100%" height={88} style={styles.statsDecor}>
+            <Circle cx="280" cy="22" r="32" fill={colors.coral} opacity={0.55} />
+            <Path d="M0 70 Q 140 0 320 56" stroke={colors.yellow} strokeWidth="1.4" fill="none" opacity={0.55} />
+          </Svg>
           <View style={styles.statsRow}>
             <View style={styles.statsCol}>
               <Text style={styles.statsLabel}>BOOKMARKS</Text>
@@ -87,12 +103,7 @@ export default function Bookmarks() {
             {visible.map((b) => (
               <Pressable
                 key={b.id}
-                onPress={() =>
-                  nav.dispatch(CommonActions.navigate({
-                    name: 'Explore' as never,
-                    params: { screen: 'LessonReader', params: { lessonId: b.id, moduleId: b.module_id } } as never,
-                  }))
-                }
+                onPress={() => nav.navigate('LessonReader', { lessonId: b.id, moduleId: b.module_id })}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${b.title}`}
                 style={styles.row}>
@@ -121,11 +132,13 @@ export default function Bookmarks() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
-  scroll: { padding: 16, paddingBottom: 110 },
-  title: { fontFamily: type.family.sans, fontSize: 30, fontWeight: '800', color: colors.ink, letterSpacing: -0.6, marginTop: 6 },
-  sub: { fontFamily: type.family.sans, fontSize: 13, color: colors.mute, fontWeight: '600', marginTop: 4, marginBottom: 14 },
-  statsCard: { backgroundColor: colors.ink, borderRadius: radii['3xl'], padding: 18, overflow: 'hidden', position: 'relative' },
-  statsDecor: { position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: 40, backgroundColor: colors.coral, opacity: 0.25 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 },
+  filterBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.rule, alignItems: 'center', justifyContent: 'center' },
+  scroll: { padding: 16, paddingBottom: 120 },
+  title: { fontFamily: type.family.sans, fontSize: 32, fontWeight: '800', color: colors.ink, letterSpacing: -0.7 },
+  sub: { fontFamily: type.family.sans, fontSize: 14, color: colors.mute, fontWeight: '600', marginTop: 3 },
+  statsCard: { backgroundColor: colors.ink, borderRadius: radii['3xl'], padding: 20, overflow: 'hidden', position: 'relative', marginBottom: 16 },
+  statsDecor: { position: 'absolute', top: -8, right: -10 },
   statsRow: { flexDirection: 'row', alignItems: 'center' },
   statsCol: { flex: 1, alignItems: 'flex-start' },
   statsLabel: { color: 'rgba(255,255,255,0.5)', fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', letterSpacing: 1 },

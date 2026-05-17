@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, LayoutChangeEvent } from 'react-native';
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useAnimatedGestureHandler,
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
@@ -26,26 +25,29 @@ const PADDING = 4;
 export default function SlideToComplete({ onComplete, label = 'Slide to complete', meta, done }: Props) {
   const [trackWidth, setTrackWidth] = useState(0);
   const x = useSharedValue(0);
+  const start = useSharedValue(0);
 
   const max = Math.max(0, trackWidth - KNOB - PADDING * 2);
   const threshold = max * 0.8;
 
   const onLayout = (e: LayoutChangeEvent) => setTrackWidth(e.nativeEvent.layout.width);
 
-  const handler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { startX: number }>({
-    onStart: (_, ctx) => { ctx.startX = x.value; },
-    onActive: (e, ctx) => {
-      x.value = Math.min(max, Math.max(0, ctx.startX + e.translationX));
-    },
-    onEnd: () => {
+  const pan = Gesture.Pan()
+    .enabled(!done)
+    .onStart(() => {
+      start.value = x.value;
+    })
+    .onUpdate((e) => {
+      x.value = Math.min(max, Math.max(0, start.value + e.translationX));
+    })
+    .onEnd(() => {
       if (x.value >= threshold) {
         x.value = withSpring(max, { damping: 18, stiffness: 200 });
         runOnJS(onComplete)();
       } else {
         x.value = withSpring(0, { damping: 16, stiffness: 180 });
       }
-    },
-  });
+    });
 
   const knobStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   const fillStyle = useAnimatedStyle(() => ({ width: x.value + KNOB + PADDING * 2 }));
@@ -67,11 +69,11 @@ export default function SlideToComplete({ onComplete, label = 'Slide to complete
       <View style={styles.endCheck} pointerEvents="none">
         <Icon d={I.check} size={18} color="rgba(255,255,255,0.35)" strokeWidth={2.2} />
       </View>
-      <PanGestureHandler onGestureEvent={handler} enabled={!done}>
+      <GestureDetector gesture={pan}>
         <Animated.View style={[styles.knob, knobStyle]}>
           <Icon d={I.arrowR} size={20} color={colors.white} strokeWidth={2.4} />
         </Animated.View>
-      </PanGestureHandler>
+      </GestureDetector>
     </View>
   );
 }

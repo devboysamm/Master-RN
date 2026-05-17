@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Icon from '../../components/Icon';
+import ScreenHeader from '../../components/ScreenHeader';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
 import { I } from '../../theme/icons';
@@ -18,12 +18,12 @@ export default function Modules() {
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
-      <View style={styles.header}>
-        <View style={styles.iconBtn}><Icon d={I.arrowL} size={16} color={colors.ink} strokeWidth={2} /></View>
-        <Text style={styles.headerTitle}>All Modules</Text>
-        <View style={styles.iconBtn}><Icon d={I.filter} size={16} color={colors.ink} strokeWidth={2} /></View>
-      </View>
-
+      <ScreenHeader
+        title="All Modules"
+        showBack={nav.canGoBack()}
+        rightIcon={I.filter}
+        rightLabel="Filter"
+      />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -35,10 +35,10 @@ export default function Modules() {
           <ErrorState message={error} onRetry={refresh} />
         ) : loading && !modules.length ? (
           <View style={{ gap: 10, marginTop: 14 }}>
-            {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={84} radius={radii['3xl']} />)}
+            {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={92} radius={radii['3xl']} />)}
           </View>
         ) : (
-          <View style={{ gap: 10, marginTop: 14 }}>
+          <View style={{ gap: 12, marginTop: 14 }}>
             {modules.map((m, i) => {
               const pct = i === 0 ? 0.35 : i === 1 ? 0.6 : 0;
               return (
@@ -47,14 +47,12 @@ export default function Modules() {
                   onPress={() => nav.navigate('ModuleDetail', { moduleId: m.id })}
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${m.title}`}
-                  style={styles.card}>
+                  style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}>
                   <View style={[styles.geo, { backgroundColor: m.background_color }]} />
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.kicker}>MODULE {String(m.order_index || i + 1).padStart(2, '0')}</Text>
                     <Text style={styles.cardTitle} numberOfLines={1}>{m.title}</Text>
-                    <Text style={styles.cardMeta} numberOfLines={1}>
-                      {m.description}
-                    </Text>
+                    <Text style={styles.cardMeta} numberOfLines={2}>{m.description}</Text>
                     {pct > 0 && (
                       <View style={styles.progressRow}>
                         <View style={styles.track}>
@@ -76,30 +74,20 @@ export default function Modules() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 10,
-  },
-  iconBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.rule,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  headerTitle: { fontFamily: type.family.sans, fontSize: 14, fontWeight: '700', color: colors.ink },
-  scroll: { paddingHorizontal: 16, paddingBottom: 110 },
-  title: { fontFamily: type.family.sans, fontSize: 30, fontWeight: '800', color: colors.ink, letterSpacing: -0.6, marginTop: 6 },
-  sub: { fontFamily: type.family.sans, fontSize: 13, color: colors.mute, fontWeight: '600', marginTop: 4 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 120 },
+  title: { fontFamily: type.family.sans, fontSize: 32, fontWeight: '800', color: colors.ink, letterSpacing: -0.7, marginTop: 8 },
+  sub: { fontFamily: type.family.sans, fontSize: 14, color: colors.mute, fontWeight: '600', marginTop: 4 },
   card: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: colors.card, borderRadius: radii['3xl'], padding: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: colors.card, borderRadius: radii['3xl'], padding: 14,
     borderWidth: 1, borderColor: colors.rule,
   },
-  geo: { width: 70, height: 78, borderRadius: radii.lg },
-  kicker: { fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', color: colors.coralDeep, letterSpacing: 1 },
-  cardTitle: { fontFamily: type.family.sans, fontSize: 16, fontWeight: '800', color: colors.ink, marginTop: 2 },
-  cardMeta: { fontFamily: type.family.sans, fontSize: 11, color: colors.mute, fontWeight: '700', marginTop: 2 },
+  geo: { width: 76, height: 86, borderRadius: radii.lg },
+  kicker: { fontFamily: type.family.mono, fontSize: 11, fontWeight: '700', color: colors.coralDeep, letterSpacing: 1 },
+  cardTitle: { fontFamily: type.family.sans, fontSize: 17, fontWeight: '800', color: colors.ink, marginTop: 3 },
+  cardMeta: { fontFamily: type.family.sans, fontSize: 12, color: colors.mute, fontWeight: '600', marginTop: 3, lineHeight: 17 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   track: { flex: 1, height: 5, backgroundColor: colors.cardAlt, borderRadius: 3 },
   fill: { height: '100%', backgroundColor: colors.coral, borderRadius: 3 },
-  pct: { fontFamily: type.family.sans, fontSize: 11, fontWeight: '800', color: colors.ink },
+  pct: { fontFamily: type.family.sans, fontSize: 12, fontWeight: '800', color: colors.ink },
 });

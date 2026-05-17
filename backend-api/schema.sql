@@ -31,5 +31,10 @@ CREATE TABLE IF NOT EXISTS app_content (
   welcome_description TEXT NOT NULL,
   motivation_text TEXT NOT NULL,
   motivation_quote TEXT NOT NULL,
+  welcome_subtitle TEXT,
+  welcome_footer TEXT,
+  app_description TEXT,
+  terms_url VARCHAR(500),
+  privacy_url VARCHAR(500),
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

@@ -43,6 +43,11 @@ async function runMigrations(conn) {
   await addMissingColumn(conn, 'lessons', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
   await addMissingColumn(conn, 'lessons', 'updated_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
   await addMissingColumn(conn, 'app_content', 'updated_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+  await addMissingColumn(conn, 'app_content', 'welcome_subtitle', 'TEXT');
+  await addMissingColumn(conn, 'app_content', 'welcome_footer', 'TEXT');
+  await addMissingColumn(conn, 'app_content', 'app_description', 'TEXT');
+  await addMissingColumn(conn, 'app_content', 'terms_url', 'VARCHAR(500)');
+  await addMissingColumn(conn, 'app_content', 'privacy_url', 'VARCHAR(500)');
 }
 
 async function initializeDatabase() {

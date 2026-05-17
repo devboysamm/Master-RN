@@ -36,14 +36,15 @@ export default function Profile() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <DottedHero height={260}>
           <View style={styles.headerRow}>
-            <View style={styles.iconBtn}><Icon d={I.arrowL} size={16} color={colors.white} strokeWidth={2} /></View>
+            <View style={styles.iconBtn} />
             <Text style={styles.headerTitle}>Profile</Text>
             <Pressable
               onPress={() => nav.navigate('Settings')}
               accessibilityRole="button"
               accessibilityLabel="Settings"
+              hitSlop={8}
               style={styles.iconBtn}>
-              <Icon d={I.gear} size={16} color={colors.white} strokeWidth={2} />
+              <Icon d={I.gear} size={18} color={colors.white} strokeWidth={2} />
             </Pressable>
           </View>
           <View style={styles.heroBody}>
@@ -119,17 +120,17 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
   scroll: { paddingBottom: 130 },
-  headerRow: { position: 'absolute', top: 8, left: 12, right: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  iconBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: colors.white, fontFamily: type.family.sans, fontSize: 14, fontWeight: '800' },
+  headerRow: { position: 'absolute', top: 12, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  iconBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: colors.white, fontFamily: type.family.sans, fontSize: 17, fontWeight: '800' },
   heroBody: { alignItems: 'flex-start', gap: 4 },
-  avatarRing: { width: 70, height: 70, borderRadius: 35, borderWidth: 3, borderColor: 'rgba(255,255,255,0.15)' },
-  avatarBg: { flex: 1, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: colors.white, fontFamily: type.family.sans, fontSize: 24, fontWeight: '800' },
-  accentBar: { width: 3, height: 12, backgroundColor: colors.coral, borderRadius: 2 },
-  kicker: { color: colors.coral, fontFamily: type.family.mono, fontSize: 11, fontWeight: '700', letterSpacing: 1.2 },
-  name: { color: colors.white, fontFamily: type.family.sans, fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
-  handle: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontSize: 13, fontWeight: '600', marginTop: 2 },
+  avatarRing: { width: 78, height: 78, borderRadius: 39, borderWidth: 3, borderColor: 'rgba(255,255,255,0.15)' },
+  avatarBg: { flex: 1, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: colors.white, fontFamily: type.family.sans, fontSize: 28, fontWeight: '800' },
+  accentBar: { width: 3, height: 14, backgroundColor: colors.coral, borderRadius: 2 },
+  kicker: { color: colors.coral, fontFamily: type.family.mono, fontSize: 12, fontWeight: '700', letterSpacing: 1.2 },
+  name: { color: colors.white, fontFamily: type.family.sans, fontSize: 24, fontWeight: '800', letterSpacing: -0.4 },
+  handle: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontSize: 14, fontWeight: '600', marginTop: 3 },
   stats: { flexDirection: 'row', marginHorizontal: 16, marginTop: -28, backgroundColor: colors.card, borderRadius: radii['3xl'], padding: 16, borderWidth: 1, borderColor: colors.rule, alignItems: 'center' },
   statCol: { flex: 1, alignItems: 'center' },
   statNum: { fontFamily: type.family.sans, fontSize: 18, fontWeight: '800', color: colors.ink },

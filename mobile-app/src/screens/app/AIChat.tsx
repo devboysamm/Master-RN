@@ -19,20 +19,20 @@ export default function AIChat() {
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
       <View style={styles.header}>
-        <View style={styles.iconBtn}><Icon d={I.arrowL} size={16} color={colors.ink} strokeWidth={2} /></View>
+        <View style={styles.iconBtn} />
         <View style={styles.aiPill}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{'</>'}</Text>
           </View>
           <View>
             <Text style={styles.aiName}>Native AI</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={styles.dot} />
               <Text style={styles.aiMeta}>online</Text>
             </View>
           </View>
         </View>
-        <View style={styles.iconBtn}><Icon d={I.more} size={16} color={colors.ink} strokeWidth={2} /></View>
+        <View style={styles.iconBtn}><Icon d={I.more} size={18} color={colors.ink} strokeWidth={2} /></View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -108,13 +108,13 @@ function UserBubble({ children, timestamp }: { children: React.ReactNode; timest
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
-  iconBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.rule, alignItems: 'center', justifyContent: 'center' },
-  aiPill: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: colors.coral, fontFamily: type.family.mono, fontSize: 12, fontWeight: '800' },
-  aiName: { fontFamily: type.family.sans, fontSize: 14, fontWeight: '800', color: colors.ink },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ok },
-  aiMeta: { fontFamily: type.family.sans, fontSize: 10, fontWeight: '700', color: colors.mute },
+  iconBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.rule, alignItems: 'center', justifyContent: 'center' },
+  aiPill: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: colors.coral, fontFamily: type.family.mono, fontSize: 13, fontWeight: '800' },
+  aiName: { fontFamily: type.family.sans, fontSize: 15, fontWeight: '800', color: colors.ink },
+  dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.ok },
+  aiMeta: { fontFamily: type.family.sans, fontSize: 11, fontWeight: '700', color: colors.mute },
   scroll: { padding: 16, paddingBottom: 140 },
   aiWrap: { marginBottom: 12 },
   aiBubble: { backgroundColor: colors.card, borderRadius: 20, borderTopLeftRadius: 6, padding: 14, maxWidth: '92%', borderWidth: 1, borderColor: colors.rule },

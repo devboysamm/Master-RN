@@ -35,14 +35,15 @@ export default function ModuleDetail() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 110 }}
         refreshControl={<RefreshControl refreshing={mod.loading || lessonsState.loading} onRefresh={refresh} tintColor={colors.coral} />}>
-        <DottedHero height={220}>
+        <DottedHero height={240}>
           <View style={styles.headerBar}>
             <Pressable
               onPress={() => nav.goBack()}
               accessibilityRole="button"
               accessibilityLabel="Back"
+              hitSlop={8}
               style={styles.backBtn}>
-              <Icon d={I.arrowL} size={16} color={colors.white} strokeWidth={2} />
+              <Icon d={I.arrowL} size={20} color={colors.white} strokeWidth={2.2} />
             </Pressable>
           </View>
           <View style={styles.heroBottom}>
@@ -135,30 +136,30 @@ export default function ModuleDetail() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
-  headerBar: { position: 'absolute', top: 8, left: 12, right: 12, flexDirection: 'row', justifyContent: 'space-between' },
+  headerBar: { position: 'absolute', top: 12, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' },
   backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.14)',
     alignItems: 'center', justifyContent: 'center',
   },
   heroBottom: { gap: 8 },
-  accentBar: { width: 4, height: 14, borderRadius: 2, backgroundColor: colors.coral },
-  kicker: { color: colors.coral, fontFamily: type.family.mono, fontSize: 11, fontWeight: '700', letterSpacing: 1.4 },
-  heroTitle: { color: colors.white, fontFamily: type.family.sans, fontSize: 28, fontWeight: '800', letterSpacing: -0.4, lineHeight: 30 },
+  accentBar: { width: 4, height: 16, borderRadius: 2, backgroundColor: colors.coral },
+  kicker: { color: colors.coral, fontFamily: type.family.mono, fontSize: 12, fontWeight: '700', letterSpacing: 1.4 },
+  heroTitle: { color: colors.white, fontFamily: type.family.sans, fontSize: 30, fontWeight: '800', letterSpacing: -0.5, lineHeight: 34 },
   chipRow: { flexDirection: 'row', gap: 6, marginTop: 6 },
-  preWrap: { padding: 16, paddingBottom: 6 },
-  preHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  preLabel: { color: colors.inkSoft, fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', letterSpacing: 1 },
-  preSwipe: { color: colors.coralDeep, fontFamily: type.family.mono, fontSize: 10, fontWeight: '700' },
-  preRow: { gap: 6 },
-  preChip: { backgroundColor: colors.coralSoft, borderColor: colors.coral, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  preChipText: { color: colors.coralDeep, fontFamily: type.family.sans, fontSize: 12, fontWeight: '800' },
-  lessonCard: { backgroundColor: colors.card, borderRadius: radii['3xl'], padding: 6, marginHorizontal: 16, marginTop: 10, gap: 4 },
-  empty: { padding: 30, textAlign: 'center', color: colors.mute, fontFamily: type.family.sans, fontWeight: '600' },
-  lessonRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: radii.lg },
-  numCircle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  numText: { fontFamily: type.family.mono, fontSize: 11, fontWeight: '800' },
-  lessonTitle: { color: colors.ink, fontFamily: type.family.sans, fontSize: 14, fontWeight: '700' },
-  lessonMeta: { color: colors.mute, fontFamily: type.family.sans, fontSize: 11, fontWeight: '600', marginTop: 2 },
-  bookmarkBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  preWrap: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 6 },
+  preHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  preLabel: { color: colors.inkSoft, fontFamily: type.family.mono, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  preSwipe: { color: colors.coralDeep, fontFamily: type.family.mono, fontSize: 11, fontWeight: '700' },
+  preRow: { gap: 8 },
+  preChip: { backgroundColor: colors.coralSoft, borderColor: colors.coral, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999 },
+  preChipText: { color: colors.coralDeep, fontFamily: type.family.sans, fontSize: 13, fontWeight: '800' },
+  lessonCard: { backgroundColor: colors.card, borderRadius: radii['3xl'], padding: 8, marginHorizontal: 16, marginTop: 14, gap: 4 },
+  empty: { padding: 30, textAlign: 'center', color: colors.mute, fontFamily: type.family.sans, fontSize: 14, fontWeight: '600' },
+  lessonRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: radii.lg },
+  numCircle: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  numText: { fontFamily: type.family.mono, fontSize: 12, fontWeight: '800' },
+  lessonTitle: { color: colors.ink, fontFamily: type.family.sans, fontSize: 15, fontWeight: '700' },
+  lessonMeta: { color: colors.mute, fontFamily: type.family.sans, fontSize: 12, fontWeight: '600', marginTop: 2 },
+  bookmarkBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 });

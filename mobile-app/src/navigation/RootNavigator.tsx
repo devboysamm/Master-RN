@@ -51,17 +51,22 @@ function AuthFlow() {
   );
 }
 
+const stackOptions = { headerShown: false } as const;
+
 function HomeTab() {
   return (
-    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+    <HomeStack.Navigator screenOptions={stackOptions}>
       <HomeStack.Screen name="HomeMain" component={Home} />
+      <HomeStack.Screen name="ModuleDetail" component={ModuleDetail} />
+      <HomeStack.Screen name="LessonReader" component={LessonReader} />
+      <HomeStack.Screen name="LessonCode" component={LessonCode} />
     </HomeStack.Navigator>
   );
 }
 
 function ExploreTab() {
   return (
-    <ExploreStack.Navigator screenOptions={{ headerShown: false }}>
+    <ExploreStack.Navigator screenOptions={stackOptions}>
       <ExploreStack.Screen name="Modules" component={Modules} />
       <ExploreStack.Screen name="ModuleDetail" component={ModuleDetail} />
       <ExploreStack.Screen name="LessonReader" component={LessonReader} />
@@ -72,15 +77,18 @@ function ExploreTab() {
 
 function ProgressTab() {
   return (
-    <ProgressStack.Navigator screenOptions={{ headerShown: false }}>
+    <ProgressStack.Navigator screenOptions={stackOptions}>
       <ProgressStack.Screen name="Bookmarks" component={Bookmarks} />
+      <ProgressStack.Screen name="ModuleDetail" component={ModuleDetail} />
+      <ProgressStack.Screen name="LessonReader" component={LessonReader} />
+      <ProgressStack.Screen name="LessonCode" component={LessonCode} />
     </ProgressStack.Navigator>
   );
 }
 
 function ChatTab() {
   return (
-    <ChatStack.Navigator screenOptions={{ headerShown: false }}>
+    <ChatStack.Navigator screenOptions={stackOptions}>
       <ChatStack.Screen name="AIChat" component={AIChat} />
     </ChatStack.Navigator>
   );
@@ -88,7 +96,7 @@ function ChatTab() {
 
 function ProfileTab() {
   return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+    <ProfileStack.Navigator screenOptions={stackOptions}>
       <ProfileStack.Screen name="Profile" component={Profile} />
       <ProfileStack.Screen name="Settings" component={Settings} />
     </ProfileStack.Navigator>

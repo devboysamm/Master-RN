@@ -37,12 +37,12 @@ export default function LessonCode() {
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => nav.goBack()} accessibilityRole="button" accessibilityLabel="Back" style={styles.iconBtn}>
-          <Icon d={I.arrowL} size={16} color={colors.white} strokeWidth={2} />
+        <Pressable onPress={() => nav.goBack()} accessibilityRole="button" accessibilityLabel="Back" style={styles.iconBtn} hitSlop={8}>
+          <Icon d={I.arrowL} size={18} color={colors.white} strokeWidth={2.2} />
         </Pressable>
-        <Text style={styles.title}>{l?.title || 'Code'}</Text>
+        <Text style={styles.title} numberOfLines={1}>{l?.title || 'Code'}</Text>
         <View style={styles.iconBtn}>
-          <Icon d={I.copy} size={16} color={colors.white} strokeWidth={2} />
+          <Icon d={I.copy} size={18} color={colors.white} strokeWidth={2} />
         </View>
       </View>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -86,11 +86,11 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: '#16110d' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingVertical: 12 },
   iconBtn: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 42, height: 42, borderRadius: 21,
     backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center', justifyContent: 'center',
   },
-  title: { color: colors.white, fontFamily: type.family.sans, fontSize: 14, fontWeight: '800', flex: 1, textAlign: 'center' },
+  title: { color: colors.white, fontFamily: type.family.sans, fontSize: 17, fontWeight: '800', flex: 1, textAlign: 'center' },
   scroll: { padding: 16, paddingBottom: 130 },
   sampleLabel: { color: colors.coral, fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', letterSpacing: 1.2, marginTop: 8 },
   empty: { color: 'rgba(245,239,230,0.6)', fontFamily: type.family.sans, fontSize: 13, textAlign: 'center', padding: 30 },

@@ -75,8 +75,8 @@ export default function LessonReader() {
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
       <View style={styles.header}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => nav.goBack()} style={styles.iconBtn}>
-          <Icon d={I.arrowL} size={16} color={colors.white} strokeWidth={2} />
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => nav.goBack()} style={styles.iconBtn} hitSlop={8}>
+          <Icon d={I.arrowL} size={18} color={colors.white} strokeWidth={2.2} />
         </Pressable>
         <Text style={styles.lessonOfTotal}>
           {total ? `Lesson ${idx >= 0 ? idx + 1 : 1}/${total}` : ''}
@@ -85,8 +85,9 @@ export default function LessonReader() {
           accessibilityRole="button"
           accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
           onPress={() => toggleBookmark(params.lessonId)}
-          style={styles.iconBtn}>
-          <Icon d={I.bookmark} size={16} color={bookmarked ? colors.coral : colors.white} fill={bookmarked ? colors.coral : 'none'} />
+          style={styles.iconBtn}
+          hitSlop={8}>
+          <Icon d={I.bookmark} size={18} color={bookmarked ? colors.coral : colors.white} fill={bookmarked ? colors.coral : 'none'} />
         </Pressable>
       </View>
 
@@ -156,21 +157,21 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.ink, paddingHorizontal: 14, paddingVertical: 12,
+    backgroundColor: colors.ink, paddingHorizontal: 16, paddingVertical: 14,
   },
   iconBtn: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 42, height: 42, borderRadius: 21,
     backgroundColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center', justifyContent: 'center',
   },
-  lessonOfTotal: { color: 'rgba(255,255,255,0.7)', fontFamily: type.family.mono, fontSize: 11, fontWeight: '700' },
-  scroll: { padding: 16, paddingBottom: 130 },
-  modPill: { alignSelf: 'flex-start', backgroundColor: colors.coral, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  modPillText: { color: colors.white, fontFamily: type.family.sans, fontSize: 11, fontWeight: '800' },
-  title: { fontFamily: type.family.sans, fontSize: 26, fontWeight: '800', color: colors.ink, letterSpacing: -0.4, marginTop: 12 },
-  subTitle: { fontFamily: type.family.sans, fontSize: 14, color: colors.mute, fontWeight: '600', marginTop: 6 },
-  metaRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.card, borderColor: colors.rule, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
-  metaText: { fontFamily: type.family.sans, fontSize: 11, color: colors.mute, fontWeight: '700' },
+  lessonOfTotal: { color: 'rgba(255,255,255,0.8)', fontFamily: type.family.mono, fontSize: 12, fontWeight: '700' },
+  scroll: { padding: 16, paddingBottom: 140 },
+  modPill: { alignSelf: 'flex-start', backgroundColor: colors.coral, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999 },
+  modPillText: { color: colors.white, fontFamily: type.family.sans, fontSize: 12, fontWeight: '800' },
+  title: { fontFamily: type.family.sans, fontSize: 28, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 14, lineHeight: 34 },
+  subTitle: { fontFamily: type.family.sans, fontSize: 15, color: colors.mute, fontWeight: '600', marginTop: 8 },
+  metaRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.card, borderColor: colors.rule, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  metaText: { fontFamily: type.family.sans, fontSize: 12, color: colors.mute, fontWeight: '700' },
   slideWrap: { position: 'absolute', left: 14, right: 14, bottom: 16 },
 });

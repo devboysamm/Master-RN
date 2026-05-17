@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from '../../components/Icon';
+import ScreenHeader from '../../components/ScreenHeader';
 import { I } from '../../theme/icons';
 import { colors, type, radii } from '../../theme/tokens';
 import { useThemePref, type ThemePref } from '../../storage/theme';
@@ -36,18 +37,7 @@ export default function Settings() {
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => nav.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          style={styles.iconBtn}>
-          <Icon d={I.arrowL} size={16} color={colors.ink} strokeWidth={2} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.iconBtn} />
-      </View>
-
+      <ScreenHeader title="Settings" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Preferences</Text>
         <Text style={styles.sub}>Tune the app to your taste.</Text>
@@ -162,12 +152,9 @@ function Separator() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.cream },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
-  iconBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.rule, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontFamily: type.family.sans, fontSize: 14, fontWeight: '700', color: colors.ink },
-  scroll: { paddingHorizontal: 16, paddingBottom: 110 },
-  title: { fontFamily: type.family.sans, fontSize: 30, fontWeight: '800', color: colors.ink, letterSpacing: -0.6, marginTop: 6 },
-  sub: { fontFamily: type.family.sans, fontSize: 13, color: colors.mute, fontWeight: '600', marginTop: 4, marginBottom: 16 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 120 },
+  title: { fontFamily: type.family.sans, fontSize: 32, fontWeight: '800', color: colors.ink, letterSpacing: -0.7, marginTop: 6 },
+  sub: { fontFamily: type.family.sans, fontSize: 14, color: colors.mute, fontWeight: '600', marginTop: 4, marginBottom: 18 },
   themeCard: { backgroundColor: colors.card, borderRadius: radii['3xl'], padding: 16, borderWidth: 1, borderColor: colors.rule },
   cardLabel: { fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', color: colors.mute, letterSpacing: 1 },
   themeRow: { flexDirection: 'row', gap: 10, marginTop: 12 },

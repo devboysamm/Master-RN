@@ -24,6 +24,11 @@ export type AppContent = {
   welcome_description: string;
   motivation_text: string;
   motivation_quote: string;
+  welcome_subtitle?: string | null;
+  welcome_footer?: string | null;
+  app_description?: string | null;
+  terms_url?: string | null;
+  privacy_url?: string | null;
 };
 
 export const mockAppContent: AppContent = {
@@ -31,6 +36,11 @@ export const mockAppContent: AppContent = {
   welcome_description: 'A practical, hands-on course to ship your first native app.',
   motivation_text: 'Daily motivation',
   motivation_quote: 'Ship something today. Even if it\'s small. Especially if it\'s small.',
+  welcome_subtitle: 'Ship native apps with confidence — bite-sized lessons, real code.',
+  welcome_footer: 'By continuing you agree to our',
+  app_description: 'Master RN is a practical, bite-sized course to ship your first native app.',
+  terms_url: 'https://masterreactnative.dev/terms-condition',
+  privacy_url: 'https://masterreactnative.dev/privacy',
 };
 
 export const mockModules: Module[] = [

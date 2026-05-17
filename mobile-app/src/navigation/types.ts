@@ -4,18 +4,21 @@ export type AuthStackParamList = {
   Auth: undefined;
 };
 
-export type ExploreStackParamList = {
-  Modules: undefined;
+export type ContentRoutes = {
   ModuleDetail: { moduleId: number };
   LessonReader: { lessonId: number; moduleId?: number };
   LessonCode: { lessonId: number };
 };
 
-export type HomeStackParamList = {
+export type ExploreStackParamList = ContentRoutes & {
+  Modules: undefined;
+};
+
+export type HomeStackParamList = ContentRoutes & {
   HomeMain: undefined;
 };
 
-export type ProgressStackParamList = {
+export type ProgressStackParamList = ContentRoutes & {
   Bookmarks: undefined;
 };
 

@@ -48,8 +48,9 @@ export const spacing = {
   8: 32,
 } as const;
 
+// Sizes bumped ~25% from initial set for better legibility on phone
 export const type = {
   family: { sans: 'Manrope', mono: 'JetBrainsMono' },
-  size:   { xs: 9, sm: 11, base: 13, md: 14, lg: 16, xl: 18, '2xl': 22, '3xl': 28, '4xl': 32 },
+  size:   { xs: 11, sm: 13, base: 15, md: 16, lg: 19, xl: 22, '2xl': 26, '3xl': 32, '4xl': 38 },
   weight: { regular: '400', medium: '600', bold: '700', black: '800' },
 } as const;
