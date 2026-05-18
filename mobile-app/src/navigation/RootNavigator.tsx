@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import Splash from '../screens/auth/Splash';
 import Welcome from '../screens/auth/Welcome';
 import Auth from '../screens/auth/Auth';
+import Forgot from '../screens/auth/Forgot';
 
 import Home from '../screens/app/Home';
 import Modules from '../screens/app/Modules';
@@ -47,6 +48,7 @@ function AuthFlow() {
       <AuthStack.Screen name="Splash" component={Splash} />
       <AuthStack.Screen name="Welcome" component={Welcome} />
       <AuthStack.Screen name="Auth" component={Auth} />
+      <AuthStack.Screen name="Forgot" component={Forgot} />
     </AuthStack.Navigator>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import { colors, type, radii } from '../../theme/tokens';
 import { useLesson, useModule, useModuleLessons } from '../../api/hooks';
 import { useBookmarks } from '../../storage/bookmarks';
 import { useCompleted } from '../../storage/completed';
+import { setLastLesson } from '../../storage/lastLesson';
 import { ExploreStackParamList } from '../../navigation/types';
 
 const baseStyle: MixedStyleDeclaration = {
@@ -71,6 +72,21 @@ export default function LessonReader() {
 
   const { sanitized, blocks } = useMemo(() => extractCodeBlocks(l?.content || ''), [l?.content]);
   const parts = sanitized.split(/<div data-codeblock="(\d+)"><\/div>/g);
+
+  // Persist this lesson as "last opened" so Home's Continue card resumes here.
+  useEffect(() => {
+    if (!l) return;
+    setLastLesson({
+      lessonId: l.id,
+      moduleId: l.module_id,
+      lessonTitle: l.title,
+      moduleTitle: m?.title ?? null,
+      lessonNumber: idx >= 0 ? idx + 1 : 1,
+      totalLessons: total || undefined,
+      moduleNumber: m?.order_index ?? undefined,
+      updatedAt: Date.now(),
+    });
+  }, [l?.id, m?.id, idx, total]);
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>

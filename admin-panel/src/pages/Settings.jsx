@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppContent, Health, apiBaseURL } from '../api/client';
+import { AppContent, Health, Modules as ModulesAPI, apiBaseURL } from '../api/client';
 import { MRN } from '../theme/tokens';
 
 const emptyContent = {
@@ -12,6 +12,9 @@ const emptyContent = {
   app_description: '',
   terms_url: '',
   privacy_url: '',
+  featured_module_id: '',
+  premium_title: '',
+  premium_description: '',
 };
 
 // Only these are server-side required. Welcome screen extras + URLs are optional.
@@ -20,6 +23,7 @@ const REQUIRED_KEYS = ['welcome_title', 'welcome_description', 'motivation_text'
 export default function Settings() {
   const [health, setHealth] = useState({ status: 'idle' });
   const [content, setContent] = useState(emptyContent);
+  const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
@@ -38,14 +42,20 @@ export default function Settings() {
   const loadContent = async () => {
     setLoading(true);
     try {
-      const c = await AppContent.get();
-      setContent({ ...emptyContent, ...(c || {}) });
+      const [c, mList] = await Promise.all([
+        AppContent.get().catch((e) => {
+          if (e?.response?.status === 404) return null;
+          throw e;
+        }),
+        ModulesAPI.list().catch(() => []),
+      ]);
+      const merged = { ...emptyContent, ...(c || {}) };
+      // Normalise featured_module_id to string so the <select> behaves.
+      merged.featured_module_id = c?.featured_module_id != null ? String(c.featured_module_id) : '';
+      setContent(merged);
+      setModules(Array.isArray(mList) ? mList : []);
     } catch (e) {
-      if (e?.response?.status === 404) {
-        setContent(emptyContent);
-      } else {
-        setErr(e?.response?.data?.message || e.message);
-      }
+      setErr(e?.response?.data?.message || e.message);
     } finally {
       setLoading(false);
     }
@@ -69,7 +79,11 @@ export default function Settings() {
     }
     setSaving(true);
     try {
-      await AppContent.update(content);
+      const payload = {
+        ...content,
+        featured_module_id: content.featured_module_id ? Number(content.featured_module_id) : null,
+      };
+      await AppContent.update(payload);
       setOk('App content saved.');
       setTimeout(() => setOk(null), 3000);
     } catch (e) {
@@ -235,6 +249,57 @@ export default function Settings() {
                   placeholder="https://masterreactnative.dev/privacy"
                 />
               </div>
+            </div>
+
+            <div style={{ height: 1, background: MRN.rule, margin: '12px 0 8px' }} />
+            <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+              Home screen (mobile)
+            </div>
+
+            <div className="field">
+              <label className="label">Featured module</label>
+              <select
+                className="input"
+                value={content.featured_module_id}
+                onChange={set('featured_module_id')}>
+                <option value="">— None (hide featured section) —</option>
+                {modules.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {String(m.order_index || m.id).padStart(2, '0')} · {m.title}
+                  </option>
+                ))}
+              </select>
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Shown as the yellow “Featured module” card on Home. Leave blank to hide it.
+              </div>
+            </div>
+
+            <div style={{ height: 1, background: MRN.rule, margin: '12px 0 8px' }} />
+            <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+              Premium teaser (mobile)
+            </div>
+
+            <div className="field">
+              <label className="label">Premium title</label>
+              <input
+                className="input"
+                value={content.premium_title}
+                onChange={set('premium_title')}
+                placeholder="Unlock advanced patterns"
+              />
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Leave blank to hide the Premium section on Home.
+              </div>
+            </div>
+            <div className="field">
+              <label className="label">Premium description</label>
+              <textarea
+                className="textarea"
+                rows={3}
+                value={content.premium_description}
+                onChange={set('premium_description')}
+                placeholder="Deep dives, source code, and weekly office hours."
+              />
             </div>
           </div>
         )}

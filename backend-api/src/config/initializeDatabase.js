@@ -35,9 +35,30 @@ async function addMissingColumn(conn, table, column, definition) {
   console.log(`[db] added missing column ${table}.${column}`);
 }
 
+const DEFAULT_CATEGORIES = [
+  { name: 'Beginner',      icon: 'sparkle', color: '#9EC9A8', order_index: 1 },
+  { name: 'Components',    icon: 'layers',  color: '#61DAFB', order_index: 2 },
+  { name: 'Hooks & State', icon: 'sparkle', color: '#F26A4A', order_index: 3 },
+  { name: 'Navigation',    icon: 'compass', color: '#7B68EE', order_index: 4 },
+  { name: 'Styling',       icon: 'layers',  color: '#E8A0BF', order_index: 5 },
+  { name: 'APIs & Data',   icon: 'shield',  color: '#4682B4', order_index: 6 },
+  { name: 'Ship to Store', icon: 'book',    color: '#F5C24B', order_index: 7 },
+];
+
+async function seedDefaultCategories(conn) {
+  const [rows] = await conn.query('SELECT COUNT(*) AS c FROM categories');
+  if (rows[0].c > 0) return;
+  for (const c of DEFAULT_CATEGORIES) {
+    await conn.query(
+      'INSERT INTO categories (name, icon, color, order_index) VALUES (?, ?, ?, ?)',
+      [c.name, c.icon, c.color, c.order_index]
+    );
+  }
+  console.log(`[db] seeded ${DEFAULT_CATEGORIES.length} default categories`);
+}
+
 async function runMigrations(conn) {
   // Older databases were created before created_at/updated_at existed.
-  // Add them in-place so models that SELECT these columns don't break.
   await addMissingColumn(conn, 'modules', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
   await addMissingColumn(conn, 'modules', 'updated_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
   await addMissingColumn(conn, 'lessons', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
@@ -48,6 +69,10 @@ async function runMigrations(conn) {
   await addMissingColumn(conn, 'app_content', 'app_description', 'TEXT');
   await addMissingColumn(conn, 'app_content', 'terms_url', 'VARCHAR(500)');
   await addMissingColumn(conn, 'app_content', 'privacy_url', 'VARCHAR(500)');
+  await addMissingColumn(conn, 'app_content', 'featured_module_id', 'INT');
+  await addMissingColumn(conn, 'app_content', 'premium_title', 'VARCHAR(255)');
+  await addMissingColumn(conn, 'app_content', 'premium_description', 'TEXT');
+  await seedDefaultCategories(conn);
 }
 
 async function initializeDatabase() {

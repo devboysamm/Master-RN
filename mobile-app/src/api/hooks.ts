@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import * as modulesApi from './modules';
 import * as lessonsApi from './lessons';
 import * as appContentApi from './appContent';
+import * as categoriesApi from './categories';
 import {
-  mockModules, mockAppContent, lessonsForModule, findLesson, findModule,
+  mockModules, mockAppContent, mockCategories, lessonsForModule, findLesson, findModule,
   type Module, type Lesson, type AppContent,
 } from './mock';
+import type { Category } from './categories';
 
 type AsyncState<T> = {
   data: T | null;
@@ -69,4 +71,17 @@ export function useLesson(id: number) {
 export function useAppContent() {
   const fetcher = useCallback(() => appContentApi.getAppContent(), []);
   return useAsync<AppContent>(fetcher, mockAppContent);
+}
+
+export function useCategories() {
+  const fetcher = useCallback(() => categoriesApi.getCategories(), []);
+  return useAsync<Category[]>(fetcher, mockCategories);
+}
+
+export function useCategoryModules(id: number | null) {
+  const fetcher = useCallback(
+    () => (id == null ? Promise.resolve([]) : categoriesApi.getCategoryModules(id)),
+    [id],
+  );
+  return useAsync<Module[]>(fetcher, []);
 }

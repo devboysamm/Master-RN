@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AtomLogo from '../../components/AtomLogo';
 import RadialGlow from '../../components/RadialGlow';
@@ -18,9 +18,82 @@ import { AuthStackParamList } from '../../navigation/types';
 
 type Mode = 'signup' | 'signin';
 
+// All values: design × 1.2 per "match splash sizing" request.
+// Where the design value is shown in /* … */, the number used is design × 1.2.
+const GLOW_SIZE = 336;       // 280 × 1.2
+const GLOW_TOP = -96;        // -80 × 1.2
+const GLOW_RIGHT = -72;      // -60 × 1.2
+
+const PAD_H = 24;            // 20 × 1.2
+const PAD_TOP = 17;          // 14 × 1.2 (top bar)
+const PAD_BOTTOM = 22;       // 18 × 1.2 (guest)
+
+const BACK_SIZE = 46;        // 38 × 1.2
+const BACK_R = 23;           // 19 × 1.2
+const BACK_ICON = 19;        // 16 × 1.2
+const ATOM = 72;             // 32 × 1.2 × 1.3 × 1.2 × 1.2 — bumped +20% again per request
+const ATOM_SW = 8;           // thinned to match the slim look of Welcome's main atom
+
+const HEAD_MT = 26;          // 22 × 1.2 (gap from top bar to kicker)
+const KICKER_FS = 12;        // 10 × 1.2
+const KICKER_LS = 1.7;       // 1.4 × 1.2
+const TITLE_FS = 34;         // 28 × 1.2
+const TITLE_LS = -0.72;      // -0.6 × 1.2
+const TITLE_LH = 42;         // looser leading so multi-line titles breathe
+const TITLE_MT = 7;          // 6 × 1.2
+
+const TABS_MT = 26;          // 22 × 1.2 (gap from title to tabs)
+const TABS_PAD = 5;          // 4 × 1.2
+const TABS_R = 17;           // 14 × 1.2
+const TAB_PAD_V = 12;        // 10 × 1.2
+const TAB_R = 12;            // 10 × 1.2
+const TAB_FS = 14;           // 12 × 1.2
+
+const FORM_MT = 22;          // 18 × 1.2 (gap from tabs to first field)
+const FIELD_GAP = 12;        // 10 × 1.2
+
+const LABEL_FS = 11;         // 9 × 1.2
+const LABEL_LS = 1.4;        // 1.2 × 1.2
+const LABEL_MB = 7;          // 6 × 1.2
+
+const INPUT_R = 17;          // 14 × 1.2
+const INPUT_PAD_V = 16;      // 13 × 1.2
+const INPUT_PAD_H = 17;      // 14 × 1.2
+const INPUT_FS = 17;         // 14 × 1.2
+const INPUT_GAP = 10;        // 8 × 1.2
+const EYE_ICON = 19;         // 16 × 1.2
+
+const STR_MT = 7;            // 6 × 1.2 (gap from password input to strength)
+const STR_GAP = 10;          // 8 × 1.2 (bars row ↔ label)
+const STR_BAR_GAP = 4;       // 3 × 1.2
+const STR_BAR_H = 4;         // 3 × 1.2
+const STR_LABEL_FS = 12;     // 10 × 1.2
+
+const CTA_MT = 22;           // 18 × 1.2 (gap from form/strength to CTA)
+const CTA_R = 22;            // 18 × 1.2
+const CTA_PAD_V = 19;        // 16 × 1.2
+const CTA_PAD_H = 22;        // 18 × 1.2
+const CTA_FS = 17;           // 14 × 1.2
+const CTA_ARROW = 19;        // 16 × 1.2
+
+const DIV_MT = 17;           // 14 × 1.2 (gap from CTA to divider)
+const DIV_MB = 12;           // 10 × 1.2
+const DIV_GAP = 14;          // 12 × 1.2
+const OR_FS = 11;            // 9 × 1.2
+const OR_LS = 1.7;           // 1.4 × 1.2
+
+const SOCIAL_MT = 12;        // 10 × 1.2
+const SOCIAL_GAP = 10;       // 8 × 1.2
+
+const GUEST_MT = 22;         // 18 × 1.2
+const GUEST_PAD = 8;
+const GUEST_FS = 14;         // 12 × 1.2
+
 export default function Auth() {
   const nav = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const [mode, setMode] = useState<Mode>('signup');
+  const route = useRoute<RouteProp<AuthStackParamList, 'Auth'>>();
+  const initialMode: Mode = route.params?.mode === 'signin' ? 'signin' : 'signup';
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [showPw, setShowPw] = useState(false);
   const { signIn, signUp, continueAsGuest } = useAuth();
   const { control, handleSubmit, watch, formState: { isSubmitting, errors } } = useForm({
@@ -38,7 +111,7 @@ export default function Auth() {
   return (
     <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
       <View style={styles.glowWrap} pointerEvents="none">
-        <RadialGlow size={300} intensity={0.22} />
+        <RadialGlow size={GLOW_SIZE} intensity={0.08} />
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -51,15 +124,17 @@ export default function Auth() {
               accessibilityLabel="Back"
               hitSlop={8}
               style={styles.backBtn}>
-              <Icon d={I.arrowL} size={18} color={colors.white} strokeWidth={2.2} />
+              <Icon d={I.arrowL} size={BACK_ICON} color={colors.white} strokeWidth={2.2} />
             </Pressable>
-            <AtomLogo size={36} strokeWidth={12} />
+            <AtomLogo size={ATOM} strokeWidth={ATOM_SW} />
           </View>
 
-          {/* Headline */}
-          <Text style={styles.kicker}>GET STARTED</Text>
+          {/* Headline — copy switches with mode */}
+          <Text style={styles.kicker}>
+            {mode === 'signup' ? 'GET STARTED' : 'WELCOME BACK'}
+          </Text>
           <Text style={styles.title}>
-            {mode === 'signup' ? 'Create your\naccount' : 'Welcome back'}
+            {mode === 'signup' ? 'Create your\naccount' : 'Sign in to\ncontinue'}
           </Text>
 
           {/* Segmented tabs */}
@@ -69,33 +144,33 @@ export default function Auth() {
           </View>
 
           {/* Form */}
-          {mode === 'signup' && (
+          <View style={styles.form}>
+            {mode === 'signup' && (
+              <Field
+                label="NAME"
+                error={errors.name?.message}
+                control={control}
+                name="name"
+                rules={{ required: 'Name is required' }}
+                placeholder="Your name"
+              />
+            )}
+
             <Field
-              label="NAME"
-              error={errors.name?.message}
+              label="EMAIL"
+              error={errors.email?.message}
               control={control}
-              name="name"
-              rules={{ required: 'Name is required' }}
-              placeholder="Your name"
+              name="email"
+              rules={{
+                required: 'Email is required',
+                pattern: { value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, message: 'Invalid email' },
+              }}
+              placeholder="you@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              mono
             />
-          )}
 
-          <Field
-            label="EMAIL"
-            error={errors.email?.message}
-            control={control}
-            name="email"
-            rules={{
-              required: 'Email is required',
-              pattern: { value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, message: 'Invalid email' },
-            }}
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            mono
-          />
-
-          <View>
             <Field
               label="PASSWORD"
               error={errors.password?.message}
@@ -107,7 +182,9 @@ export default function Auth() {
               rightIcon={showPw ? I.eyeOff : I.eye}
               onRightIcon={() => setShowPw((v) => !v)}
               mono
+              mb={0}
             />
+
             {mode === 'signup' && password ? (
               <View style={styles.strength}>
                 <View style={styles.strengthBars}>
@@ -124,6 +201,17 @@ export default function Auth() {
                 <Text style={[styles.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
               </View>
             ) : null}
+
+            {mode === 'signin' && (
+              <Pressable
+                onPress={() => nav.navigate('Forgot')}
+                accessibilityRole="link"
+                accessibilityLabel="Forgot password"
+                hitSlop={6}
+                style={styles.forgotWrap}>
+                <Text style={styles.forgot}>Forgot password?</Text>
+              </Pressable>
+            )}
           </View>
 
           {/* Primary CTA */}
@@ -136,7 +224,7 @@ export default function Auth() {
             <Text style={styles.ctaText}>
               {isSubmitting ? '…' : mode === 'signup' ? 'Create account' : 'Sign in'}
             </Text>
-            <Icon d={I.arrowR} size={18} color={colors.white} strokeWidth={2.2} />
+            <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />
           </Pressable>
 
           {/* Divider + social */}
@@ -190,14 +278,15 @@ type FieldProps = {
   onRightIcon?: () => void;
   error?: string;
   mono?: boolean;
+  mb?: number;
 };
 
 function Field({
   label, control, name, rules, placeholder,
-  secureTextEntry, keyboardType, autoCapitalize, rightIcon, onRightIcon, error, mono,
+  secureTextEntry, keyboardType, autoCapitalize, rightIcon, onRightIcon, error, mono, mb = FIELD_GAP,
 }: FieldProps) {
   return (
-    <View style={{ marginBottom: 12 }}>
+    <View style={{ marginBottom: mb }}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrap}>
         <Controller
@@ -225,7 +314,7 @@ function Field({
             accessibilityLabel="Toggle visibility"
             hitSlop={8}
             style={styles.eye}>
-            <Icon d={rightIcon} size={18} color="rgba(255,255,255,0.55)" />
+            <Icon d={rightIcon} size={EYE_ICON} color="rgba(255,255,255,0.55)" />
           </Pressable>
         )}
       </View>
@@ -252,48 +341,71 @@ function strengthOf(pw: string): { score: number; label: string; color: string }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.splashBg },
-  glowWrap: { position: 'absolute', top: -80, right: -80, width: 300, height: 300 },
-  scroll: { padding: 20, paddingBottom: 24 },
+  glowWrap: {
+    position: 'absolute',
+    top: GLOW_TOP,
+    right: GLOW_RIGHT,
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
+  },
+  scroll: {
+    paddingHorizontal: PAD_H,
+    paddingTop: PAD_TOP,
+    paddingBottom: PAD_BOTTOM,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
   },
   backBtn: {
-    width: 42, height: 42, borderRadius: 21,
+    width: BACK_SIZE, height: BACK_SIZE, borderRadius: BACK_R,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center', justifyContent: 'center',
   },
-  kicker: { color: colors.coral, fontFamily: type.family.mono, fontSize: 11, fontWeight: '700', letterSpacing: 1.4 },
+  kicker: {
+    marginTop: HEAD_MT,
+    color: colors.coral,
+    fontFamily: type.family.mono,
+    fontSize: KICKER_FS,
+    fontWeight: '700',
+    letterSpacing: KICKER_LS,
+  },
   title: {
+    marginTop: TITLE_MT,
     color: colors.white,
     fontFamily: type.family.sans,
-    fontSize: 30,
+    fontSize: TITLE_FS,
     fontWeight: '800',
-    letterSpacing: -0.7,
-    lineHeight: 34,
-    marginTop: 6,
+    letterSpacing: TITLE_LS,
+    lineHeight: TITLE_LH,
   },
   tabs: {
+    marginTop: TABS_MT,
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14,
-    padding: 4,
-    marginTop: 22,
-    marginBottom: 18,
+    borderRadius: TABS_R,
+    padding: TABS_PAD,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  tab: { flex: 1, paddingVertical: 11, alignItems: 'center', borderRadius: 10 },
+  tab: { flex: 1, paddingVertical: TAB_PAD_V, alignItems: 'center', borderRadius: TAB_R },
   tabActive: { backgroundColor: colors.coral },
-  tabText: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontWeight: '700', fontSize: 13 },
+  tabText: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontWeight: '700', fontSize: TAB_FS },
   tabTextActive: { color: colors.white, fontWeight: '800' },
-  label: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', letterSpacing: 1.2, marginBottom: 7 },
+  form: { marginTop: FORM_MT },
+  label: {
+    color: 'rgba(255,255,255,0.5)',
+    fontFamily: type.family.mono,
+    fontSize: LABEL_FS,
+    fontWeight: '700',
+    letterSpacing: LABEL_LS,
+    marginBottom: LABEL_MB,
+  },
   inputWrap: {
     backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14,
+    borderRadius: INPUT_R,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
     flexDirection: 'row',
@@ -301,35 +413,61 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: INPUT_PAD_H,
+    paddingVertical: INPUT_PAD_V,
     color: colors.white,
     fontFamily: type.family.sans,
-    fontSize: 15,
+    fontSize: INPUT_FS,
     fontWeight: '600',
   },
-  eye: { paddingHorizontal: 14, justifyContent: 'center', alignSelf: 'stretch' },
-  err: { color: colors.coral, fontFamily: type.family.sans, fontSize: 12, fontWeight: '600', marginTop: 4 },
-  strength: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
-  strengthBars: { flex: 1, flexDirection: 'row', gap: 4 },
-  strengthBar: { flex: 1, height: 3, borderRadius: 2 },
-  strengthLabel: { fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', letterSpacing: 0.6 },
+  eye: { paddingHorizontal: INPUT_PAD_H, justifyContent: 'center', alignSelf: 'stretch' },
+  err: { color: colors.coral, fontFamily: type.family.sans, fontSize: 13, fontWeight: '600', marginTop: 5 },
+  strength: { flexDirection: 'row', alignItems: 'center', gap: STR_GAP, marginTop: STR_MT },
+  strengthBars: { flex: 1, flexDirection: 'row', gap: STR_BAR_GAP },
+  strengthBar: { flex: 1, height: STR_BAR_H, borderRadius: 2 },
+  strengthLabel: {
+    fontFamily: type.family.mono,
+    fontSize: STR_LABEL_FS,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+  },
+  forgotWrap: { marginTop: STR_MT, alignSelf: 'flex-end' },
+  forgot: {
+    color: colors.coral,
+    fontFamily: type.family.sans,
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
   cta: {
-    marginTop: 18,
+    marginTop: CTA_MT,
     backgroundColor: colors.coral,
-    borderRadius: 18,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    borderRadius: CTA_R,
+    paddingVertical: CTA_PAD_V,
+    paddingHorizontal: CTA_PAD_H,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  ctaText: { color: colors.white, fontFamily: type.family.sans, fontSize: 15, fontWeight: '800' },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, marginBottom: 12 },
+  ctaText: { color: colors.white, fontFamily: type.family.sans, fontSize: CTA_FS, fontWeight: '800' },
+  dividerRow: {
+    flexDirection: 'row', alignItems: 'center', gap: DIV_GAP,
+    marginTop: DIV_MT, marginBottom: DIV_MB,
+  },
   divider: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.10)' },
-  dividerText: { fontFamily: type.family.mono, fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.4 },
-  socialRow: { flexDirection: 'row', gap: 8 },
-  guestWrap: { padding: 16, alignItems: 'center', marginTop: 6 },
-  guest: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontSize: 13, fontWeight: '600' },
+  dividerText: {
+    fontFamily: type.family.mono,
+    fontSize: OR_FS,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: OR_LS,
+  },
+  socialRow: { flexDirection: 'row', gap: SOCIAL_GAP, marginTop: SOCIAL_MT },
+  guestWrap: {
+    marginTop: GUEST_MT,
+    padding: GUEST_PAD,
+    alignItems: 'center',
+  },
+  guest: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontSize: GUEST_FS, fontWeight: '600' },
   guestLink: { color: colors.coral, fontWeight: '800', textDecorationLine: 'underline' },
 });

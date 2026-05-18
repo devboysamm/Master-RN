@@ -10,20 +10,27 @@ type Props = {
   greeting?: string;
   progress?: number;
   onPressBell?: () => void;
+  onPressAvatar?: () => void;
 };
 
-export default function TopHeader({ name = 'John', greeting = 'Welcome back', progress = 0.62, onPressBell }: Props) {
+export default function TopHeader({ name = 'John', greeting = 'Welcome back', progress = 0.62, onPressBell, onPressAvatar }: Props) {
   return (
     <View style={styles.wrap}>
-      <LinearGradient
-        colors={[colors.coral, colors.yellow]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.avatarRing}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{(name[0] || 'J').toUpperCase()}</Text>
-        </View>
-      </LinearGradient>
+      <Pressable
+        onPress={onPressAvatar}
+        accessibilityRole="button"
+        accessibilityLabel="Open profile"
+        hitSlop={6}>
+        <LinearGradient
+          colors={[colors.coral, colors.yellow]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.avatarRing}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{(name[0] || 'J').toUpperCase()}</Text>
+          </View>
+        </LinearGradient>
+      </Pressable>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={styles.greeting} numberOfLines={1}>
           {greeting}, <Text style={styles.name}>{name}</Text>

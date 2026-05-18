@@ -11,6 +11,9 @@ const SELECT_COLS = [
   'app_description',
   'terms_url',
   'privacy_url',
+  'featured_module_id',
+  'premium_title',
+  'premium_description',
   'updated_at',
 ].join(', ');
 
@@ -32,13 +35,17 @@ async function upsert(data) {
     app_description = null,
     terms_url = null,
     privacy_url = null,
+    featured_module_id = null,
+    premium_title = null,
+    premium_description = null,
   } = data;
   await pool.query(
     `INSERT INTO app_content (
        id, welcome_title, welcome_description, motivation_text, motivation_quote,
-       welcome_subtitle, welcome_footer, app_description, terms_url, privacy_url
+       welcome_subtitle, welcome_footer, app_description, terms_url, privacy_url,
+       featured_module_id, premium_title, premium_description
      )
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
        welcome_title = VALUES(welcome_title),
        welcome_description = VALUES(welcome_description),
@@ -48,7 +55,10 @@ async function upsert(data) {
        welcome_footer = VALUES(welcome_footer),
        app_description = VALUES(app_description),
        terms_url = VALUES(terms_url),
-       privacy_url = VALUES(privacy_url)`,
+       privacy_url = VALUES(privacy_url),
+       featured_module_id = VALUES(featured_module_id),
+       premium_title = VALUES(premium_title),
+       premium_description = VALUES(premium_description)`,
     [
       welcome_title,
       welcome_description,
@@ -59,6 +69,9 @@ async function upsert(data) {
       app_description,
       terms_url,
       privacy_url,
+      featured_module_id,
+      premium_title,
+      premium_description,
     ]
   );
   return get();

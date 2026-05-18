@@ -4,6 +4,7 @@ const cors = require('cors');
 const modulesRoutes = require('./routes/modules');
 const lessonsRoutes = require('./routes/lessons');
 const appContentRoutes = require('./routes/appContent');
+const categoriesRoutes = require('./routes/categories');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -36,6 +37,7 @@ app.get('/health', (req, res) => {
 app.use('/api/modules', modulesRoutes);
 app.use('/api', lessonsRoutes);
 app.use('/api/app-content', appContentRoutes);
+app.use('/api/categories', categoriesRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Not found' });

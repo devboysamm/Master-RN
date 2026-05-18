@@ -29,6 +29,9 @@ export type AppContent = {
   app_description?: string | null;
   terms_url?: string | null;
   privacy_url?: string | null;
+  featured_module_id?: number | null;
+  premium_title?: string | null;
+  premium_description?: string | null;
 };
 
 export const mockAppContent: AppContent = {
@@ -41,7 +44,20 @@ export const mockAppContent: AppContent = {
   app_description: 'Master RN is a practical, bite-sized course to ship your first native app.',
   terms_url: 'https://masterreactnative.dev/terms-condition',
   privacy_url: 'https://masterreactnative.dev/privacy',
+  featured_module_id: 3,
+  premium_title: null,
+  premium_description: null,
 };
+
+export const mockCategories = [
+  { id: 1, name: 'Beginner',      icon: 'sparkle', color: '#9EC9A8', order_index: 1, module_count: 1 },
+  { id: 2, name: 'Components',    icon: 'layers',  color: '#61DAFB', order_index: 2, module_count: 1 },
+  { id: 3, name: 'Hooks & State', icon: 'sparkle', color: '#F26A4A', order_index: 3, module_count: 1 },
+  { id: 4, name: 'Navigation',    icon: 'compass', color: '#7B68EE', order_index: 4, module_count: 1 },
+  { id: 5, name: 'Styling',       icon: 'layers',  color: '#E8A0BF', order_index: 5, module_count: 0 },
+  { id: 6, name: 'APIs & Data',   icon: 'shield',  color: '#4682B4', order_index: 6, module_count: 1 },
+  { id: 7, name: 'Ship to Store', icon: 'book',    color: '#F5C24B', order_index: 7, module_count: 0 },
+];
 
 export const mockModules: Module[] = [
   { id: 1, title: 'Foundations',        description: 'What RN is and how it runs.',     prerequisites: 'JavaScript, ES6', icon: 'book',    image_url: null, background_color: '#FBD7C8', order_index: 1 },

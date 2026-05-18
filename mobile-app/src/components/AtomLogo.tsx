@@ -16,9 +16,11 @@ type Props = {
   size?: number;
   strokeWidth?: number;
   spin?: boolean;
+  // Some uses (e.g. the small top-right atom on Auth) omit the center dot.
+  showDot?: boolean;
 };
 
-export default function AtomLogo({ size = 92, strokeWidth = 7, spin = false }: Props) {
+export default function AtomLogo({ size = 92, strokeWidth = 7, spin = false, showDot = true }: Props) {
   const r1 = useSharedValue(0);
   const r2 = useSharedValue(60);
   const r3 = useSharedValue(120);
@@ -50,7 +52,7 @@ export default function AtomLogo({ size = 92, strokeWidth = 7, spin = false }: P
       <AnimatedG animatedProps={props3} originX={110} originY={110}>
         <Ellipse cx={110} cy={110} rx={84} ry={32} fill="none" stroke={colors.atomInk} strokeWidth={strokeWidth} />
       </AnimatedG>
-      <Circle cx={110} cy={110} r={14} fill={colors.atomInk} />
+      {showDot && <Circle cx={110} cy={110} r={14} fill={colors.atomInk} />}
     </Svg>
   );
 }

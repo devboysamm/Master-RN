@@ -43,6 +43,19 @@ export const AppContent = {
   update: (body) => api.put('/api/app-content', body).then(unwrap),
 };
 
+export const Categories = {
+  list: () => api.get('/api/categories').then(unwrap),
+  get: (id) => api.get(`/api/categories/${id}`).then(unwrap),
+  modules: (id) => api.get(`/api/categories/${id}/modules`).then(unwrap),
+  create: (body) => api.post('/api/categories', body).then(unwrap),
+  update: (id, body) => api.put(`/api/categories/${id}`, body).then(unwrap),
+  remove: (id) => api.delete(`/api/categories/${id}`).then(unwrap),
+  addModule: (id, moduleId) =>
+    api.post(`/api/categories/${id}/modules`, { module_id: moduleId }).then(unwrap),
+  removeModule: (id, moduleId) =>
+    api.delete(`/api/categories/${id}/modules/${moduleId}`).then(unwrap),
+};
+
 export const Health = {
   check: () => api.get('/health').then((r) => r.data),
 };

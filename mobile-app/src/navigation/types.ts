@@ -1,7 +1,8 @@
 export type AuthStackParamList = {
   Splash: undefined;
   Welcome: undefined;
-  Auth: undefined;
+  Auth: { mode?: 'signup' | 'signin' } | undefined;
+  Forgot: undefined;
 };
 
 export type ContentRoutes = {
