@@ -349,9 +349,9 @@ function ModuleArt({
       <Image
         source={{ uri: imageUrl }}
         style={{
-          width: 56,
-          height: 60,
-          borderRadius: 12,
+          width: 62,
+          height: 66,
+          borderRadius: 13,
           backgroundColor: color,
         }}
         resizeMode="cover"
@@ -362,9 +362,9 @@ function ModuleArt({
   return (
     <View
       style={{
-        width: 56,
-        height: 60,
-        borderRadius: 12,
+        width: 62,
+        height: 66,
+        borderRadius: 13,
         backgroundColor: color,
         alignItems: 'center',
         justifyContent: 'center',
