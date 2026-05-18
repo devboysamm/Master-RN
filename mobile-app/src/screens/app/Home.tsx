@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,9 +18,11 @@ import { HomeStackParamList } from '../../navigation/types';
 const SCROLL_PAD_H = 16;
 const SCROLL_PAD_BOTTOM = 120;
 
+// Play button + progress ring — sized for visibility, scaled +20%.
 const RING_SIZE = 76;
 const RING_STROKE = 4;
 const PLAY_INSET = 8;
+const PLAY_ICON_SIZE = 22;
 
 const ALL_CATEGORY_ID = -1;
 type CategoryChip = { id: number; name: string };
@@ -47,7 +49,7 @@ export default function Home() {
 
   // When a category chip is active, swap the Modules list for its filtered set.
   const sourceModules = activeCatId === ALL_CATEGORY_ID ? (modules ?? []) : (categoryModules ?? []);
-  const visibleModules = sourceModules.slice(0, 5);
+  const visibleModules = sourceModules.slice(0, 3);
   const currentModuleId = lastLesson?.moduleId ?? null;
 
   const chips: CategoryChip[] = [
@@ -94,11 +96,11 @@ export default function Home() {
           }}
         />
 
-        {/* Explore — category pills filter the Modules list below */}
-        <View style={styles.sectionRow}>
-          <Text style={styles.exploreTitle}>Explore</Text>
-          <Pressable onPress={openAllModules} accessibilityRole="link" accessibilityLabel="See all categories" hitSlop={6}>
-            <Text style={styles.seeAll}>See all →</Text>
+        {/* "Explore" heading + right-aligned "All modules →" link, above the chip row. */}
+        <View style={styles.subSectionRow}>
+          <Text style={styles.subSectionTitle}>Explore</Text>
+          <Pressable onPress={openAllModules} accessibilityRole="link" accessibilityLabel="See all modules" hitSlop={6}>
+            <Text style={styles.seeAll}>All modules →</Text>
           </Pressable>
         </View>
         <ScrollView
@@ -119,13 +121,6 @@ export default function Home() {
             );
           })}
         </ScrollView>
-
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Modules</Text>
-          <Pressable onPress={openAllModules} accessibilityRole="link" accessibilityLabel="See all modules" hitSlop={6}>
-            <Text style={styles.seeAll}>See all →</Text>
-          </Pressable>
-        </View>
 
         <View style={{ gap: 10, marginTop: 12 }}>
           {visibleModules.length === 0 ? (
@@ -148,7 +143,7 @@ export default function Home() {
 
         <AiTutorBanner onPress={openChat} />
 
-        <Text style={[styles.sectionTitle, { marginTop: 24, marginBottom: 12 }]}>Quick links</Text>
+        <Text style={[styles.subSectionTitle, { marginTop: 24, marginBottom: 12 }]}>Quick links</Text>
         <View style={styles.quickGrid}>
           <QuickLink
             icon={I.flame}
@@ -267,7 +262,7 @@ function PlayWithProgressRing({ progress }: { progress: number }) {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <Icon d={I.play} size={22} color={colors.white} fill={colors.white} strokeWidth={0} />
+        <Icon d={I.play} size={PLAY_ICON_SIZE} color={colors.white} fill={colors.white} strokeWidth={0} />
       </View>
     </View>
   );
@@ -283,6 +278,7 @@ type ModuleRowProps = {
     title: string;
     description: string;
     icon: string;
+    image_url?: string | null;
     background_color: string;
     order_index: number;
   };
@@ -317,7 +313,7 @@ function ModuleRow({ module: m, index, isCurrent, completedIds, onPress }: Modul
         isCurrent && styles.moduleRowCurrent,
         pressed && { opacity: 0.85 },
       ]}>
-      <ModuleArt color={m.background_color} iconName={m.icon} />
+      <ModuleArt color={m.background_color} iconName={m.icon} imageUrl={m.image_url ?? null} />
       <View style={{ flex: 1, minWidth: 0, marginLeft: 14 }}>
         <Text style={styles.moduleKicker}>
           MODULE {String(m.order_index || index + 1).padStart(2, '0')}
@@ -343,9 +339,25 @@ function ModuleRow({ module: m, index, isCurrent, completedIds, onPress }: Modul
   );
 }
 
-function ModuleArt({ color, iconName }: { color: string; iconName: string }) {
-  // Look up the icon path; default to 'layers' if the module's icon string
-  // isn't in our set.
+function ModuleArt({
+  color, iconName, imageUrl,
+}: { color: string; iconName: string; imageUrl: string | null }) {
+  // If the module has an uploaded image, use that. Otherwise fall back to
+  // a coloured square with the icon glyph centred.
+  if (imageUrl) {
+    return (
+      <Image
+        source={{ uri: imageUrl }}
+        style={{
+          width: 56,
+          height: 60,
+          borderRadius: 12,
+          backgroundColor: color,
+        }}
+        resizeMode="cover"
+      />
+    );
+  }
   const path = (I as Record<string, string>)[iconName] || I.layers;
   return (
     <View
@@ -453,6 +465,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 22,
+  },
+  subSectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 22,
+    marginBottom: 4,
+  },
+  subSectionTitle: {
+    color: colors.ink,
+    fontFamily: type.family.sans,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   sectionTitle: {
     color: colors.ink,

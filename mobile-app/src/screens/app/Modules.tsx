@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -48,7 +48,15 @@ export default function Modules() {
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${m.title}`}
                   style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}>
-                  <View style={[styles.geo, { backgroundColor: m.background_color }]} />
+                  {m.image_url ? (
+                    <Image
+                      source={{ uri: m.image_url }}
+                      style={[styles.geo, { backgroundColor: m.background_color }]}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.geo, { backgroundColor: m.background_color }]} />
+                  )}
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.kicker}>MODULE {String(m.order_index || i + 1).padStart(2, '0')}</Text>
                     <Text style={styles.cardTitle} numberOfLines={1}>{m.title}</Text>
