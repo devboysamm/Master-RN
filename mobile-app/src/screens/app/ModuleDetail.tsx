@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '../../components/Icon';
+import RadialGlow from '../../components/RadialGlow';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
 import { useModule, useModuleLessons } from '../../api/hooks';
@@ -28,9 +29,10 @@ const GLOW_TOP = -48;          // -40 × 1.2
 const GLOW_RIGHT = -36;        // -30 × 1.2
 const GLOW_SIZE = 192;         // 160 × 1.2
 
-const DECO_TOP = 12;           // 10 × 1.2
+const DECO_TOP = 40;           // moved lower (was 12) so it sits behind the title block
 const DECO_RIGHT = 17;         // 14 × 1.2
-const DECO_FS = 72;            // 60 × 1.2
+const DECO_FS = 64;            // explicit per spec — tightened from 72
+const DECO_LS = -4;            // explicit per spec — pulls "</>" glyphs together
 
 const BACK_SIZE = 41;          // 34 × 1.2
 const BACK_R = 20;             // BACK_SIZE / 2
@@ -53,6 +55,8 @@ const CHIP_GAP = 7;            // 6 × 1.2
 const CHIP_PAD_V = 7;          // 6 × 1.2
 const CHIP_PAD_H = 14;         // 12 × 1.2
 const CHIP_FS = 13;            // 11 × 1.2
+const CHIP_ICON = 13;          // small leading glyph in each chip
+const CHIP_INNER_GAP = 6;      // gap between chip icon and label
 
 /* PREREQUISITES */
 const PRE_MT = 17;             // 14 × 1.2
@@ -60,7 +64,6 @@ const PRE_INDENT = 24;         // 20 × 1.2
 const PRE_LABEL_FS = 11;       // 9.5 × 1.2 ≈ 11.4
 const PRE_LABEL_LS = 1.7;      // 1.4 × 1.2
 const PRE_LABEL_MB = 10;       // 8 × 1.2
-const PRE_ROW_GAP = 7;         // 6 × 1.2
 const PRE_ROW_PAD_V_TOP = 2;
 const PRE_ROW_PAD_V_BOT = 5;   // 4 × 1.2
 const PRE_PILL_PAD_V = 7;      // 6 × 1.2
@@ -81,18 +84,20 @@ const LESSONS_HEAD_LS = -0.36; // -0.3 × 1.2
 const LESSONS_COUNT_FS = 12;   // 10 × 1.2
 const LESSONS_COUNT_LS = 1.0;  // 0.8 × 1.2
 
-const LESSON_ROW_GAP = 17;     // 14 × 1.2
-const LESSON_ROW_PAD_V = 22;   // 18 × 1.2
+const LESSON_ROW_GAP = 14;     // tightened to match Home module rows
+const LESSON_ROW_PAD_V = 16;   // tightened to match Home module rows
 
-const BADGE_SIZE = 41;         // 34 × 1.2
+const BADGE_SIZE = 40;         // bumped so the check + number read clearly
 const BADGE_R = 20;            // BADGE_SIZE / 2
-const BADGE_CHECK = 18;        // 15 × 1.2
-const BADGE_NUM_FS = 14;       // 12 × 1.2
+const BADGE_CHECK = 18;        // bumped with the badge
+const BADGE_NUM_FS = 14;       // bumped with the badge
 
-const LESSON_TITLE_FS = 17;    // 14 × 1.2
-const LESSON_SUB_FS = 13;      // 10.5 × 1.2
+const LESSON_TITLE_FS = 16;    // -5% from 17
+const LESSON_SUB_FS = 11;      // matches Home module list meta
+const LESSON_TIME_ICON = 12;   // +10% from 11
+const LESSON_SUB_GAP = 6;      // +10% from 5
 
-const BOOKMARK_SIZE = 20;      // 17 × 1.2
+const BOOKMARK_SIZE = 17;      // matches Home module rows
 
 function formatTime(totalMinutes: number): string {
   if (totalMinutes <= 0) return '0m';
@@ -138,7 +143,11 @@ export default function ModuleDetail() {
         }>
         {/* HERO */}
         <View style={styles.hero}>
-          <View style={styles.heroGlow} pointerEvents="none" />
+          <RadialGlow
+            size={GLOW_SIZE}
+            intensity={0.15}
+            style={styles.heroGlow}
+          />
           <Text style={styles.heroDecoration} pointerEvents="none" allowFontScaling={false}>
             {'</>'}
           </Text>
@@ -164,12 +173,15 @@ export default function ModuleDetail() {
             </Text>
             <View style={styles.chipRow}>
               <View style={styles.chipNeutral}>
+                <Icon d={I.layers} size={CHIP_ICON} color={colors.white} strokeWidth={2.2} />
                 <Text style={styles.chipText}>{lessons.length} lessons</Text>
               </View>
               <View style={styles.chipNeutral}>
+                <Icon d={I.clock} size={CHIP_ICON} color={colors.white} strokeWidth={2.2} />
                 <Text style={styles.chipText}>{formatTime(totalTime)}</Text>
               </View>
               <View style={styles.chipCoral}>
+                <Icon d={I.sparkle} size={CHIP_ICON} color={colors.white} strokeWidth={2.2} />
                 <Text style={styles.chipText}>Beginner</Text>
               </View>
             </View>
@@ -182,21 +194,16 @@ export default function ModuleDetail() {
             <Text style={[styles.preLabel, { paddingHorizontal: PRE_INDENT }]}>
               REQUIRES
             </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[
-                styles.preRow,
-                { paddingHorizontal: PRE_INDENT },
-              ]}>
+            <View style={styles.preRow}>
               {prereqs.map((p) => (
                 <View key={p} style={styles.prePill}>
-                  {/* For now, all prereqs are "not satisfied" → empty circle. */}
-                  <View style={styles.preDotEmpty} />
+                  <View style={styles.preDotDone}>
+                    <Icon d={I.check} size={PRE_DOT_CHECK} color={colors.white} strokeWidth={2.6} />
+                  </View>
                   <Text style={styles.prePillText}>{p}</Text>
                 </View>
               ))}
-            </ScrollView>
+            </View>
           </View>
         )}
 
@@ -224,11 +231,7 @@ export default function ModuleDetail() {
               const bookmarked = isBookmarked(l.id);
               const isLast = i === lessons.length - 1;
               const num = String(l.lesson_order || i + 1).padStart(2, '0');
-              const subtitle = done
-                ? `${l.read_time} min · Completed`
-                : isCurrent
-                ? `${l.read_time} min · In progress`
-                : `${l.read_time} min`;
+              const statusSuffix = done ? ' · Completed' : isCurrent ? ' · In progress' : '';
 
               return (
                 <Pressable
@@ -262,7 +265,12 @@ export default function ModuleDetail() {
 
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.lessonTitle} numberOfLines={1}>{l.title}</Text>
-                    <Text style={styles.lessonSub} numberOfLines={1}>{subtitle}</Text>
+                    <View style={styles.lessonSubRow}>
+                      <Icon d={I.clock} size={LESSON_TIME_ICON} color={colors.mute} strokeWidth={2} />
+                      <Text style={styles.lessonSub} numberOfLines={1}>
+                        {l.read_time} min{statusSuffix}
+                      </Text>
+                    </View>
                   </View>
 
                   <Pressable
@@ -306,23 +314,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: GLOW_TOP,
     right: GLOW_RIGHT,
-    width: GLOW_SIZE,
-    height: GLOW_SIZE,
-    borderRadius: GLOW_SIZE / 2,
-    // Simple radial-ish hint: a flat fill with high opacity at the centre.
-    // The painterly version uses <RadialGlow>; here we keep it lightweight
-    // and rely on the surrounding ink to absorb the edge.
-    backgroundColor: 'rgba(242,106,74,0.35)',
-    opacity: 0.9,
   },
   heroDecoration: {
     position: 'absolute',
     top: DECO_TOP,
     right: DECO_RIGHT,
-    color: 'rgba(242,106,74,0.12)',
+    color: 'rgba(242,106,74,0.06)',
     fontFamily: type.family.mono,
     fontSize: DECO_FS,
     fontWeight: '800',
+    letterSpacing: DECO_LS,
     lineHeight: Math.round(DECO_FS * 0.85),
   },
   backBtn: {
@@ -371,12 +372,18 @@ const styles = StyleSheet.create({
     marginTop: CHIPS_MT,
   },
   chipNeutral: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CHIP_INNER_GAP,
     paddingVertical: CHIP_PAD_V,
     paddingHorizontal: CHIP_PAD_H,
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.10)',
   },
   chipCoral: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CHIP_INNER_GAP,
     paddingVertical: CHIP_PAD_V,
     paddingHorizontal: CHIP_PAD_H,
     borderRadius: 999,
@@ -399,7 +406,10 @@ const styles = StyleSheet.create({
     marginBottom: PRE_LABEL_MB,
   },
   preRow: {
-    gap: PRE_ROW_GAP,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 20,
     paddingTop: PRE_ROW_PAD_V_TOP,
     paddingBottom: PRE_ROW_PAD_V_BOT,
   },
@@ -511,11 +521,16 @@ const styles = StyleSheet.create({
     fontSize: LESSON_TITLE_FS,
     fontWeight: '800',
   },
+  lessonSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: LESSON_SUB_GAP,
+    marginTop: 3,
+  },
   lessonSub: {
     color: colors.mute,
     fontFamily: type.family.sans,
     fontSize: LESSON_SUB_FS,
     fontWeight: '700',
-    marginTop: 2,
   },
 });

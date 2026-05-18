@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Image,
+  View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Image, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -8,9 +8,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import ScreenHeader from '../../components/ScreenHeader';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
+import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
-import { useModules } from '../../api/hooks';
+import { useModules, useCategories, useCategoryModules } from '../../api/hooks';
 import { useCompleted } from '../../storage/completed';
 import { useLastLesson } from '../../storage/lastLesson';
 import { getModuleLessons } from '../../api/modules';
@@ -56,6 +57,21 @@ const TRACK_R = 3;             // 4 × 0.85
 const PCT_FS = 11;             // 13 × 0.85
 const PCT_GAP = 8;             // 10 × 0.85
 
+/* Title-row inline AI Chat button */
+const AI_BTN_SIZE = 34;
+const AI_BTN_R = 17;
+const AI_BTN_ICON = 16;
+
+/* Filter bottom sheet */
+const SHEET_RADIUS = 22;
+const SHEET_PAD = 20;
+const SHEET_MAX_H_PCT = 0.6;
+const SHEET_TITLE_FS = 19;
+const SHEET_CLOSE_SIZE = 34;
+const SHEET_ROW_PAD_V = 14;
+const SHEET_DOT_SIZE = 14;
+const SHEET_ROW_FS = 16;
+
 type Mod = {
   id: number;
   title: string;
@@ -78,9 +94,24 @@ function formatTime(totalMinutes: number): string {
 export default function Modules() {
   const nav = useNavigation<NativeStackNavigationProp<ExploreStackParamList>>();
   const { data, loading, error, refresh } = useModules();
+  const { data: categories } = useCategories();
   const { completed } = useCompleted();
   const { lastLesson } = useLastLesson();
   const modules = data ?? [];
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedCatId, setSelectedCatId] = useState<number | null>(null);
+
+  // Fetch category-scoped module list when a category is picked.
+  const catFiltered = useCategoryModules(selectedCatId);
+  const allowedIds = useMemo(() => {
+    if (selectedCatId == null) return null;
+    return new Set((catFiltered.data ?? []).map((m) => m.id));
+  }, [selectedCatId, catFiltered.data]);
+  const displayModules = useMemo(
+    () => (allowedIds ? modules.filter((m) => allowedIds.has(m.id)) : modules),
+    [modules, allowedIds],
+  );
 
   const [lessonsByModule, setLessonsByModule] = useState<Record<number, Lesson[]>>({});
   const [lessonsLoading, setLessonsLoading] = useState(false);
@@ -109,14 +140,22 @@ export default function Modules() {
   const totals = useMemo(() => {
     let lessons = 0;
     let minutes = 0;
-    Object.values(lessonsByModule).forEach((arr) => {
+    displayModules.forEach((m) => {
+      const arr = lessonsByModule[m.id] ?? [];
       lessons += arr.length;
       minutes += arr.reduce((s, l) => s + (l.read_time || 0), 0);
     });
     return { lessons, minutes };
-  }, [lessonsByModule]);
+  }, [displayModules, lessonsByModule]);
 
   const showSkeleton = (loading || lessonsLoading) && modules.length === 0;
+  const selectedCat = (categories ?? []).find((c) => c.id === selectedCatId) ?? null;
+
+  const openChat = () => {
+    // ExploreStack → MainTabs parent → "Chat" tab.
+    const parent = nav.getParent();
+    parent?.navigate('Chat' as never);
+  };
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
@@ -125,16 +164,29 @@ export default function Modules() {
         showBack={nav.canGoBack()}
         rightIcon={I.filter}
         rightLabel="Filter"
+        onRightPress={() => setFilterOpen(true)}
       />
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.coral} />}>
-        <Text style={styles.title}>Learning Path</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Learning Path</Text>
+          <Pressable
+            onPress={openChat}
+            accessibilityRole="button"
+            accessibilityLabel="Ask the AI Tutor"
+            hitSlop={8}
+            style={({ pressed }) => [styles.aiBtn, pressed && { opacity: 0.8 }]}>
+            <Icon d={I.sparkle} size={AI_BTN_ICON} color={colors.coral} strokeWidth={2} />
+          </Pressable>
+        </View>
         <Text style={styles.meta}>
-          {totals.lessons > 0
-            ? `${totals.lessons} lessons · ${formatTime(totals.minutes)} total`
-            : 'Pick a topic and start building.'}
+          {selectedCat
+            ? `${selectedCat.name} · ${totals.lessons} lessons · ${formatTime(totals.minutes)}`
+            : totals.lessons > 0
+              ? `${totals.lessons} lessons · ${formatTime(totals.minutes)} total`
+              : 'Pick a topic and start building.'}
         </Text>
 
         {error && !modules.length ? (
@@ -143,9 +195,11 @@ export default function Modules() {
           <View style={{ gap: LIST_GAP, marginTop: LIST_MT }}>
             {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={130} radius={CARD_RADIUS} />)}
           </View>
+        ) : displayModules.length === 0 ? (
+          <Text style={styles.empty}>No modules in this category yet.</Text>
         ) : (
           <View style={{ gap: LIST_GAP, marginTop: LIST_MT }}>
-            {modules.map((m, i) => (
+            {displayModules.map((m, i) => (
               <ModuleCard
                 key={m.id}
                 module={m as Mod}
@@ -159,6 +213,17 @@ export default function Modules() {
           </View>
         )}
       </ScrollView>
+
+      <FilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        categories={categories ?? []}
+        selectedCatId={selectedCatId}
+        onSelect={(id) => {
+          setSelectedCatId(id);
+          setFilterOpen(false);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -229,6 +294,79 @@ function ModuleCard({ module: m, index, isCurrent, lessons, completedIds, onPres
 }
 
 /* -------------------------------------------------------------------------- */
+/* FILTER BOTTOM SHEET                                                         */
+/* -------------------------------------------------------------------------- */
+
+type FilterSheetProps = {
+  open: boolean;
+  onClose: () => void;
+  categories: { id: number; name: string; color: string }[];
+  selectedCatId: number | null;
+  onSelect: (id: number | null) => void;
+};
+
+function FilterSheet({ open, onClose, categories, selectedCatId, onSelect }: FilterSheetProps) {
+  return (
+    <Modal
+      visible={open}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+      statusBarTranslucent>
+      <Pressable style={styles.backdrop} onPress={onClose} />
+      <View style={styles.sheet}>
+        <View style={styles.sheetHead}>
+          <Text style={styles.sheetTitle}>Filter by category</Text>
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            hitSlop={8}
+            style={styles.sheetClose}>
+            <Icon d={I.close} size={18} color={colors.ink} strokeWidth={2.2} />
+          </Pressable>
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <FilterRow
+            label="All"
+            color={colors.mute}
+            selected={selectedCatId == null}
+            onPress={() => onSelect(null)}
+          />
+          {categories.map((c) => (
+            <FilterRow
+              key={c.id}
+              label={c.name}
+              color={c.color}
+              selected={selectedCatId === c.id}
+              onPress={() => onSelect(c.id)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+function FilterRow({
+  label, color, selected, onPress,
+}: { label: string; color: string; selected: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => [styles.filterRow, pressed && { opacity: 0.7 }]}>
+      <View style={[styles.dot, { backgroundColor: color }]} />
+      <Text style={styles.filterLabel}>{label}</Text>
+      {selected && (
+        <Icon d={I.check} size={18} color={colors.coral} strokeWidth={2.4} />
+      )}
+    </Pressable>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* STYLES                                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -239,13 +377,27 @@ const styles = StyleSheet.create({
     paddingTop: SCROLL_PAD_TOP,
     paddingBottom: SCROLL_PAD_BOTTOM,
   },
-  title: {
+  titleRow: {
     marginTop: HEADER_MT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
     color: colors.ink,
     fontFamily: type.family.sans,
     fontSize: TITLE_FS,
     fontWeight: '800',
     letterSpacing: TITLE_LS,
+    flexShrink: 1,
+  },
+  aiBtn: {
+    width: AI_BTN_SIZE,
+    height: AI_BTN_SIZE,
+    borderRadius: AI_BTN_R,
+    backgroundColor: colors.cardAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   meta: {
     marginTop: META_MT,
@@ -253,6 +405,14 @@ const styles = StyleSheet.create({
     fontFamily: type.family.sans,
     fontSize: META_FS,
     fontWeight: '500',
+  },
+  empty: {
+    marginTop: 40,
+    textAlign: 'center',
+    color: colors.mute,
+    fontFamily: type.family.sans,
+    fontSize: 14,
+    fontWeight: '600',
   },
 
   card: {
@@ -312,5 +472,61 @@ const styles = StyleSheet.create({
     fontSize: PCT_FS,
     fontWeight: '800',
     marginLeft: PCT_GAP,
+  },
+
+  /* Bottom sheet */
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  sheet: {
+    position: 'absolute',
+    left: 0, right: 0, bottom: 0,
+    backgroundColor: colors.cream,
+    borderTopLeftRadius: SHEET_RADIUS,
+    borderTopRightRadius: SHEET_RADIUS,
+    padding: SHEET_PAD,
+    maxHeight: `${SHEET_MAX_H_PCT * 100}%`,
+  },
+  sheetHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  sheetTitle: {
+    color: colors.ink,
+    fontFamily: type.family.sans,
+    fontSize: SHEET_TITLE_FS,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  sheetClose: {
+    width: SHEET_CLOSE_SIZE,
+    height: SHEET_CLOSE_SIZE,
+    borderRadius: SHEET_CLOSE_SIZE / 2,
+    backgroundColor: colors.cardAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: SHEET_ROW_PAD_V,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rule,
+  },
+  dot: {
+    width: SHEET_DOT_SIZE,
+    height: SHEET_DOT_SIZE,
+    borderRadius: SHEET_DOT_SIZE / 2,
+  },
+  filterLabel: {
+    flex: 1,
+    color: colors.ink,
+    fontFamily: type.family.sans,
+    fontSize: SHEET_ROW_FS,
+    fontWeight: '700',
   },
 });
