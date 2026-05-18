@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const modulesRoutes = require('./routes/modules');
 const lessonsRoutes = require('./routes/lessons');
@@ -29,6 +30,15 @@ app.use(
 );
 
 app.use(express.json({ limit: '2mb' }));
+
+// Static SVG icons served at /icons/*.svg
+app.use(
+  '/icons',
+  express.static(path.join(__dirname, '..', 'public', 'icons'), {
+    maxAge: '1d',
+    setHeaders: (res) => res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8'),
+  })
+);
 
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
