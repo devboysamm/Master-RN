@@ -3,7 +3,7 @@ const Lesson = require('../models/Lesson');
 
 const HEX6 = /^#[0-9A-Fa-f]{6}$/;
 const HTTP_URL = /^https?:\/\//i;
-const DATA_SVG = /^data:image\/svg\+xml(;[^,]*)?,/i;
+const DATA_URL = /^data:image\/(png|jpe?g|gif|webp|svg\+xml)(;[^,]*)?,/i;
 
 function validateModulePayload(body, { partial = false } = {}) {
   if (!partial || Object.prototype.hasOwnProperty.call(body, 'title')) {
@@ -17,8 +17,8 @@ function validateModulePayload(body, { partial = false } = {}) {
     }
   }
   if (Object.prototype.hasOwnProperty.call(body, 'image_url') && body.image_url != null && body.image_url !== '') {
-    if (typeof body.image_url !== 'string' || (!HTTP_URL.test(body.image_url) && !DATA_SVG.test(body.image_url))) {
-      return 'image_url must be http(s):// or a data:image/svg+xml URI';
+    if (typeof body.image_url !== 'string' || (!HTTP_URL.test(body.image_url) && !DATA_URL.test(body.image_url))) {
+      return 'image_url must be an http(s):// URL or a data:image/... URI';
     }
   }
   if (Object.prototype.hasOwnProperty.call(body, 'order_index') && body.order_index != null) {

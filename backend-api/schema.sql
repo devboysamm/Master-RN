@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS modules (
   description TEXT,
   prerequisites TEXT,
   icon VARCHAR(64) DEFAULT 'book',
-  image_url VARCHAR(500),
+  image_url LONGTEXT,
   background_color CHAR(7) DEFAULT '#EAF2FF',
   order_index INT DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

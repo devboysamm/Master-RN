@@ -57,6 +57,19 @@ async function seedDefaultCategories(conn) {
   console.log(`[db] seeded ${DEFAULT_CATEGORIES.length} default categories`);
 }
 
+async function widenColumnIfNeeded(conn, table, column, targetType) {
+  const dbName = process.env.DB_NAME || 'master-react-native';
+  const [rows] = await conn.query(
+    `SELECT DATA_TYPE FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    [dbName, table, column]
+  );
+  const current = rows[0]?.DATA_TYPE?.toLowerCase();
+  if (!current || current === targetType.toLowerCase()) return;
+  await conn.query(`ALTER TABLE \`${table}\` MODIFY ${column} ${targetType}`);
+  console.log(`[db] widened ${table}.${column}: ${current} → ${targetType}`);
+}
+
 async function runMigrations(conn) {
   // Older databases were created before created_at/updated_at existed.
   await addMissingColumn(conn, 'modules', 'created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP');
@@ -72,6 +85,8 @@ async function runMigrations(conn) {
   await addMissingColumn(conn, 'app_content', 'featured_module_id', 'INT');
   await addMissingColumn(conn, 'app_content', 'premium_title', 'VARCHAR(255)');
   await addMissingColumn(conn, 'app_content', 'premium_description', 'TEXT');
+  // Widen image_url so it can hold base64-encoded PNG/SVG data URIs.
+  await widenColumnIfNeeded(conn, 'modules', 'image_url', 'LONGTEXT');
   await seedDefaultCategories(conn);
 }
 
