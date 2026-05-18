@@ -6,6 +6,7 @@ const modulesRoutes = require('./routes/modules');
 const lessonsRoutes = require('./routes/lessons');
 const appContentRoutes = require('./routes/appContent');
 const categoriesRoutes = require('./routes/categories');
+const uploadsRoutes = require('./routes/uploads');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -40,6 +41,14 @@ app.use(
   })
 );
 
+// User-uploaded images served at /uploads/<filename>
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '..', 'public', 'uploads'), {
+    maxAge: '7d',
+  })
+);
+
 app.get('/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
 });
@@ -48,6 +57,10 @@ app.use('/api/modules', modulesRoutes);
 app.use('/api', lessonsRoutes);
 app.use('/api/app-content', appContentRoutes);
 app.use('/api/categories', categoriesRoutes);
+// /api/upload (POST single image) lives on uploadsRoutes.upload,
+// /api/uploads (GET list, DELETE /:filename) on uploadsRoutes.list.
+app.use('/api', uploadsRoutes.upload);
+app.use('/api/uploads', uploadsRoutes.list);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Not found' });

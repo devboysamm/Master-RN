@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Modules as ModulesAPI } from '../api/client';
 import { MRN, moduleSwatches } from '../theme/tokens';
+import ImagePicker from '../components/ImagePicker';
 
 const empty = {
   title: '',
@@ -12,8 +13,6 @@ const empty = {
   background_color: '#EAF2FF',
   order_index: 0,
 };
-
-const ICON_OPTIONS = ['book', 'code', 'layers', 'flame', 'sparkle', 'shield', 'compass', 'star'];
 
 export default function ModuleEdit() {
   const { id } = useParams();
@@ -46,8 +45,12 @@ export default function ModuleEdit() {
       setErr('Background color must be a 6-digit hex (e.g. #EAF2FF).');
       return;
     }
-    if (form.image_url && !/^https?:\/\//i.test(form.image_url)) {
-      setErr('Image URL must start with http:// or https://');
+    if (
+      form.image_url &&
+      !/^https?:\/\//i.test(form.image_url) &&
+      !/^data:image\//i.test(form.image_url)
+    ) {
+      setErr('Image must be an http(s):// URL or a data:image/... URI.');
       return;
     }
     setSaving(true);
@@ -110,22 +113,13 @@ export default function ModuleEdit() {
           <input className="input" value={form.prerequisites || ''} onChange={set('prerequisites')} placeholder="JavaScript, ES6"/>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-          <div className="field">
-            <label className="label">Icon</label>
-            <select className="select" value={form.icon || 'book'} onChange={set('icon')}>
-              {ICON_OPTIONS.map((i) => <option key={i} value={i}>{i}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label className="label">Order index</label>
-            <input className="input" type="number" value={form.order_index ?? 0} onChange={set('order_index')}/>
-          </div>
-        </div>
-
         <div className="field">
-          <label className="label">Image URL (optional)</label>
-          <input className="input" value={form.image_url || ''} onChange={set('image_url')} placeholder="https://example.com/cover.png"/>
+          <label className="label">Image</label>
+          <ImagePicker
+            value={form.image_url || ''}
+            onChange={(url) => setForm((prev) => ({ ...prev, image_url: url }))}
+            placeholder="No image set"
+          />
         </div>
 
         <div className="field">

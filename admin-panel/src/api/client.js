@@ -60,4 +60,16 @@ export const Health = {
   check: () => api.get('/health').then((r) => r.data),
 };
 
+export const Uploads = {
+  list: () => api.get('/api/uploads').then(unwrap),
+  remove: (filename) => api.delete(`/api/uploads/${encodeURIComponent(filename)}`).then(unwrap),
+  upload: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return api.post('/api/upload', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(unwrap);
+  },
+};
+
 export const apiBaseURL = baseURL;

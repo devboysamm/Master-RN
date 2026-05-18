@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -10,7 +10,7 @@ import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
-import { useModules, useModuleLessons } from '../../api/hooks';
+import { useModules, useModuleLessons, useCategories, useCategoryModules } from '../../api/hooks';
 import { useLastLesson } from '../../storage/lastLesson';
 import { useCompleted } from '../../storage/completed';
 import { HomeStackParamList } from '../../navigation/types';
@@ -22,12 +22,21 @@ const RING_SIZE = 76;
 const RING_STROKE = 4;
 const PLAY_INSET = 8;
 
+const ALL_CATEGORY_ID = -1;
+type CategoryChip = { id: number; name: string };
+
 export default function Home() {
   const nav = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
   const { user, isGuest } = useAuth();
   const { data: modules } = useModules();
+  const { data: categories } = useCategories();
   const { lastLesson } = useLastLesson();
   const { completed } = useCompleted();
+
+  const [activeCatId, setActiveCatId] = useState<number>(ALL_CATEGORY_ID);
+  const { data: categoryModules } = useCategoryModules(
+    activeCatId === ALL_CATEGORY_ID ? null : activeCatId,
+  );
 
   const greetName = user?.name || (isGuest ? 'Guest' : 'Friend');
   const completedIds = new Set(completed);
@@ -36,8 +45,15 @@ export default function Home() {
   const totalLessons = Math.max((modules?.length ?? 1) * 7, completed.length + 1);
   const progress = Math.min(1, completed.length / Math.max(1, totalLessons));
 
-  const visibleModules = (modules ?? []).slice(0, 5);
+  // When a category chip is active, swap the Modules list for its filtered set.
+  const sourceModules = activeCatId === ALL_CATEGORY_ID ? (modules ?? []) : (categoryModules ?? []);
+  const visibleModules = sourceModules.slice(0, 5);
   const currentModuleId = lastLesson?.moduleId ?? null;
+
+  const chips: CategoryChip[] = [
+    { id: ALL_CATEGORY_ID, name: 'All' },
+    ...((categories ?? []).map((c) => ({ id: c.id, name: c.name }))),
+  ];
 
   const openModule = (id: number) => nav.navigate('ModuleDetail', { moduleId: id });
   const openLesson = (lessonId: number, moduleId: number) =>
@@ -77,6 +93,32 @@ export default function Home() {
             else openAllModules();
           }}
         />
+
+        {/* Explore — category pills filter the Modules list below */}
+        <View style={styles.sectionRow}>
+          <Text style={styles.exploreTitle}>Explore</Text>
+          <Pressable onPress={openAllModules} accessibilityRole="link" accessibilityLabel="See all categories" hitSlop={6}>
+            <Text style={styles.seeAll}>See all →</Text>
+          </Pressable>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catRow}>
+          {chips.map((c) => {
+            const active = c.id === activeCatId;
+            return (
+              <Pressable
+                key={c.id}
+                onPress={() => setActiveCatId(c.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Filter ${c.name}`}
+                style={[styles.cat, active ? styles.catActive : styles.catInactive]}>
+                <Text style={[styles.catText, active && styles.catTextActive]}>{c.name}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Modules</Text>
@@ -418,6 +460,42 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: -0.4,
+  },
+  exploreTitle: {
+    color: colors.ink,
+    fontFamily: type.family.sans,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  catRow: {
+    gap: 8,
+    paddingTop: 10,
+    paddingBottom: 4,
+    paddingRight: 16,
+  },
+  cat: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  catActive: {
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
+  },
+  catInactive: {
+    backgroundColor: colors.card,
+    borderColor: colors.rule,
+  },
+  catText: {
+    fontFamily: type.family.sans,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.inkSoft,
+  },
+  catTextActive: {
+    color: colors.white,
   },
   seeAll: {
     color: colors.coralDeep,

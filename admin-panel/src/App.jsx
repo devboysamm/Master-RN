@@ -5,6 +5,7 @@ import Modules from './pages/Modules';
 import ModuleEdit from './pages/ModuleEdit';
 import Lessons from './pages/Lessons';
 import LessonEditor from './pages/LessonEditor';
+import Media from './pages/Media';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import { MRN } from './theme/tokens';
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/lessons"        element={<Lessons />} />
             <Route path="/lessons/new"    element={<LessonEditor />} />
             <Route path="/lessons/:id"    element={<LessonEditor />} />
+            <Route path="/media"          element={<Media />} />
             <Route path="/categories"     element={<Categories />} />
             <Route path="/settings"       element={<Settings />} />
             <Route path="*"               element={<Navigate to="/" replace />} />
