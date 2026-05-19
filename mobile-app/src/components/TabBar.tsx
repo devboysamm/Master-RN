@@ -1,15 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import Icon from './Icon';
 import { I } from '../theme/icons';
 import { colors, type } from '../theme/tokens';
 
 const TAB_ICONS: Record<string, string> = {
   Home: I.home,
-  Explore: I.compass,
-  Progress: I.pie,
+  Explore: I.layers,    // was I.compass — layered stack reads as "lessons / modules"
+  Progress: I.bookmark, // was I.pie — bookmark fits the Saved-tab semantics
   Profile: I.user,
 };
 
@@ -55,8 +63,8 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
                       ]}>
                       AI
                     </Text>
-                    {/* Always-on green dot: signals "AI is online and ready". */}
-                    <View style={styles.aiDot} />
+                    {/* Pulsing green dot — top-right of "AI", always on. */}
+                    <AiPulseDot />
                   </View>
                 ) : (
                   <Icon
@@ -73,6 +81,41 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
       </View>
     </View>
   );
+}
+
+/**
+ * Pulsing green status dot for the AI tab. Scale 1 → 1.4 → 1 and
+ * opacity 1 → 0.6 → 1 over 1400ms, ease-in-out, infinite.
+ */
+function AiPulseDot() {
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+  useEffect(() => {
+    const ease = Easing.inOut(Easing.ease);
+    const half = 700;
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.4, { duration: half, easing: ease }),
+        withTiming(1,   { duration: half, easing: ease }),
+      ),
+      -1,
+      false,
+    );
+    opacity.value = withRepeat(
+      withSequence(
+        withTiming(0.6, { duration: half, easing: ease }),
+        withTiming(1,   { duration: half, easing: ease }),
+      ),
+      -1,
+      false,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+  return <Animated.View style={[styles.aiDot, animStyle]} />;
 }
 
 const styles = StyleSheet.create({
@@ -109,11 +152,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapActive: { backgroundColor: colors.coral },
+  // Relative wrapper so the pulsing dot can sit absolutely at the top-right
+  // corner of the "AI" text, like a notification badge.
   aiBlock: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    position: 'relative',
   },
   aiText: {
     fontFamily: type.family.sans,
@@ -121,5 +165,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.4,
   },
-  aiDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ok },
+  aiDot: {
+    position: 'absolute',
+    top: -2,
+    right: -8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.ok,
+  },
 });

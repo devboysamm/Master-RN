@@ -98,6 +98,7 @@ export default function Profile() {
   };
   const goHelp = () => nav.navigate('HelpFeedback');
   const goAbout = () => nav.navigate('About');
+  const goEditProfile = () => nav.navigate('EditProfile');
 
   const name = user?.name || (isGuest ? 'Guest' : 'You');
   const email = user?.email || 'Guest account';
@@ -142,7 +143,7 @@ export default function Profile() {
             <View style={{ marginTop: SECTION_MT }}>
               <Text style={styles.sectionLabel}>ACCOUNT</Text>
               <View style={{ gap: ROW_LIST_GAP }}>
-                <Row icon={I.user}     title="Edit profile"   onPress={comingSoon} />
+                <Row icon={I.user}     title="Edit profile"   onPress={goEditProfile} />
                 <Row icon={I.bookmark} title="Saved lessons"  meta={String(bookmarks.length)} onPress={goToBookmarks} />
               </View>
             </View>

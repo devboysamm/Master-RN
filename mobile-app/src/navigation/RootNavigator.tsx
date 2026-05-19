@@ -19,6 +19,10 @@ import AIChat from '../screens/app/AIChat';
 import Profile from '../screens/app/Profile';
 import HelpFeedback from '../screens/app/HelpFeedback';
 import About from '../screens/app/About';
+import Notifications from '../screens/app/Notifications';
+import Cheatsheets from '../screens/app/Cheatsheets';
+import ReportProblem from '../screens/app/ReportProblem';
+import EditProfile from '../screens/app/EditProfile';
 
 import TabBar from '../components/TabBar';
 import { useAuth } from '../context/AuthContext';
@@ -82,6 +86,12 @@ function HomeTab() {
       <HomeStack.Screen name="ModuleDetail" component={ModuleDetail} />
       <HomeStack.Screen name="LessonReader" component={LessonReader} />
       <HomeStack.Screen name="LessonCode" component={LessonCode} />
+      {/* Right-side slide-in feel: native-stack default push animation. */}
+      <HomeStack.Screen name="Notifications"  component={Notifications}  options={{ animation: 'slide_from_right' }} />
+      <HomeStack.Screen name="Cheatsheets"    component={Cheatsheets}    options={{ animation: 'slide_from_right' }} />
+      <HomeStack.Screen name="ReportProblem"  component={ReportProblem}  options={{ animation: 'slide_from_right' }} />
+      <HomeStack.Screen name="HelpFeedback"   component={HelpFeedback}   options={{ animation: 'slide_from_right' }} />
+      <HomeStack.Screen name="About"          component={About}          options={{ animation: 'slide_from_right' }} />
     </HomeStack.Navigator>
   );
 }
@@ -122,6 +132,7 @@ function ProfileTab() {
       <ProfileStack.Screen name="Profile" component={Profile} />
       <ProfileStack.Screen name="HelpFeedback" component={HelpFeedback} />
       <ProfileStack.Screen name="About" component={About} />
+      <ProfileStack.Screen name="EditProfile" component={EditProfile} options={{ animation: 'slide_from_right' }} />
     </ProfileStack.Navigator>
   );
 }

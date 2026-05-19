@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -49,7 +49,7 @@ export default function Home() {
 
   // When a category chip is active, swap the Modules list for its filtered set.
   const sourceModules = activeCatId === ALL_CATEGORY_ID ? (modules ?? []) : (categoryModules ?? []);
-  const visibleModules = sourceModules.slice(0, 3);
+  const visibleModules = sourceModules.slice(0, 2);
   const currentModuleId = lastLesson?.moduleId ?? null;
 
   const chips: CategoryChip[] = [
@@ -75,9 +75,11 @@ export default function Home() {
       CommonActions.navigate({ name: 'Chat' as never, params: { screen: 'AIChat' } as never }),
     );
   };
-  const handleBell = () => Alert.alert('Notifications', 'Notifications coming in v1.1.');
-  const comingSoon = (label: string) => () =>
-    Alert.alert(label, 'Coming in a future release.');
+  const handleBell = () => nav.navigate('Notifications');
+  const openCheatsheets   = () => nav.navigate('Cheatsheets');
+  const openHelpFeedback  = () => nav.navigate('HelpFeedback');
+  const openReportProblem = () => nav.navigate('ReportProblem');
+  const openAbout         = () => nav.navigate('About');
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
@@ -147,27 +149,27 @@ export default function Home() {
         <View style={styles.quickGrid}>
           <QuickLink
             icon={I.flame}
-            title="Practice quiz"
-            subtitle="5 questions"
-            onPress={comingSoon('Practice quiz')}
-          />
-          <QuickLink
-            icon={I.code}
             title="Cheatsheets"
-            subtitle="12 snippets"
-            onPress={comingSoon('Cheatsheets')}
+            subtitle="Quick references"
+            onPress={openCheatsheets}
           />
           <QuickLink
-            icon={I.sparkle}
-            title="What's new"
-            subtitle="v1.2 notes"
-            onPress={comingSoon("What's new")}
+            icon={I.chat}
+            title="Help & feedback"
+            subtitle="Get in touch"
+            onPress={openHelpFeedback}
           />
           <QuickLink
             icon={I.shield}
             title="Report a problem"
             subtitle="Help us fix"
-            onPress={comingSoon('Report a problem')}
+            onPress={openReportProblem}
+          />
+          <QuickLink
+            icon={I.eye}
+            title="About Master RN"
+            subtitle="v1.0"
+            onPress={openAbout}
           />
         </View>
       </ScrollView>

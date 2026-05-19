@@ -34,7 +34,8 @@ const DOT_SIZE = 8;
 const HEADER_PILL_GAP = 11;
 
 /* Empty state */
-const EMPTY_PAD_V = 38;
+const EMPTY_PAD_V = 0;            // content sits up high, not vertically centered
+const EMPTY_ATOM = 64;            // spec 56 × 1.15 ≈ 64
 const EMPTY_HEAD_FS = 22;
 const EMPTY_SUB_FS = 15;
 const EMPTY_SUB_LH = 22;
@@ -308,7 +309,7 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
     <View style={styles.empty}>
       {/* AtomLogo only — no ring, no ink circle, no outline. */}
       <View style={styles.emptyAvatarSlot}>
-        <AtomLogo size={56} strokeWidth={8} showDot />
+        <AtomLogo size={EMPTY_ATOM} strokeWidth={8} showDot />
       </View>
       <Text style={styles.emptyHead}>Ready when you are.</Text>
       <Text style={styles.emptySub}>
@@ -459,7 +460,10 @@ const styles = StyleSheet.create({
 
   /* Lists */
   listContent: { paddingHorizontal: 16, paddingBottom: 8 },
-  emptyHolder: { flex: 1, paddingHorizontal: 16, justifyContent: 'center' },
+  // Anchor the empty state near the top of the chat area rather than
+  // vertically centring it — looks intentional + makes the prompt pills
+  // easier to reach without thumb-stretching.
+  emptyHolder: { flex: 1, paddingHorizontal: 16, justifyContent: 'flex-start', paddingTop: 40 },
 
   /* Empty state */
   empty: {
@@ -552,7 +556,9 @@ const styles = StyleSheet.create({
   dotsRow: { flexDirection: 'row', alignItems: 'center', gap: DOTS_GAP, height: 12 },
   typingDot: { width: DOT, height: DOT, borderRadius: DOT / 2, backgroundColor: colors.mute },
 
-  /* Composer */
+  /* Composer — symmetric paddings on left + right so the placeholder
+   * text and the send arrow are the same distance from their respective
+   * container edges. */
   composerInner: {
     backgroundColor: colors.card,
     borderRadius: COMPOSER_RADIUS,
@@ -560,8 +566,8 @@ const styles = StyleSheet.create({
     borderColor: colors.rule,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: COMPOSER_PAD,
-    paddingLeft: 18,
+    paddingVertical: COMPOSER_PAD,
+    paddingHorizontal: 14,
   },
   input: {
     flex: 1,
@@ -570,7 +576,6 @@ const styles = StyleSheet.create({
     color: colors.ink,
     fontWeight: '500',
     paddingVertical: 8,
-    paddingRight: 8,
     minHeight: INPUT_MIN_H,
     maxHeight: INPUT_MAX_H,
   },
