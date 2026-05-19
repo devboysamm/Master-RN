@@ -20,9 +20,9 @@ import type { Lesson } from '../../api/mock';
 const HERO_RADIUS = 26;          // spec 22 × 1.2
 const HERO_MT = 10;
 const HERO_MH = 19;
-const HERO_PAD_TOP = 17;
+const HERO_PAD_TOP = 32;         // +15 to grow card height by 30
 const HERO_PAD_H = 19;
-const HERO_PAD_BOTTOM = 19;
+const HERO_PAD_BOTTOM = 34;      // +15 to grow card height by 30
 const HERO_GLOW_SIZE = 192;      // spec 160 × 1.2
 const HERO_GLOW_TOP = -48;
 const HERO_GLOW_RIGHT = -36;
@@ -40,13 +40,13 @@ const META_FS = 11;              // 14 × 0.8
 /* Hero buttons (guest) — × 0.8 */
 const BIG_BTN_PV = 11;           // 14 × 0.8
 const BIG_BTN_PH = 14;           // 18 × 0.8
-const BIG_BTN_FS = 12;           // 15 × 0.8
+const BIG_BTN_FS = 13;           // 15 × 0.8 + 1 for readability
 const BIG_BTN_R = 14;            // 18 × 0.8
 
 /* Sign out pill — × 0.8 */
 const SIGNOUT_PV = 6;            // 7 × 0.8
 const SIGNOUT_PH = 10;           // 12 × 0.8
-const SIGNOUT_FS = 9;            // 11 × 0.8
+const SIGNOUT_FS = 10;           // 11 × 0.8 + 1 for readability
 
 /* Stats mini cards — only the typography scales × 0.8 (tile radius +
  * padding stay so the extra space distributes as breathing room). */
@@ -117,9 +117,6 @@ export default function Profile() {
   const goHelp = () => nav.navigate('HelpFeedback');
   const goAbout = () => nav.navigate('About');
 
-  const progressLabel = totalLessons != null
-    ? `${completed.length} / ${totalLessons}`
-    : `${completed.length}`;
   const progressPct = totalLessons && totalLessons > 0
     ? Math.round((completed.length / totalLessons) * 100)
     : 0;
@@ -170,7 +167,6 @@ export default function Profile() {
               <View style={{ gap: ROW_LIST_GAP }}>
                 <Row icon={I.user}     title="Edit profile"   onPress={comingSoon} />
                 <Row icon={I.bookmark} title="Saved lessons"  meta={String(bookmarks.length)} onPress={goToBookmarks} />
-                <Row icon={I.pie}      title="Your progress"  meta={progressLabel} onPress={comingSoon} />
               </View>
             </View>
 
@@ -375,9 +371,9 @@ const styles = StyleSheet.create({
     paddingVertical: SIGNOUT_PV,
     paddingHorizontal: SIGNOUT_PH,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.cream,
   },
-  signOutText: { color: colors.white, fontFamily: type.family.sans, fontSize: SIGNOUT_FS, fontWeight: '700' },
+  signOutText: { color: colors.ink, fontFamily: type.family.sans, fontSize: SIGNOUT_FS, fontWeight: '700' },
 
   /* Stats row (signed-in) */
   statsRow: { flexDirection: 'row', gap: 8, marginTop: 18 },
