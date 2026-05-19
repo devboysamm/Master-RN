@@ -17,9 +17,9 @@ import { useCompleted } from '../../storage/completed';
 const HERO_RADIUS = 26;          // spec 22 × 1.2
 const HERO_MT = 10;
 const HERO_MH = 19;
-const HERO_PAD_TOP = 32;         // +15 to grow card height by 30
+const HERO_PAD_TOP = 28;         // signed-in: -4 from 32 (guest already at this level)
 const HERO_PAD_H = 19;
-const HERO_PAD_BOTTOM = 34;      // +15 to grow card height by 30
+const HERO_PAD_BOTTOM = 30;      // signed-in: -4 from 34
 const HERO_GLOW_SIZE = 192;      // spec 160 × 1.2
 const HERO_GLOW_TOP = -48;
 const HERO_GLOW_RIGHT = -36;
@@ -290,11 +290,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  // Guest variant: shave 4px off top + bottom for a slightly tighter card.
-  heroGuest: {
-    paddingTop: HERO_PAD_TOP - 4,
-    paddingBottom: HERO_PAD_BOTTOM - 4,
-  },
+  // Guest = signed-in: both views share the same hero geometry now that
+  // the base padding has been pulled down by 4px on each axis.
+  heroGuest: {},
   heroGlow: { position: 'absolute', top: HERO_GLOW_TOP, right: HERO_GLOW_RIGHT },
   heroDeco: {
     position: 'absolute',

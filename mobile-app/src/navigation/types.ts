@@ -19,6 +19,11 @@ export type ExploreStackParamList = ContentRoutes & {
 
 export type HomeStackParamList = ContentRoutes & {
   HomeMain: undefined;
+  Notifications: undefined;
+  Cheatsheets: undefined;
+  ReportProblem: undefined;
+  HelpFeedback: undefined;
+  About: undefined;
 };
 
 export type ProgressStackParamList = ContentRoutes & {
@@ -33,6 +38,7 @@ export type ProfileStackParamList = {
   Profile: undefined;
   HelpFeedback: undefined;
   About: undefined;
+  EditProfile: undefined;
 };
 
 export type AppTabParamList = {
