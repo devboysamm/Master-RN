@@ -1,22 +1,30 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from './Icon';
 import { I } from '../theme/icons';
-import { colors } from '../theme/tokens';
+import { colors, type } from '../theme/tokens';
 
 const TAB_ICONS: Record<string, string> = {
   Home: I.home,
   Explore: I.compass,
   Progress: I.pie,
-  Chat: I.chat,
   Profile: I.user,
 };
 
 export default function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, 12);
+
+  // Allow nested screens to hide the tab bar by calling
+  // navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } }).
+  const focusedDescriptor = descriptors[state.routes[state.index].key];
+  const focusedStyle = focusedDescriptor.options.tabBarStyle as
+    | { display?: 'none' | 'flex' }
+    | undefined;
+  if (focusedStyle?.display === 'none') return null;
+
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { bottom }]}>
       <View style={styles.bar}>
@@ -28,21 +36,32 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
             if (!focused && !event.defaultPrevented) navigation.navigate(route.name as never);
           };
           const label = (options.tabBarAccessibilityLabel ?? route.name) as string;
+          const isChat = route.name === 'Chat';
           return (
             <Pressable
               key={route.key}
               onPress={onPress}
               accessibilityRole="button"
-              accessibilityLabel={label}
+              accessibilityLabel={isChat ? 'AI' : label}
               accessibilityState={focused ? { selected: true } : {}}
               style={styles.tab}>
-              <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-                <Icon
-                  d={TAB_ICONS[route.name] || I.home}
-                  size={22}
-                  color={focused ? colors.white : 'rgba(255,255,255,0.45)'}
-                  strokeWidth={2}
-                />
+              <View style={[styles.iconWrap, focused && !isChat && styles.iconWrapActive]}>
+                {isChat ? (
+                  <Text
+                    style={[
+                      styles.aiText,
+                      { color: focused ? colors.coral : 'rgba(255,255,255,0.45)' },
+                    ]}>
+                    AI
+                  </Text>
+                ) : (
+                  <Icon
+                    d={TAB_ICONS[route.name] || I.home}
+                    size={22}
+                    color={focused ? colors.white : 'rgba(255,255,255,0.45)'}
+                    strokeWidth={2}
+                  />
+                )}
               </View>
             </Pressable>
           );
@@ -86,4 +105,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapActive: { backgroundColor: colors.coral },
+  aiText: {
+    fontFamily: type.family.sans,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
 });

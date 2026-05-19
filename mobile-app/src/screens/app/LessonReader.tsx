@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import RenderHTML, { MixedStyleDeclaration } from 'react-native-render-html';
 import Icon from '../../components/Icon';
 import CodeBlock from '../../components/CodeBlock';
+import RadialGlow from '../../components/RadialGlow';
 import SlideToComplete from '../../components/SlideToComplete';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
@@ -17,18 +18,36 @@ import { useCompleted } from '../../storage/completed';
 import { setLastLesson } from '../../storage/lastLesson';
 import { ExploreStackParamList } from '../../navigation/types';
 
+// Header / top-section sizing — all spec values ×1.2.
+const KICKER_PILL_W = 5;     // spec 4 × 1.2
+const KICKER_PILL_H = 14;    // spec 12 × 1.2
+const KICKER_FS = 12;        // spec 10 × 1.2
+const KICKER_LS = 1.7;       // spec 1.4 × 1.2
+const TITLE_FS = 28;         // reduced -3 (was 31)
+const TITLE_LS = -0.48;      // spec -0.4 × 1.2
+const SUB_FS = 16;           // -2 for tighter subtitle
+const SUB_MT = 7;            // spec 6 × 1.2
+const META_MT = 14;          // spec 12 × 1.2
+const CHIP_PAD_V = 5;        // tightened for the new dark pill style
+const CHIP_PAD_H = 10;
+const CHIP_FS = 10;          // dark pill — smaller, denser
+const CHIP_ICON = 11;        // scaled with the new pill text
+
+const BODY_FS = 16;          // +2 for readability
+const BODY_LH = Math.round(BODY_FS * 1.7);
+
 const baseStyle: MixedStyleDeclaration = {
   color: colors.inkSoft,
   fontFamily: type.family.sans,
-  fontSize: 14,
-  lineHeight: 22,
+  fontSize: BODY_FS,
+  lineHeight: BODY_LH,
 };
 const tagsStyles = {
   h1: { fontFamily: type.family.sans, fontSize: 24, fontWeight: '800' as const, color: colors.ink, marginTop: 16, marginBottom: 8 },
-  h2: { fontFamily: type.family.sans, fontSize: 20, fontWeight: '800' as const, color: colors.ink, marginTop: 14, marginBottom: 8 },
-  h3: { fontFamily: type.family.sans, fontSize: 16, fontWeight: '800' as const, color: colors.ink, marginTop: 12, marginBottom: 6 },
-  p:  { fontFamily: type.family.sans, fontSize: 14, lineHeight: 22, color: colors.inkSoft, marginBottom: 10 },
-  li: { fontFamily: type.family.sans, fontSize: 14, lineHeight: 22, color: colors.inkSoft },
+  h2: { fontFamily: type.family.sans, fontSize: 22, fontWeight: '800' as const, color: colors.ink, marginTop: 14, marginBottom: 8 },
+  h3: { fontFamily: type.family.sans, fontSize: 18, fontWeight: '800' as const, color: colors.ink, marginTop: 12, marginBottom: 6 },
+  p:  { fontFamily: type.family.sans, fontSize: BODY_FS, lineHeight: BODY_LH, color: colors.inkSoft, marginBottom: 10 },
+  li: { fontFamily: type.family.sans, fontSize: BODY_FS, lineHeight: BODY_LH, color: colors.inkSoft },
   code: { fontFamily: type.family.mono, fontSize: 12, color: colors.coralDeep, backgroundColor: colors.cardAlt, paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
   pre: { backgroundColor: '#16110d', borderRadius: radii.lg, padding: 12, marginVertical: 10 },
   strong: { fontWeight: '800' as const, color: colors.ink },
@@ -73,6 +92,27 @@ export default function LessonReader() {
   const { sanitized, blocks } = useMemo(() => extractCodeBlocks(l?.content || ''), [l?.content]);
   const parts = sanitized.split(/<div data-codeblock="(\d+)"><\/div>/g);
 
+  // Section count = number of <h2>/<h3> headings in the lesson body.
+  const sectionCount = useMemo(() => {
+    const html = l?.content || '';
+    const matches = html.match(/<h[23]\b/gi);
+    return matches?.length ?? 0;
+  }, [l?.content]);
+
+  const positionLabel = total
+    ? `${String(idx >= 0 ? idx + 1 : 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`
+    : null;
+
+  const nextLesson = idx >= 0 && idx + 1 < lessons.length ? lessons[idx + 1] : null;
+
+  // Hide the bottom tab bar while this screen is focused so the
+  // slide-to-complete button has space to breathe at the bottom.
+  useFocusEffect(useCallback(() => {
+    const parent = nav.getParent();
+    parent?.setOptions({ tabBarStyle: { display: 'none' } });
+    return () => parent?.setOptions({ tabBarStyle: undefined });
+  }, [nav]));
+
   // Persist this lesson as "last opened" so Home's Continue card resumes here.
   useEffect(() => {
     if (!l) return;
@@ -91,39 +131,76 @@ export default function LessonReader() {
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
       <View style={styles.header}>
+        <View style={styles.headerGlowWrap} pointerEvents="none">
+          <RadialGlow size={200} intensity={0.12} />
+        </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => nav.goBack()} style={styles.iconBtn} hitSlop={8}>
           <Icon d={I.arrowL} size={18} color={colors.white} strokeWidth={2.2} />
         </Pressable>
         <Text style={styles.lessonOfTotal}>
           {total ? `Lesson ${idx >= 0 ? idx + 1 : 1}/${total}` : ''}
         </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
-          onPress={() => toggleBookmark(params.lessonId)}
-          style={styles.iconBtn}
-          hitSlop={8}>
-          <Icon d={I.bookmark} size={18} color={bookmarked ? colors.coral : colors.white} fill={bookmarked ? colors.coral : 'none'} />
-        </Pressable>
+        {nextLesson ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Next lesson"
+            onPress={() => nav.navigate('LessonReader', { lessonId: nextLesson.id, moduleId: params.moduleId })}
+            hitSlop={8}
+            style={({ pressed }) => [styles.nextBtn, pressed && { opacity: 0.85 }]}>
+            <Text style={styles.nextBtnText}>Next</Text>
+            <Icon d={I.arrowR} size={12} color={colors.white} strokeWidth={2.4} />
+          </Pressable>
+        ) : (
+          <View style={styles.iconBtn} />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {m && (
-          <View style={styles.modPill}>
-            <Text style={styles.modPillText}>{m.title}</Text>
+          <View style={styles.kickerRow}>
+            <View style={styles.kickerPill} />
+            <Text style={styles.kickerText} numberOfLines={1}>
+              {m.title.toUpperCase()}
+            </Text>
           </View>
         )}
-        <Text style={styles.title}>{l?.title || ' '}</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { flex: 1 }]}>{l?.title || ' '}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+            onPress={() => toggleBookmark(params.lessonId)}
+            hitSlop={10}
+            style={styles.titleBookmark}>
+            <Icon
+              d={I.bookmark}
+              size={22}
+              color={bookmarked ? colors.coral : colors.mute}
+              fill={bookmarked ? colors.coral : 'none'}
+            />
+          </Pressable>
+        </View>
         {!!l?.description && <Text style={styles.subTitle}>{l.description}</Text>}
         <View style={styles.metaRow}>
           <View style={styles.metaChip}>
-            <Icon d={I.clock} size={12} color={colors.mute} strokeWidth={2} />
+            <Icon d={I.clock} size={CHIP_ICON} color={colors.white} strokeWidth={2} />
             <Text style={styles.metaText}>{l?.read_time || 0} min read</Text>
           </View>
+          <Text style={styles.metaSep}>·</Text>
           <View style={styles.metaChip}>
-            <Icon d={I.layers} size={12} color={colors.mute} strokeWidth={2} />
-            <Text style={styles.metaText}>Lesson {(idx >= 0 ? idx + 1 : 1)} / {total || 1}</Text>
+            <Icon d={I.layers} size={CHIP_ICON} color={colors.white} strokeWidth={2} />
+            <Text style={styles.metaText}>
+              {sectionCount > 0 ? `${sectionCount} sections` : `${total || 1} lessons`}
+            </Text>
           </View>
+          {positionLabel && (
+            <>
+              <Text style={styles.metaSep}>·</Text>
+              <View style={styles.metaChip}>
+                <Text style={[styles.metaText, styles.metaPosition]}>{positionLabel}</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {lesson.error && !l ? (
@@ -174,20 +251,45 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: colors.ink, paddingHorizontal: 16, paddingVertical: 14,
+    overflow: 'hidden',
+    position: 'relative',
   },
+  headerGlowWrap: { position: 'absolute', top: -60, right: -60 },
   iconBtn: {
     width: 42, height: 42, borderRadius: 21,
     backgroundColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center', justifyContent: 'center',
   },
+  nextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: colors.coral,
+  },
+  nextBtnText: {
+    color: colors.white,
+    fontFamily: type.family.sans,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   lessonOfTotal: { color: 'rgba(255,255,255,0.8)', fontFamily: type.family.mono, fontSize: 12, fontWeight: '700' },
   scroll: { padding: 16, paddingBottom: 140 },
-  modPill: { alignSelf: 'flex-start', backgroundColor: colors.coral, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999 },
-  modPillText: { color: colors.white, fontFamily: type.family.sans, fontSize: 12, fontWeight: '800' },
-  title: { fontFamily: type.family.sans, fontSize: 28, fontWeight: '800', color: colors.ink, letterSpacing: -0.5, marginTop: 14, lineHeight: 34 },
-  subTitle: { fontFamily: type.family.sans, fontSize: 15, color: colors.mute, fontWeight: '600', marginTop: 8 },
-  metaRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.card, borderColor: colors.rule, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  metaText: { fontFamily: type.family.sans, fontSize: 12, color: colors.mute, fontWeight: '700' },
-  slideWrap: { position: 'absolute', left: 14, right: 14, bottom: 16 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  kickerPill: { width: KICKER_PILL_W, height: KICKER_PILL_H, borderRadius: 2, backgroundColor: colors.coral },
+  kickerText: { color: colors.coral, fontFamily: type.family.mono, fontSize: KICKER_FS, fontWeight: '800', letterSpacing: KICKER_LS, flexShrink: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10, gap: 12 },
+  title: { fontFamily: type.family.sans, fontSize: TITLE_FS, fontWeight: '800', color: colors.ink, letterSpacing: TITLE_LS, lineHeight: Math.round(TITLE_FS * 1.1) },
+  titleBookmark: { paddingTop: 4 },
+  subTitle: { fontFamily: type.family.sans, fontSize: SUB_FS, color: colors.mute, fontWeight: '500', marginTop: SUB_MT, lineHeight: Math.round(SUB_FS * 1.6) },
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: META_MT },
+  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.ink, paddingHorizontal: CHIP_PAD_H, paddingVertical: CHIP_PAD_V, borderRadius: 999 },
+  metaSep: { fontFamily: type.family.sans, fontSize: CHIP_FS, color: colors.mute, fontWeight: '700', marginHorizontal: 2 },
+  metaText: { fontFamily: type.family.sans, fontSize: CHIP_FS, color: colors.white, fontWeight: '700' },
+  metaPosition: { fontFamily: type.family.mono, letterSpacing: 0.6 },
+  // Tab bar is hidden on this screen (useFocusEffect), so the slide
+  // can sit close to the bottom with a comfortable safe-area margin.
+  slideWrap: { position: 'absolute', left: 14, right: 14, bottom: 30 },
 });

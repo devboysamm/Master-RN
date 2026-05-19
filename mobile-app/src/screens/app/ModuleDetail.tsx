@@ -29,8 +29,8 @@ const GLOW_TOP = -48;          // -40 × 1.2
 const GLOW_RIGHT = -36;        // -30 × 1.2
 const GLOW_SIZE = 192;         // 160 × 1.2
 
-const DECO_TOP = 40;           // moved lower (was 12) so it sits behind the title block
-const DECO_RIGHT = 17;         // 14 × 1.2
+const DECO_BOTTOM = 12;        // moved to bottom-right of hero
+const DECO_RIGHT = 14;         // per spec
 const DECO_FS = 64;            // explicit per spec — tightened from 72
 const DECO_LS = -4;            // explicit per spec — pulls "</>" glyphs together
 
@@ -66,12 +66,20 @@ const PRE_LABEL_LS = 1.7;      // 1.4 × 1.2
 const PRE_LABEL_MB = 10;       // 8 × 1.2
 const PRE_ROW_PAD_V_TOP = 2;
 const PRE_ROW_PAD_V_BOT = 5;   // 4 × 1.2
-const PRE_PILL_PAD_V = 7;      // 6 × 1.2
-const PRE_PILL_PAD_H = 14;     // 12 × 1.2
-const PRE_PILL_FS = 14;        // 11.5 × 1.2
-const PRE_DOT_SIZE = 17;       // 14 × 1.2
-const PRE_DOT_CHECK = 12;      // check icon inside the dot
-const PRE_PILL_INNER_GAP = 8;  // gap between dot and label
+/* Card-style prereq pill: cardAlt bg, subtle border + shadow, coral dot, ink text. */
+const PRE_PILL_PAD_V = 8;
+const PRE_PILL_PAD_H = 14;
+const PRE_PILL_FS = 12;
+const PRE_PILL_GAP = 8;
+const PRE_PILL_BORDER_W = 1;
+const PRE_DOT_SIZE = 8;
+
+/* AI Tutor pill in the hero top row */
+const AI_PILL_PAD_V = 6;
+const AI_PILL_PAD_H = 10;
+const AI_PILL_FS = 11;
+const AI_PILL_ICON = 14;
+const AI_PILL_GAP = 5;
 
 /* LESSONS */
 const LESSONS_PAD_H = 24;      // 20 × 1.2
@@ -126,6 +134,11 @@ export default function ModuleDetail() {
   const completedCount = lessons.filter((l) => isCompleted(l.id)).length;
   const refresh = () => { mod.refresh(); lessonsState.refresh(); };
 
+  const openChat = () => {
+    const parent = nav.getParent();
+    parent?.navigate('Chat' as never);
+  };
+
   // First non-completed lesson = "current".
   const currentIndex = lessons.findIndex((l) => !isCompleted(l.id));
 
@@ -152,14 +165,25 @@ export default function ModuleDetail() {
             {'</>'}
           </Text>
 
-          <Pressable
-            onPress={() => nav.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-            hitSlop={8}
-            style={styles.backBtn}>
-            <Icon d={I.arrowL} size={BACK_ICON} color={colors.white} strokeWidth={2.2} />
-          </Pressable>
+          <View style={styles.heroTopRow}>
+            <Pressable
+              onPress={() => nav.goBack()}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+              hitSlop={8}
+              style={styles.backBtn}>
+              <Icon d={I.arrowL} size={BACK_ICON} color={colors.white} strokeWidth={2.2} />
+            </Pressable>
+            <Pressable
+              onPress={openChat}
+              accessibilityRole="button"
+              accessibilityLabel="Ask the AI Tutor about this module"
+              hitSlop={6}
+              style={({ pressed }) => [styles.aiPill, pressed && { opacity: 0.85 }]}>
+              <Icon d={I.sparkle} size={AI_PILL_ICON} color={colors.white} fill={colors.white} strokeWidth={0} />
+              <Text style={styles.aiPillText}>AI Tutor</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.titleBlock}>
             <View style={styles.kickerRow}>
@@ -180,10 +204,6 @@ export default function ModuleDetail() {
                 <Icon d={I.clock} size={CHIP_ICON} color={colors.white} strokeWidth={2.2} />
                 <Text style={styles.chipText}>{formatTime(totalTime)}</Text>
               </View>
-              <View style={styles.chipCoral}>
-                <Icon d={I.sparkle} size={CHIP_ICON} color={colors.white} strokeWidth={2.2} />
-                <Text style={styles.chipText}>Beginner</Text>
-              </View>
             </View>
           </View>
         </View>
@@ -197,9 +217,7 @@ export default function ModuleDetail() {
             <View style={styles.preRow}>
               {prereqs.map((p) => (
                 <View key={p} style={styles.prePill}>
-                  <View style={styles.preDotDone}>
-                    <Icon d={I.check} size={PRE_DOT_CHECK} color={colors.white} strokeWidth={2.6} />
-                  </View>
+                  <View style={styles.preDot} />
                   <Text style={styles.prePillText}>{p}</Text>
                 </View>
               ))}
@@ -317,7 +335,7 @@ const styles = StyleSheet.create({
   },
   heroDecoration: {
     position: 'absolute',
-    top: DECO_TOP,
+    bottom: DECO_BOTTOM,
     right: DECO_RIGHT,
     color: 'rgba(242,106,74,0.06)',
     fontFamily: type.family.mono,
@@ -326,6 +344,11 @@ const styles = StyleSheet.create({
     letterSpacing: DECO_LS,
     lineHeight: Math.round(DECO_FS * 0.85),
   },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   backBtn: {
     width: BACK_SIZE,
     height: BACK_SIZE,
@@ -333,6 +356,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  aiPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: AI_PILL_GAP,
+    paddingVertical: AI_PILL_PAD_V,
+    paddingHorizontal: AI_PILL_PAD_H,
+    borderRadius: 999,
+    backgroundColor: colors.coral,
+  },
+  aiPillText: {
+    color: colors.white,
+    fontFamily: type.family.sans,
+    fontSize: AI_PILL_FS,
+    fontWeight: '700',
   },
   titleBlock: {
     marginTop: TITLE_BLOCK_MT,
@@ -416,33 +454,27 @@ const styles = StyleSheet.create({
   prePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: PRE_PILL_INNER_GAP,
+    gap: PRE_PILL_GAP,
     paddingVertical: PRE_PILL_PAD_V,
     paddingHorizontal: PRE_PILL_PAD_H,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.rule,
-    backgroundColor: 'transparent',
+    backgroundColor: colors.cardAlt,
+    borderWidth: PRE_PILL_BORDER_W,
+    borderColor: 'rgba(22,19,17,0.08)',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 1,
   },
-  preDotEmpty: {
+  preDot: {
     width: PRE_DOT_SIZE,
     height: PRE_DOT_SIZE,
     borderRadius: PRE_DOT_SIZE / 2,
-    borderWidth: 1.5,
-    borderColor: colors.mute,
+    backgroundColor: colors.coral,
   },
-  // (Kept for future use when prereqs become satisfiable.)
-  preDotDone: {
-    width: PRE_DOT_SIZE,
-    height: PRE_DOT_SIZE,
-    borderRadius: PRE_DOT_SIZE / 2,
-    backgroundColor: colors.ok,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  preDotCheck: { width: PRE_DOT_CHECK, height: PRE_DOT_CHECK },
   prePillText: {
-    color: colors.inkSoft,
+    color: colors.ink,
     fontFamily: type.family.sans,
     fontSize: PRE_PILL_FS,
     fontWeight: '700',

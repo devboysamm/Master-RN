@@ -34,7 +34,8 @@ const LIST_MT = 14;            // 17 × 0.85
 const LIST_GAP = 12;           // 14 × 0.85
 
 const CARD_RADIUS = 22;        // 26 × 0.85
-const CARD_PAD = 14;           // 17 × 0.85
+const CARD_PAD_V = 16;         // -2 from 18 for tighter top/bottom
+const CARD_PAD_H = 18;         // horizontal stays roomy
 const CARD_GAP = 12;           // 14 × 0.85
 const CARD_BORDER_W = 1;
 const CARD_BORDER_W_CURRENT = 1.6;
@@ -47,20 +48,24 @@ const KICKER_FS = 10;          // 12 × 0.85
 const KICKER_LS = 1.0;         // 1.2 × 0.85
 const CARD_TITLE_FS = 16;      // 19 × 0.85
 const CARD_TITLE_MT = 2;
-const CARD_META_FS = 11;       // 13 × 0.85
-const CARD_META_MT = 2;
+const CARD_META_FS = 12;       // +1 for legibility
+const CARD_META_MT = 8;        // +2 breathing room below the title
+const CARD_META_ICON = 13;     // +1 with the meta text
+const CARD_META_GAP = 5;       // gap inside the meta row
 
 const TRACK_MT = 8;            // 10 × 0.85
 const TRACK_H = 5;             // 6 × 0.85
 const TRACK_R = 3;             // 4 × 0.85
 
-const PCT_FS = 11;             // 13 × 0.85
+const PCT_FS = 13;             // bumped +2 for readability
 const PCT_GAP = 8;             // 10 × 0.85
 
-/* Title-row inline AI Chat button */
-const AI_BTN_SIZE = 34;
-const AI_BTN_R = 17;
-const AI_BTN_ICON = 16;
+/* Title-row inline AI Tutor pill */
+const AI_PILL_PAD_V = 6;
+const AI_PILL_PAD_H = 12;
+const AI_PILL_FS = 11;
+const AI_PILL_ICON = 14;
+const AI_PILL_GAP = 5;
 
 /* Filter bottom sheet */
 const SHEET_RADIUS = 22;
@@ -175,10 +180,11 @@ export default function Modules() {
           <Pressable
             onPress={openChat}
             accessibilityRole="button"
-            accessibilityLabel="Ask the AI Tutor"
-            hitSlop={8}
-            style={({ pressed }) => [styles.aiBtn, pressed && { opacity: 0.8 }]}>
-            <Icon d={I.sparkle} size={AI_BTN_ICON} color={colors.coral} strokeWidth={2} />
+            accessibilityLabel="AI Tutor online — tap to chat"
+            hitSlop={6}
+            style={({ pressed }) => [styles.aiPill, pressed && { opacity: 0.85 }]}>
+            <Icon d={I.sparkle} size={AI_PILL_ICON} color={colors.white} fill={colors.white} strokeWidth={0} />
+            <Text style={styles.aiPillText}>AI Tutor</Text>
           </Pressable>
         </View>
         <Text style={styles.meta}>
@@ -273,9 +279,17 @@ function ModuleCard({ module: m, index, isCurrent, lessons, completedIds, onPres
           MODULE {String(m.order_index || index + 1).padStart(2, '0')}
         </Text>
         <Text style={styles.cardTitle} numberOfLines={1}>{m.title}</Text>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {lessonCount > 0 ? `${lessonCount} lessons · ${formatTime(totalMinutes)}` : 'Loading…'}
-        </Text>
+        {lessonCount > 0 ? (
+          <View style={styles.cardMetaRow}>
+            <Icon d={I.layers} size={CARD_META_ICON} color={colors.mute} strokeWidth={2} />
+            <Text style={styles.cardMeta}>{lessonCount} lessons</Text>
+            <Text style={styles.cardMetaDot}>·</Text>
+            <Icon d={I.clock} size={CARD_META_ICON} color={colors.mute} strokeWidth={2} />
+            <Text style={styles.cardMeta}>{formatTime(totalMinutes)}</Text>
+          </View>
+        ) : (
+          <Text style={styles.cardMeta}>Loading…</Text>
+        )}
         <View style={styles.track}>
           <View
             style={[
@@ -391,13 +405,20 @@ const styles = StyleSheet.create({
     letterSpacing: TITLE_LS,
     flexShrink: 1,
   },
-  aiBtn: {
-    width: AI_BTN_SIZE,
-    height: AI_BTN_SIZE,
-    borderRadius: AI_BTN_R,
-    backgroundColor: colors.cardAlt,
+  aiPill: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: AI_PILL_GAP,
+    paddingVertical: AI_PILL_PAD_V,
+    paddingHorizontal: AI_PILL_PAD_H,
+    borderRadius: 999,
+    backgroundColor: colors.coral,
+  },
+  aiPillText: {
+    color: colors.white,
+    fontFamily: type.family.sans,
+    fontSize: AI_PILL_FS,
+    fontWeight: '700',
   },
   meta: {
     marginTop: META_MT,
@@ -421,7 +442,8 @@ const styles = StyleSheet.create({
     gap: CARD_GAP,
     backgroundColor: colors.card,
     borderRadius: CARD_RADIUS,
-    padding: CARD_PAD,
+    paddingVertical: CARD_PAD_V,
+    paddingHorizontal: CARD_PAD_H,
     borderWidth: CARD_BORDER_W,
     borderColor: colors.rule,
   },
@@ -448,12 +470,24 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: CARD_TITLE_MT,
   },
+  cardMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: CARD_META_GAP,
+    marginTop: CARD_META_MT,
+  },
   cardMeta: {
     color: colors.mute,
     fontFamily: type.family.sans,
     fontSize: CARD_META_FS,
     fontWeight: '600',
-    marginTop: CARD_META_MT,
+  },
+  cardMetaDot: {
+    color: colors.mute,
+    fontFamily: type.family.sans,
+    fontSize: CARD_META_FS,
+    fontWeight: '600',
+    marginHorizontal: 1,
   },
   track: {
     height: TRACK_H,

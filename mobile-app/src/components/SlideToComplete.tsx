@@ -23,6 +23,7 @@ const KNOB = 48;
 const PADDING = 4;
 
 export default function SlideToComplete({ onComplete, label = 'Slide to complete', meta, done }: Props) {
+  // ALL hooks MUST run on every render — no early returns above this block.
   const [trackWidth, setTrackWidth] = useState(0);
   const x = useSharedValue(0);
   const start = useSharedValue(0);
@@ -51,6 +52,25 @@ export default function SlideToComplete({ onComplete, label = 'Slide to complete
 
   const knobStyle = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));
   const fillStyle = useAnimatedStyle(() => ({ width: x.value + KNOB + PADDING * 2 }));
+
+  // Render the completed state AFTER all hooks have run so React sees the
+  // same hook count on every render regardless of `done`.
+  if (done) {
+    return (
+      <View style={[styles.wrap, styles.wrapDone]}>
+        <View style={styles.doneRow}>
+          <View style={styles.doneCheck}>
+            <Icon d={I.check} size={20} color={colors.white} strokeWidth={2.6} />
+          </View>
+          <View style={styles.doneLabels}>
+            <Text style={styles.doneLabel}>Completed</Text>
+            {meta ? <Text style={styles.doneMeta}>{meta}</Text> : null}
+          </View>
+          <View style={styles.doneSpacer} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrap} onLayout={onLayout}>
@@ -113,5 +133,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.45,
     shadowRadius: 14,
     elevation: 8,
+  },
+  /* Completed state */
+  wrapDone: { backgroundColor: colors.ok },
+  doneRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
+  doneCheck: {
+    width: KNOB, height: KNOB, borderRadius: KNOB / 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  doneLabels: { flex: 1, alignItems: 'center' },
+  doneSpacer: { width: KNOB, height: KNOB },
+  doneLabel: { color: colors.white, fontFamily: type.family.sans, fontSize: 13, fontWeight: '800' },
+  doneMeta: {
+    color: 'rgba(255,255,255,0.7)', fontFamily: type.family.mono,
+    fontSize: 9, fontWeight: '700', marginTop: 2, letterSpacing: 0.8,
   },
 });

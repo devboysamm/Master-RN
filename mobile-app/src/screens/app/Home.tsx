@@ -122,7 +122,7 @@ export default function Home() {
           })}
         </ScrollView>
 
-        <View style={{ gap: 10, marginTop: 12 }}>
+        <View style={{ gap: 11, marginTop: 12 }}>
           {visibleModules.length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>No modules yet. Pull to refresh.</Text>
@@ -319,9 +319,17 @@ function ModuleRow({ module: m, index, isCurrent, completedIds, onPress }: Modul
           MODULE {String(m.order_index || index + 1).padStart(2, '0')}
         </Text>
         <Text style={styles.moduleTitle} numberOfLines={1}>{m.title}</Text>
-        <Text style={styles.moduleMeta} numberOfLines={1}>
-          {lessonCount ? `${lessonCount} lessons · ${timeLabel}` : 'Loading…'}
-        </Text>
+        {lessonCount ? (
+          <View style={styles.moduleMetaRow}>
+            <Icon d={I.layers} size={13} color={colors.mute} strokeWidth={2} />
+            <Text style={styles.moduleMeta}>{lessonCount} lessons</Text>
+            <Text style={styles.moduleMetaDot}>·</Text>
+            <Icon d={I.clock} size={13} color={colors.mute} strokeWidth={2} />
+            <Text style={styles.moduleMeta}>{timeLabel}</Text>
+          </View>
+        ) : (
+          <Text style={styles.moduleMeta}>Loading…</Text>
+        )}
         <View style={styles.moduleTrack}>
           <View
             style={[
@@ -470,7 +478,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 22,
+    marginTop: 30,
     marginBottom: 4,
   },
   subSectionTitle: {
@@ -536,7 +544,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.card,
     borderRadius: 18,
-    padding: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: colors.rule,
   },
@@ -558,12 +567,24 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 1,
   },
+  moduleMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 8,
+  },
   moduleMeta: {
     color: colors.mute,
     fontFamily: type.family.sans,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    marginTop: 2,
+  },
+  moduleMetaDot: {
+    color: colors.mute,
+    fontFamily: type.family.sans,
+    fontSize: 12,
+    fontWeight: '700',
+    marginHorizontal: 1,
   },
   moduleTrack: {
     height: 4,
@@ -576,7 +597,7 @@ const styles = StyleSheet.create({
   modulePct: {
     color: colors.inkSoft,
     fontFamily: type.family.sans,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
     marginLeft: 10,
   },
@@ -604,7 +625,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     borderRadius: 20,
     padding: 14,
-    marginTop: 22,
+    marginTop: 38,
     overflow: 'hidden',
     position: 'relative',
   },
