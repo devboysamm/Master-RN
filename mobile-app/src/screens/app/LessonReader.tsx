@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -12,7 +12,9 @@ import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
 import { I } from '../../theme/icons';
 import { colors, type, radii } from '../../theme/tokens';
-import { useLesson, useModule, useModuleLessons } from '../../api/hooks';
+import { useLesson, useModule, useModuleLessons, useModules } from '../../api/hooks';
+import { getModuleLessons } from '../../api/modules';
+import type { Lesson } from '../../api/mock';
 import { useBookmarks } from '../../storage/bookmarks';
 import { useCompleted } from '../../storage/completed';
 import { setLastLesson } from '../../storage/lastLesson';
@@ -104,6 +106,58 @@ export default function LessonReader() {
     : null;
 
   const nextLesson = idx >= 0 && idx + 1 < lessons.length ? lessons[idx + 1] : null;
+  const isLastInModule = idx >= 0 && idx + 1 === lessons.length;
+
+  // Pull the full module list so we can resolve "next module" when the
+  // user reaches the last lesson of the current one.
+  const modulesState = useModules();
+  const allModules = useMemo(() => {
+    const arr = modulesState.data ?? [];
+    return [...arr].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  }, [modulesState.data]);
+  const nextModule = useMemo(() => {
+    if (!m) return null;
+    const pos = allModules.findIndex((x) => x.id === m.id);
+    return pos >= 0 && pos + 1 < allModules.length ? allModules[pos + 1] : null;
+  }, [m, allModules]);
+
+  // Lazy-fetch the first lesson of the next module so tapping
+  // "Next module →" lands the user directly in it.
+  const [nextModuleFirstLesson, setNextModuleFirstLesson] = useState<Lesson | null>(null);
+  useEffect(() => {
+    if (!isLastInModule || !nextModule) { setNextModuleFirstLesson(null); return; }
+    let cancelled = false;
+    getModuleLessons(nextModule.id).then((arr) => {
+      if (cancelled) return;
+      setNextModuleFirstLesson(arr[0] ?? null);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [isLastInModule, nextModule?.id]);
+
+  // Next button: label + handler vary by where we are in the course.
+  const nextButton: { label: string; onPress: () => void } | null =
+    nextLesson
+      ? {
+          label: 'Next',
+          onPress: () => nav.navigate('LessonReader', {
+            lessonId: nextLesson.id,
+            moduleId: params.moduleId,
+          }),
+        }
+      : isLastInModule && nextModule && nextModuleFirstLesson
+      ? {
+          label: 'Next module',
+          onPress: () => nav.navigate('LessonReader', {
+            lessonId: nextModuleFirstLesson.id,
+            moduleId: nextModule.id,
+          }),
+        }
+      : isLastInModule && !nextModule
+      ? {
+          label: 'Finish',
+          onPress: () => nav.popToTop(),
+        }
+      : null;
 
   // Hide the bottom tab bar while this screen is focused so the
   // slide-to-complete button has space to breathe at the bottom.
@@ -140,14 +194,14 @@ export default function LessonReader() {
         <Text style={styles.lessonOfTotal}>
           {total ? `Lesson ${idx >= 0 ? idx + 1 : 1}/${total}` : ''}
         </Text>
-        {nextLesson ? (
+        {nextButton ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Next lesson"
-            onPress={() => nav.navigate('LessonReader', { lessonId: nextLesson.id, moduleId: params.moduleId })}
+            accessibilityLabel={nextButton.label}
+            onPress={nextButton.onPress}
             hitSlop={8}
             style={({ pressed }) => [styles.nextBtn, pressed && { opacity: 0.85 }]}>
-            <Text style={styles.nextBtnText}>Next</Text>
+            <Text style={styles.nextBtnText}>{nextButton.label}</Text>
             <Icon d={I.arrowR} size={12} color={colors.white} strokeWidth={2.4} />
           </Pressable>
         ) : (
@@ -272,7 +326,7 @@ const styles = StyleSheet.create({
   nextBtnText: {
     color: colors.white,
     fontFamily: type.family.sans,
-    fontSize: 13,                       // +2 for readability
+    fontSize: 14,                       // bumped +1 for the longer "Next module" label
     fontWeight: '700',
   },
   lessonOfTotal: { color: 'rgba(255,255,255,0.8)', fontFamily: type.family.mono, fontSize: 14, fontWeight: '700' },

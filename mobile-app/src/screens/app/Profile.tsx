@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   signOutText: { color: colors.ink, fontFamily: type.family.sans, fontSize: SIGNOUT_FS, fontWeight: '700' },
 
   /* Stats row (signed-in) */
-  statsRow: { flexDirection: 'row', gap: 8, marginTop: 18 },
+  statsRow: { flexDirection: 'row', gap: 8, marginTop: 23 },
   statCard: {
     flex: 1,
     backgroundColor: 'rgba(255,255,255,0.08)',

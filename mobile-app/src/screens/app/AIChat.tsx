@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, Pressable, StyleSheet, Keyboard,
   LayoutChangeEvent, FlatList, ListRenderItem,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -73,9 +73,9 @@ const INPUT_MAX_H = 110;           // ~4 lines before scroll
 const SEND_SIZE = 44;
 const SEND_ICON = 19;
 
-/* Tab bar geometry — matches TabBar.tsx (height 64 + Math.max(insets.bottom, 12)) */
-const TAB_BAR_HEIGHT = 64;
-const TAB_BAR_GAP = 10;            // breathing room above the bar
+/* Tab bar is hidden on this screen (useFocusEffect below), so the composer
+ * sits at the bottom safe-area edge with a small visual gap. */
+const BOTTOM_GAP = 10;
 
 type Role = 'user' | 'ai';
 type Message = {
@@ -183,11 +183,19 @@ export default function AIChat() {
     else nav.getParent()?.navigate('Home');
   };
 
-  // Tab bar's TOP edge from the screen bottom (matches TabBar.tsx).
-  const tabBarTop = Math.max(insets.bottom, 12) + TAB_BAR_HEIGHT;
-  // Sticky-bottom container sits above the tab bar when no keyboard;
-  // jumps just above the keyboard when shown.
-  const stickyBottom = kbH > 0 ? kbH + 8 : tabBarTop + TAB_BAR_GAP;
+  // Hide the bottom tab bar while this screen is focused — chat needs the
+  // full bottom edge for the composer and pills.
+  useFocusEffect(useCallback(() => {
+    const parent = nav.getParent();
+    parent?.setOptions({ tabBarStyle: { display: 'none' } });
+    return () => parent?.setOptions({ tabBarStyle: undefined });
+  }, [nav]));
+
+  // With the tab bar hidden, the sticky bottom can sit just above the
+  // safe-area edge (or just above the keyboard when it's open).
+  const stickyBottom = kbH > 0
+    ? kbH + 8
+    : Math.max(insets.bottom, 12) + BOTTOM_GAP;
 
   const onStickyLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
@@ -226,9 +234,14 @@ export default function AIChat() {
           </View>
         </View>
 
-        {/* Invisible spacer keeps "Native AI" visually centered without the
-         *  old three-dot pill. Same width as the back button. */}
-        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={() => nav.getParent()?.navigate('Home')}
+          accessibilityRole="button"
+          accessibilityLabel="Go to home"
+          hitSlop={8}
+          style={styles.iconBtn}>
+          <Icon d={I.home} size={HEADER_ICON} color={colors.ink} strokeWidth={2.2} />
+        </Pressable>
       </View>
 
       {messages.length === 0 ? (
@@ -293,10 +306,9 @@ export default function AIChat() {
 function EmptyState({ onPick }: { onPick: (s: string) => void }) {
   return (
     <View style={styles.empty}>
-      <View style={styles.emptyAvatarRing}>
-        <View style={styles.emptyAvatarInner}>
-          <AtomLogo size={56} strokeWidth={8} showDot />
-        </View>
+      {/* AtomLogo only — no ring, no ink circle, no outline. */}
+      <View style={styles.emptyAvatarSlot}>
+        <AtomLogo size={56} strokeWidth={8} showDot />
       </View>
       <Text style={styles.emptyHead}>Ready when you are.</Text>
       <Text style={styles.emptySub}>
@@ -438,7 +450,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   aiPill: { flexDirection: 'row', alignItems: 'center', gap: HEADER_PILL_GAP },
-  headerSpacer: { width: HEADER_BTN_SIZE, height: HEADER_BTN_SIZE },
   aiName: {
     fontFamily: type.family.sans, fontSize: NAME_FS, fontWeight: '800',
     color: colors.ink, letterSpacing: -0.2,
@@ -456,18 +467,7 @@ const styles = StyleSheet.create({
     paddingTop: EMPTY_PAD_V,
     paddingHorizontal: 14,
   },
-  emptyAvatarRing: {
-    width: 84, height: 84, borderRadius: 42,
-    borderWidth: 1.5, borderColor: 'rgba(242,106,74,0.20)',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 18,
-  },
-  emptyAvatarInner: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: colors.ink,
-    alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden',
-  },
+  emptyAvatarSlot: { marginBottom: 18 },
   emptyHead: {
     color: colors.ink, fontFamily: type.family.sans,
     fontSize: EMPTY_HEAD_FS, fontWeight: '800', letterSpacing: -0.4,

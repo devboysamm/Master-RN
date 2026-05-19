@@ -47,13 +47,17 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
               style={styles.tab}>
               <View style={[styles.iconWrap, focused && !isChat && styles.iconWrapActive]}>
                 {isChat ? (
-                  <Text
-                    style={[
-                      styles.aiText,
-                      { color: focused ? colors.coral : 'rgba(255,255,255,0.45)' },
-                    ]}>
-                    AI
-                  </Text>
+                  <View style={styles.aiBlock}>
+                    <Text
+                      style={[
+                        styles.aiText,
+                        { color: focused ? colors.coral : 'rgba(255,255,255,0.45)' },
+                      ]}>
+                      AI
+                    </Text>
+                    {/* Always-on green dot: signals "AI is online and ready". */}
+                    <View style={styles.aiDot} />
+                  </View>
                 ) : (
                   <Icon
                     d={TAB_ICONS[route.name] || I.home}
@@ -105,10 +109,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapActive: { backgroundColor: colors.coral },
+  aiBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
   aiText: {
     fontFamily: type.family.sans,
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '800',
     letterSpacing: 0.4,
   },
+  aiDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.ok },
 });
