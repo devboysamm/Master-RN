@@ -38,15 +38,15 @@ const ROW_PAD_H = 18;           // matches Modules CARD_PAD_H
 const ROW_GAP = 12;             // matches Modules CARD_GAP
 const ROW_LIST_GAP = 12;        // matches Modules LIST_GAP
 
-const THUMB_W = 71;             // matches Modules THUMB_W
-const THUMB_H = 80;             // matches Modules THUMB_H
-const THUMB_R = 16;             // matches Modules THUMB_R
+const THUMB_W = 57;             // 71 × 0.8 ≈ 57 (-20% from Modules thumb)
+const THUMB_H = 64;             // 80 × 0.8 (-20% from Modules thumb)
+const THUMB_R = 13;             // 16 × 0.8 ≈ 13 (proportional)
 
-const ROW_KICKER_FS = 10;       // matches Modules KICKER_FS
+const ROW_KICKER_FS = 10;       // matches Modules KICKER_FS (unchanged)
 const ROW_KICKER_LS = 1.0;      // matches Modules KICKER_LS
-const ROW_TITLE_FS = 16;        // matches Modules CARD_TITLE_FS
-const ROW_TITLE_MT = 2;         // matches Modules CARD_TITLE_MT
-const ROW_META_FS = 12;         // matches Modules CARD_META_FS
+const ROW_TITLE_FS = 17;        // +1 from Modules CARD_TITLE_FS
+const ROW_TITLE_MT = 2;
+const ROW_META_FS = 14;         // +2 from Modules CARD_META_FS
 const ROW_META_MT = 8;          // matches Modules CARD_META_MT
 const ROW_META_ICON = 13;       // matches Modules CARD_META_ICON
 const ROW_META_GAP = 5;         // matches Modules CARD_META_GAP

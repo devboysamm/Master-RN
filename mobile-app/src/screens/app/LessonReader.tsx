@@ -30,7 +30,7 @@ const SUB_MT = 7;            // spec 6 × 1.2
 const META_MT = 14;          // spec 12 × 1.2
 const CHIP_PAD_V = 7;        // chunkier pill
 const CHIP_PAD_H = 14;       // chunkier pill
-const CHIP_FS = 11;          // -1 from 12
+const CHIP_FS = 13;          // bumped +2 for the three meta pills
 const CHIP_ICON = 12;        // scaled down with the text
 
 const BODY_FS = 15;          // -1 from 16
@@ -272,10 +272,10 @@ const styles = StyleSheet.create({
   nextBtnText: {
     color: colors.white,
     fontFamily: type.family.sans,
-    fontSize: 11,
+    fontSize: 13,                       // +2 for readability
     fontWeight: '700',
   },
-  lessonOfTotal: { color: 'rgba(255,255,255,0.8)', fontFamily: type.family.mono, fontSize: 12, fontWeight: '700' },
+  lessonOfTotal: { color: 'rgba(255,255,255,0.8)', fontFamily: type.family.mono, fontSize: 14, fontWeight: '700' },
   scroll: { padding: 16, paddingBottom: 140 },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   kickerPill: { width: KICKER_PILL_W, height: KICKER_PILL_H, borderRadius: 2, backgroundColor: colors.coral },

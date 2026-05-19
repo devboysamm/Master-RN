@@ -107,7 +107,12 @@ export default function CodeBlock({ code, language, filename }: Props) {
   const langLabel = (language || '').toUpperCase();
   const fileLabel = filename || defaultFilename(language);
   const trimmed = code.replace(/\n$/, '');
-  const tokens = useMemo(() => tokenize(trimmed), [trimmed]);
+
+  // Tokenise per-line so we can render each line as a single-line Text
+  // inside the horizontal ScrollView. This keeps the ScrollView's height
+  // tight to the actual content (otherwise it can balloon to fill the
+  // parent's available height).
+  const lines = useMemo(() => trimmed.split('\n').map(tokenize), [trimmed]);
 
   return (
     <View style={styles.wrap}>
@@ -124,12 +129,22 @@ export default function CodeBlock({ code, language, filename }: Props) {
           </View>
         ) : <View style={styles.langSpacer} />}
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.codeScroll}>
-        <Text style={styles.code}>
-          {tokens.map((t, i) => (
-            <Text key={i} style={{ color: t.color }}>{t.text}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.codeScroll}
+        // Critical: prevent the ScrollView from stretching vertically
+        // beyond its content when placed inside another flex container.
+        style={styles.codeScrollStyle}>
+        <View>
+          {lines.map((tokens, lineIdx) => (
+            <Text key={lineIdx} numberOfLines={1} style={styles.code}>
+              {tokens.length === 0 ? ' ' : tokens.map((t, i) => (
+                <Text key={i} style={{ color: t.color }}>{t.text}</Text>
+              ))}
+            </Text>
           ))}
-        </Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -141,6 +156,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS,
     overflow: 'hidden',
     marginVertical: 10,
+    alignSelf: 'stretch',
   },
   bar: {
     height: BAR_H,
@@ -182,6 +198,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   langSpacer: { width: DOTS_ML + (DOT_SIZE * 3) + (DOTS_GAP * 2) },
+  // `flexGrow: 0` is the fix for the "huge empty void" bug: by default a
+  // nested ScrollView can be sized by its parent's available height; this
+  // pins it to its content height instead.
+  codeScrollStyle: { flexGrow: 0 },
   codeScroll: {
     padding: CODE_PAD,
   },

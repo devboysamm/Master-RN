@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, Pressable, StyleSheet, Keyboard,
-  LayoutChangeEvent,
+  LayoutChangeEvent, FlatList, ListRenderItem,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -124,7 +124,7 @@ export default function AIChat() {
   const [loading, setLoading] = useState(false);
   const [kbH, setKbH] = useState(0);
   const [stickyH, setStickyH] = useState(72);   // measured at runtime
-  const scrollRef = useRef<ScrollView>(null);
+  const listRef = useRef<FlatList<Message>>(null);
 
   // Keyboard tracking — composer + pills lift smoothly with the keyboard.
   useEffect(() => {
@@ -133,9 +133,11 @@ export default function AIChat() {
     return () => { showSub.remove(); hideSub.remove(); };
   }, []);
 
-  // Auto-scroll on new message / loading toggle.
+  // FlatList is inverted, so the "bottom" of the visible chat is offset 0.
   useEffect(() => {
-    requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    requestAnimationFrame(() =>
+      listRef.current?.scrollToOffset({ offset: 0, animated: true }),
+    );
   }, [messages.length, loading]);
 
   const send = (text: string) => {
@@ -192,6 +194,14 @@ export default function AIChat() {
     if (Math.abs(h - stickyH) > 1) setStickyH(h);
   };
 
+  // Inverted FlatList wants the newest message at index 0.
+  const inverted = useMemo(() => [...messages].reverse(), [messages]);
+  const renderItem: ListRenderItem<Message> = ({ item }) => (
+    item.role === 'user'
+      ? <UserBubble text={item.text} ts={item.ts} />
+      : <AiBubble   text={item.text} code={item.code} ts={item.ts} />
+  );
+
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
       <View style={styles.header}>
@@ -205,9 +215,8 @@ export default function AIChat() {
         </Pressable>
 
         <View style={styles.aiPill}>
-          <View style={styles.avatar}>
-            <AtomLogo size={AVATAR_ATOM} strokeWidth={10} showDot />
-          </View>
+          {/* Atom sits directly on the screen bg — no surrounding circle. */}
+          <AtomLogo size={AVATAR_SIZE} strokeWidth={10} showDot />
           <View>
             <Text style={styles.aiName}>Native AI</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -217,34 +226,35 @@ export default function AIChat() {
           </View>
         </View>
 
-        {/* Spacer keeps the title visually centered now that the menu is gone. */}
-        <View style={styles.iconBtn} />
+        {/* Invisible spacer keeps "Native AI" visually centered without the
+         *  old three-dot pill. Same width as the back button. */}
+        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        ref={scrollRef}
-        style={{ flex: 1 }}
-        contentContainerStyle={[
-          styles.scroll,
-          {
-            flexGrow: 1,
-            justifyContent: messages.length === 0 ? 'center' : 'flex-end',
-            paddingBottom: stickyBottom + stickyH + 16,
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        {messages.length === 0 ? (
+      {messages.length === 0 ? (
+        <View style={[styles.emptyHolder, { paddingBottom: stickyBottom + stickyH + 16 }]}>
           <EmptyState onPick={fillPrompt} />
-        ) : (
-          messages.map((m) => (
-            m.role === 'user'
-              ? <UserBubble key={m.id} text={m.text} ts={m.ts} />
-              : <AiBubble   key={m.id} text={m.text} code={m.code} ts={m.ts} />
-          ))
-        )}
-        {loading && <TypingBubble />}
-      </ScrollView>
+        </View>
+      ) : (
+        <FlatList
+          ref={listRef}
+          data={inverted}
+          renderItem={renderItem}
+          keyExtractor={(m) => m.id}
+          inverted
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingTop: stickyBottom + stickyH + 16 },   // visual BOTTOM in inverted
+          ]}
+          // While loading, render the typing bubble as the header — which in
+          // an inverted list shows at the visual BOTTOM, right after the
+          // latest message.
+          ListHeaderComponent={loading ? <TypingBubble /> : null}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        />
+      )}
 
       {/* Sticky bottom: quick replies + composer.
        *  Bottom edge sits at `stickyBottom` from screen bottom, so it's
@@ -428,12 +438,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   aiPill: { flexDirection: 'row', alignItems: 'center', gap: HEADER_PILL_GAP },
-  avatar: {
-    width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2,
-    backgroundColor: colors.ink,
-    alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden',
-  },
+  headerSpacer: { width: HEADER_BTN_SIZE, height: HEADER_BTN_SIZE },
   aiName: {
     fontFamily: type.family.sans, fontSize: NAME_FS, fontWeight: '800',
     color: colors.ink, letterSpacing: -0.2,
@@ -441,8 +446,9 @@ const styles = StyleSheet.create({
   dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, backgroundColor: colors.ok },
   aiMeta: { fontFamily: type.family.sans, fontSize: META_FS, fontWeight: '700', color: colors.mute },
 
-  /* Scroll */
-  scroll: { paddingHorizontal: 16, paddingTop: 8 },
+  /* Lists */
+  listContent: { paddingHorizontal: 16, paddingBottom: 8 },
+  emptyHolder: { flex: 1, paddingHorizontal: 16, justifyContent: 'center' },
 
   /* Empty state */
   empty: {
