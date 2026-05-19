@@ -4,7 +4,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withTiming,
+  Easing,
   runOnJS,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +22,8 @@ type Props = {
 
 const KNOB = 48;
 const PADDING = 4;
+const EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
+const ANIM = { duration: 300, easing: EASE };
 
 export default function SlideToComplete({ onComplete, label = 'Slide to complete', meta, done }: Props) {
   // ALL hooks MUST run on every render — no early returns above this block.
@@ -43,10 +46,10 @@ export default function SlideToComplete({ onComplete, label = 'Slide to complete
     })
     .onEnd(() => {
       if (x.value >= threshold) {
-        x.value = withSpring(max, { damping: 18, stiffness: 200 });
+        x.value = withTiming(max, ANIM);
         runOnJS(onComplete)();
       } else {
-        x.value = withSpring(0, { damping: 16, stiffness: 180 });
+        x.value = withTiming(0, ANIM);
       }
     });
 
@@ -59,15 +62,10 @@ export default function SlideToComplete({ onComplete, label = 'Slide to complete
     return (
       <View style={[styles.wrap, styles.wrapDone]}>
         <View style={styles.doneRow}>
-          <View style={styles.doneCheck}>
-            <Icon d={I.check} size={20} color={colors.white} strokeWidth={2.6} />
-          </View>
-          <View style={styles.doneLabels}>
-            <Text style={styles.doneLabel}>Completed</Text>
-            {meta ? <Text style={styles.doneMeta}>{meta}</Text> : null}
-          </View>
-          <View style={styles.doneSpacer} />
+          <Icon d={I.check} size={20} color={colors.white} strokeWidth={2.6} />
+          <Text style={styles.doneLabel}>Completed</Text>
         </View>
+        {meta ? <Text style={styles.doneMeta}>{meta}</Text> : null}
       </View>
     );
   }
@@ -134,19 +132,12 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 8,
   },
-  /* Completed state */
-  wrapDone: { backgroundColor: colors.ok },
-  doneRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
-  doneCheck: {
-    width: KNOB, height: KNOB, borderRadius: KNOB / 2,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  doneLabels: { flex: 1, alignItems: 'center' },
-  doneSpacer: { width: KNOB, height: KNOB },
-  doneLabel: { color: colors.white, fontFamily: type.family.sans, fontSize: 13, fontWeight: '800' },
+  /* Completed state: same pill shape as the slider, green fill, centered content */
+  wrapDone: { backgroundColor: colors.ok, alignItems: 'center' },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  doneLabel: { color: colors.white, fontFamily: type.family.sans, fontSize: 14, fontWeight: '700' },
   doneMeta: {
     color: 'rgba(255,255,255,0.7)', fontFamily: type.family.mono,
-    fontSize: 9, fontWeight: '700', marginTop: 2, letterSpacing: 0.8,
+    fontSize: 10, fontWeight: '700', marginTop: 2, letterSpacing: 0.8,
   },
 });

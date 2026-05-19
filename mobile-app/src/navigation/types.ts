@@ -29,7 +29,8 @@ export type ChatStackParamList = {
 
 export type ProfileStackParamList = {
   Profile: undefined;
-  Settings: undefined;
+  HelpFeedback: undefined;
+  About: undefined;
 };
 
 export type AppTabParamList = {

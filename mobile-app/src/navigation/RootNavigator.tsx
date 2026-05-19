@@ -17,7 +17,8 @@ import LessonCode from '../screens/app/LessonCode';
 import Bookmarks from '../screens/app/Bookmarks';
 import AIChat from '../screens/app/AIChat';
 import Profile from '../screens/app/Profile';
-import Settings from '../screens/app/Settings';
+import HelpFeedback from '../screens/app/HelpFeedback';
+import About from '../screens/app/About';
 
 import TabBar from '../components/TabBar';
 import { useAuth } from '../context/AuthContext';
@@ -42,12 +43,21 @@ const ChatStack = createNativeStackNavigator<ChatStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabParamList>();
 
-function AuthFlow() {
+function AuthFlow({ pendingAuthMode }: { pendingAuthMode: 'signin' | 'signup' | null }) {
+  // When a guest taps "Sign in" / "Create account" from inside the app,
+  // skip Splash + Welcome and open the Auth screen on the matching tab.
+  const initialRouteName = pendingAuthMode ? 'Auth' : 'Splash';
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.splashBg } }}>
+    <AuthStack.Navigator
+      initialRouteName={initialRouteName}
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.splashBg } }}>
       <AuthStack.Screen name="Splash" component={Splash} />
       <AuthStack.Screen name="Welcome" component={Welcome} />
-      <AuthStack.Screen name="Auth" component={Auth} />
+      <AuthStack.Screen
+        name="Auth"
+        component={Auth}
+        initialParams={pendingAuthMode ? { mode: pendingAuthMode } : undefined}
+      />
       <AuthStack.Screen name="Forgot" component={Forgot} />
     </AuthStack.Navigator>
   );
@@ -100,7 +110,8 @@ function ProfileTab() {
   return (
     <ProfileStack.Navigator screenOptions={stackOptions}>
       <ProfileStack.Screen name="Profile" component={Profile} />
-      <ProfileStack.Screen name="Settings" component={Settings} />
+      <ProfileStack.Screen name="HelpFeedback" component={HelpFeedback} />
+      <ProfileStack.Screen name="About" component={About} />
     </ProfileStack.Navigator>
   );
 }
@@ -120,7 +131,7 @@ function AppTabs() {
 }
 
 export default function RootNavigator() {
-  const { user, isGuest, hydrated } = useAuth();
+  const { user, isGuest, hydrated, pendingAuthMode } = useAuth();
   if (!hydrated) return <View style={{ flex: 1, backgroundColor: colors.splashBg }} />;
   const authed = !!user || isGuest;
   return (
@@ -129,7 +140,9 @@ export default function RootNavigator() {
         {authed ? (
           <RootStack.Screen name="App" component={AppTabs} />
         ) : (
-          <RootStack.Screen name="Auth" component={AuthFlow} />
+          <RootStack.Screen name="Auth">
+            {() => <AuthFlow pendingAuthMode={pendingAuthMode} />}
+          </RootStack.Screen>
         )}
       </RootStack.Navigator>
     </NavigationContainer>

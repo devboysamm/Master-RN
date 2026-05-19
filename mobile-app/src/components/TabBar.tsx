@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   iconWrapActive: { backgroundColor: colors.coral },
   aiText: {
     fontFamily: type.family.sans,
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.4,
   },

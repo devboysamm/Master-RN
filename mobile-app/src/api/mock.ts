@@ -32,6 +32,9 @@ export type AppContent = {
   featured_module_id?: number | null;
   premium_title?: string | null;
   premium_description?: string | null;
+  support_email?: string | null;
+  contact_url?: string | null;
+  help_content?: string | null;
 };
 
 export const mockAppContent: AppContent = {
@@ -47,6 +50,9 @@ export const mockAppContent: AppContent = {
   featured_module_id: 3,
   premium_title: null,
   premium_description: null,
+  support_email: 'info@masterreactnative.dev',
+  contact_url: 'https://masterreactnative.dev/contact-us',
+  help_content: null,
 };
 
 export const mockCategories = [

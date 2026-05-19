@@ -61,9 +61,9 @@ const PCT_FS = 13;             // bumped +2 for readability
 const PCT_GAP = 8;             // 10 × 0.85
 
 /* Title-row inline AI Tutor pill */
-const AI_PILL_PAD_V = 6;
-const AI_PILL_PAD_H = 12;
-const AI_PILL_FS = 11;
+const AI_PILL_PAD_V = 7;       // +1
+const AI_PILL_PAD_H = 14;      // +2
+const AI_PILL_FS = 12;         // +1
 const AI_PILL_ICON = 14;
 const AI_PILL_GAP = 5;
 

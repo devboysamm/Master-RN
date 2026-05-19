@@ -25,15 +25,15 @@ const KICKER_FS = 12;        // spec 10 × 1.2
 const KICKER_LS = 1.7;       // spec 1.4 × 1.2
 const TITLE_FS = 28;         // reduced -3 (was 31)
 const TITLE_LS = -0.48;      // spec -0.4 × 1.2
-const SUB_FS = 16;           // -2 for tighter subtitle
+const SUB_FS = 15;           // +1 from 14
 const SUB_MT = 7;            // spec 6 × 1.2
 const META_MT = 14;          // spec 12 × 1.2
-const CHIP_PAD_V = 5;        // tightened for the new dark pill style
-const CHIP_PAD_H = 10;
-const CHIP_FS = 10;          // dark pill — smaller, denser
-const CHIP_ICON = 11;        // scaled with the new pill text
+const CHIP_PAD_V = 7;        // chunkier pill
+const CHIP_PAD_H = 14;       // chunkier pill
+const CHIP_FS = 11;          // -1 from 12
+const CHIP_ICON = 12;        // scaled down with the text
 
-const BODY_FS = 16;          // +2 for readability
+const BODY_FS = 15;          // -1 from 16
 const BODY_LH = Math.round(BODY_FS * 1.7);
 
 const baseStyle: MixedStyleDeclaration = {
@@ -174,7 +174,7 @@ export default function LessonReader() {
             style={styles.titleBookmark}>
             <Icon
               d={I.bookmark}
-              size={22}
+              size={18}
               color={bookmarked ? colors.coral : colors.mute}
               fill={bookmarked ? colors.coral : 'none'}
             />
@@ -282,7 +282,16 @@ const styles = StyleSheet.create({
   kickerText: { color: colors.coral, fontFamily: type.family.mono, fontSize: KICKER_FS, fontWeight: '800', letterSpacing: KICKER_LS, flexShrink: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 10, gap: 12 },
   title: { fontFamily: type.family.sans, fontSize: TITLE_FS, fontWeight: '800', color: colors.ink, letterSpacing: TITLE_LS, lineHeight: Math.round(TITLE_FS * 1.1) },
-  titleBookmark: { paddingTop: 4 },
+  titleBookmark: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1.5,
+    borderColor: 'rgba(22,19,17,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
   subTitle: { fontFamily: type.family.sans, fontSize: SUB_FS, color: colors.mute, fontWeight: '500', marginTop: SUB_MT, lineHeight: Math.round(SUB_FS * 1.6) },
   metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: META_MT },
   metaChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.ink, paddingHorizontal: CHIP_PAD_H, paddingVertical: CHIP_PAD_V, borderRadius: 999 },

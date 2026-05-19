@@ -15,6 +15,9 @@ const emptyContent = {
   featured_module_id: '',
   premium_title: '',
   premium_description: '',
+  support_email: '',
+  contact_url: '',
+  help_content: '',
 };
 
 // Only these are server-side required. Welcome screen extras + URLs are optional.
@@ -300,6 +303,87 @@ export default function Settings() {
                 onChange={set('premium_description')}
                 placeholder="Deep dives, source code, and weekly office hours."
               />
+            </div>
+
+            <div style={{ height: 1, background: MRN.rule, margin: '12px 0 8px' }} />
+            <div style={{ fontSize: 13, color: MRN.mute, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+              About &amp; Support
+            </div>
+
+            <div className="field">
+              <label className="label">About text</label>
+              <textarea
+                className="textarea"
+                rows={4}
+                value={content.app_description}
+                onChange={set('app_description')}
+                placeholder="Master RN is a practical, bite-sized course to ship your first native app."
+              />
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Shown when the user taps “About Master RN” in the mobile Profile screen.
+                (Same field as the App description above; edits sync.)
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+              <div className="field">
+                <label className="label">Support email</label>
+                <input
+                  className="input"
+                  value={content.support_email}
+                  onChange={set('support_email')}
+                  placeholder="info@masterreactnative.dev"
+                />
+                <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                  Displayed under “Help and feedback”.
+                </div>
+              </div>
+              <div className="field">
+                <label className="label">Contact page URL</label>
+                <input
+                  className="input"
+                  value={content.contact_url}
+                  onChange={set('contact_url')}
+                  placeholder="https://masterreactnative.dev/contact-us"
+                />
+                <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                  Opens in browser when the user taps “Help and feedback”.
+                </div>
+              </div>
+            </div>
+
+            <div className="field">
+              <label className="label">Help page content (HTML)</label>
+              <textarea
+                className="textarea"
+                rows={10}
+                value={content.help_content}
+                onChange={set('help_content')}
+                placeholder={'<h2>Need a hand?</h2>\n<p>Email us at <a href="mailto:info@masterreactnative.dev">info@masterreactnative.dev</a></p>\n<h3>Report a bug</h3>\n<p>…</p>'}
+                style={{ fontFamily: MRN.mono }}
+              />
+              <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
+                Rendered on the mobile Help &amp; feedback screen. Supports
+                <code style={{ background: MRN.cardAlt, padding: '0 4px', borderRadius: 3, margin: '0 4px' }}>&lt;h2&gt;</code>
+                <code style={{ background: MRN.cardAlt, padding: '0 4px', borderRadius: 3, margin: '0 4px' }}>&lt;p&gt;</code>
+                <code style={{ background: MRN.cardAlt, padding: '0 4px', borderRadius: 3, margin: '0 4px' }}>&lt;a&gt;</code>
+                <code style={{ background: MRN.cardAlt, padding: '0 4px', borderRadius: 3, margin: '0 4px' }}>&lt;ul&gt;</code> etc.
+                Leave blank to show “Content coming soon.”
+              </div>
+              {content.help_content?.trim() && (
+                <div style={{
+                  marginTop: 12, padding: 16, borderRadius: 12,
+                  background: MRN.card, border: `1px solid ${MRN.rule}`,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: MRN.mute, letterSpacing: 1, marginBottom: 8 }}>
+                    PREVIEW
+                  </div>
+                  <div
+                    style={{ fontSize: 14, lineHeight: 1.6, color: MRN.ink }}
+                    dangerouslySetInnerHTML={{ __html: content.help_content }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

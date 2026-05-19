@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.ink,
     borderRadius: 20,
     padding: 14,
-    marginTop: 38,
+    marginTop: 24,
     overflow: 'hidden',
     position: 'relative',
   },

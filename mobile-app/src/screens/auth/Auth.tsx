@@ -119,7 +119,14 @@ export default function Auth() {
           {/* Top bar: back + small atom */}
           <View style={styles.topBar}>
             <Pressable
-              onPress={() => nav.goBack()}
+              onPress={() => {
+                // Auth might be the AuthStack's initial route (e.g. when a
+                // guest taps Sign in from inside the app). In that case
+                // there's no screen to go back to — drop back into the app
+                // as a guest instead of throwing GO_BACK.
+                if (nav.canGoBack()) nav.goBack();
+                else continueAsGuest();
+              }}
               accessibilityRole="button"
               accessibilityLabel="Back"
               hitSlop={8}

@@ -67,9 +67,9 @@ const PRE_LABEL_MB = 10;       // 8 × 1.2
 const PRE_ROW_PAD_V_TOP = 2;
 const PRE_ROW_PAD_V_BOT = 5;   // 4 × 1.2
 /* Card-style prereq pill: cardAlt bg, subtle border + shadow, coral dot, ink text. */
-const PRE_PILL_PAD_V = 8;
-const PRE_PILL_PAD_H = 14;
-const PRE_PILL_FS = 12;
+const PRE_PILL_PAD_V = 10;
+const PRE_PILL_PAD_H = 16;
+const PRE_PILL_FS = 13;        // +1 from 12
 const PRE_PILL_GAP = 8;
 const PRE_PILL_BORDER_W = 1;
 const PRE_DOT_SIZE = 8;
