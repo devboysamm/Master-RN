@@ -31,28 +31,33 @@ const HERO_DECO_RIGHT = 14;
 const HERO_DECO_FS = 64;
 const HERO_DECO_LS = -4;
 
-/* Avatar */
-const AVATAR_SIZE = 62;          // spec 52 × 1.2
-const AVATAR_FS = 26;
-const NAME_FS = 24;
-const META_FS = 14;
+/* Avatar — content shrunk × 0.8 from the original hero scale. */
+const AVATAR_SIZE = 50;          // 62 × 0.8
+const AVATAR_FS = 21;            // 26 × 0.8
+const NAME_FS = 19;              // 24 × 0.8
+const META_FS = 11;              // 14 × 0.8
 
-/* Hero buttons (guest) */
-const BIG_BTN_PV = 14;
-const BIG_BTN_PH = 18;
-const BIG_BTN_FS = 15;
-const BIG_BTN_R = 18;
+/* Hero buttons (guest) — × 0.8 */
+const BIG_BTN_PV = 11;           // 14 × 0.8
+const BIG_BTN_PH = 14;           // 18 × 0.8
+const BIG_BTN_FS = 12;           // 15 × 0.8
+const BIG_BTN_R = 14;            // 18 × 0.8
 
-/* Sign out pill */
-const SIGNOUT_PV = 7;
-const SIGNOUT_PH = 12;
-const SIGNOUT_FS = 11;
+/* Sign out pill — × 0.8 */
+const SIGNOUT_PV = 6;            // 7 × 0.8
+const SIGNOUT_PH = 10;           // 12 × 0.8
+const SIGNOUT_FS = 9;            // 11 × 0.8
 
-/* Stats mini cards */
-const STAT_RADIUS = 17;          // spec 14 × 1.2
+/* Stats mini cards — only the typography scales × 0.8 (tile radius +
+ * padding stay so the extra space distributes as breathing room). */
+const STAT_RADIUS = 17;
 const STAT_PAD_V = 14;
-const STAT_NUM_FS = 22;
-const STAT_LABEL_FS = 11;
+const STAT_NUM_FS = 18;          // 22 × 0.8
+const STAT_LABEL_FS = 9;         // 11 × 0.8
+
+/* In-hero gaps — × 0.8 */
+const IDENTITY_GAP = 11;         // 14 × 0.8 (avatar ↔ text)
+const BUTTONS_GAP = 8;           // 10 × 0.8 (Create ↔ Sign in)
 
 /* Card rows */
 const ROW_RADIUS = 17;           // spec 14 × 1.2
@@ -200,7 +205,7 @@ function GuestHero({ name, onCreate, onSignIn }: { name: string; onCreate: () =>
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 10, marginTop: 18 }}>
+      <View style={{ flexDirection: 'row', gap: BUTTONS_GAP, marginTop: 18 }}>
         <BigBtn label="Create account" variant="primary" onPress={onCreate} />
         <BigBtn label="Sign in"        variant="glass"   onPress={onSignIn} />
       </View>
@@ -340,7 +345,7 @@ const styles = StyleSheet.create({
   identityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: IDENTITY_GAP,
   },
   identityText: { flex: 1, minWidth: 0 },
   name: {
