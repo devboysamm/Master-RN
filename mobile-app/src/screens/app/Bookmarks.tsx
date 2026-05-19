@@ -30,22 +30,26 @@ const STATS_LABEL_LS = 1.2;
 const STATS_NUM_FS = 31;        // spec 26 × 1.2
 const STATS_DIV_H = 48;
 
-/* Lesson row */
-const ROW_RADIUS = 19;          // spec 16 × 1.2 ≈ 19
-const ROW_PAD = 17;             // spec 14 × 1.2
-const ROW_GAP = 14;             // spec 12 × 1.2
-const ROW_LIST_GAP = 12;        // spec 10 × 1.2
+/* Lesson row — values match Modules.tsx card sizing exactly so a Saved
+ * card and a Modules card look like siblings. */
+const ROW_RADIUS = 22;          // matches Modules CARD_RADIUS
+const ROW_PAD_V = 16;           // matches Modules CARD_PAD_V
+const ROW_PAD_H = 18;           // matches Modules CARD_PAD_H
+const ROW_GAP = 12;             // matches Modules CARD_GAP
+const ROW_LIST_GAP = 12;        // matches Modules LIST_GAP
 
-const THUMB_SIZE = 53;          // spec 44 × 1.2 ≈ 53
-const THUMB_RADIUS = 12;        // spec 10 × 1.2
+const THUMB_W = 71;             // matches Modules THUMB_W
+const THUMB_H = 80;             // matches Modules THUMB_H
+const THUMB_R = 16;             // matches Modules THUMB_R
 
-const ROW_KICKER_FS = 11;       // spec 9 × 1.2 ≈ 11
-const ROW_KICKER_LS = 1.2;
-const ROW_TITLE_FS = 17;        // spec 14 × 1.2
-const ROW_META_FS = 13;         // spec 11 × 1.2
-const ROW_META_ICON = 13;       // spec 11 × 1.2
-const ROW_META_MT = 4;
-const ROW_TITLE_MT = 2;
+const ROW_KICKER_FS = 10;       // matches Modules KICKER_FS
+const ROW_KICKER_LS = 1.0;      // matches Modules KICKER_LS
+const ROW_TITLE_FS = 16;        // matches Modules CARD_TITLE_FS
+const ROW_TITLE_MT = 2;         // matches Modules CARD_TITLE_MT
+const ROW_META_FS = 12;         // matches Modules CARD_META_FS
+const ROW_META_MT = 8;          // matches Modules CARD_META_MT
+const ROW_META_ICON = 13;       // matches Modules CARD_META_ICON
+const ROW_META_GAP = 5;         // matches Modules CARD_META_GAP
 const ROW_BOOKMARK_SIZE = 22;
 
 /* Empty state */
@@ -235,16 +239,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: ROW_GAP,
-    padding: ROW_PAD,
+    paddingVertical: ROW_PAD_V,
+    paddingHorizontal: ROW_PAD_H,
     backgroundColor: colors.card,
     borderRadius: ROW_RADIUS,
     borderWidth: 1,
     borderColor: colors.rule,
   },
   thumb: {
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_RADIUS,
+    width: THUMB_W,
+    height: THUMB_H,
+    borderRadius: THUMB_R,
   },
   rowKicker: {
     color: colors.coralDeep,
@@ -263,7 +268,7 @@ const styles = StyleSheet.create({
   rowMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: ROW_META_GAP,
     marginTop: ROW_META_MT,
   },
   rowMeta: {

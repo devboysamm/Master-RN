@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, Pressable, StyleSheet, Keyboard,
+  LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,21 +12,22 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  FadeInUp,
 } from 'react-native-reanimated';
 import Icon from '../../components/Icon';
 import CodeBlock from '../../components/CodeBlock';
+import AtomLogo from '../../components/AtomLogo';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/* Sizing — spec values × 1.2 to match the rest of the app.                 */
+/* Sizing — spec × 1.2 to match the rest of the app.                        */
 /* ──────────────────────────────────────────────────────────────────────── */
-/* Header */
 const HEADER_BTN_SIZE = 41;
 const HEADER_ICON = 19;
+
 const AVATAR_SIZE = 43;
-const AVATAR_FS = 15;
-const AVATAR_LS = -0.5;
+const AVATAR_ATOM = 32;            // atom inside the dark ring
 const NAME_FS = 18;
 const META_FS = 13;
 const DOT_SIZE = 8;
@@ -42,7 +44,7 @@ const EMPTY_PILL_FS = 14;
 const EMPTY_PILL_GAP = 8;
 
 /* Bubbles */
-const BUBBLE_RADIUS = 22;
+const BUBBLE_RADIUS = 22;          // spec 18 × 1.2 ≈ 22
 const BUBBLE_PAD = 17;
 const BUBBLE_FS = 15;
 const BUBBLE_LH = 22;
@@ -50,11 +52,12 @@ const BUBBLE_GAP = 14;
 const TS_FS = 11;
 const TS_MT = 5;
 
-/* Quick replies */
-const QR_PV = 8;
+/* Quick replies (sticky above composer) */
+const QR_PV = 9;
 const QR_PH = 14;
 const QR_FS = 13;
-const QR_GAP = 7;
+const QR_GAP = 8;
+const QR_ROW_MB = 8;
 
 /* Loading dots */
 const DOT = 7;
@@ -66,10 +69,13 @@ const COMPOSER_RADIUS = 28;
 const COMPOSER_BORDER = 1;
 const INPUT_FS = 15;
 const INPUT_MIN_H = 28;
-const INPUT_MAX_H = 110;       // ~4 lines before scroll
+const INPUT_MAX_H = 110;           // ~4 lines before scroll
 const SEND_SIZE = 44;
 const SEND_ICON = 19;
-const COMPOSER_OFFSET = 110;   // sits above the tab bar (~98px tall)
+
+/* Tab bar geometry — matches TabBar.tsx (height 64 + Math.max(insets.bottom, 12)) */
+const TAB_BAR_HEIGHT = 64;
+const TAB_BAR_GAP = 10;            // breathing room above the bar
 
 type Role = 'user' | 'ai';
 type Message = {
@@ -117,17 +123,17 @@ export default function AIChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [kbH, setKbH] = useState(0);
+  const [stickyH, setStickyH] = useState(72);   // measured at runtime
   const scrollRef = useRef<ScrollView>(null);
 
-  // Keyboard tracking — composer is absolute-positioned so it can lift
-  // smoothly with the keyboard without fighting the tab-bar overlap.
+  // Keyboard tracking — composer + pills lift smoothly with the keyboard.
   useEffect(() => {
     const showSub = Keyboard.addListener('keyboardWillShow', (e) => setKbH(e.endCoordinates.height));
     const hideSub = Keyboard.addListener('keyboardWillHide', () => setKbH(0));
     return () => { showSub.remove(); hideSub.remove(); };
   }, []);
 
-  // Auto-scroll to bottom on new messages / loading toggle.
+  // Auto-scroll on new message / loading toggle.
   useEffect(() => {
     requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
   }, [messages.length, loading]);
@@ -140,7 +146,7 @@ export default function AIChat() {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-    // Mocked response — real API in Phase 2.
+    // Mocked reply — real API in Phase 2.
     setTimeout(() => {
       const aiMsg: Message = {
         id: `a_${Date.now()}`,
@@ -161,23 +167,30 @@ export default function AIChat() {
 
   const fillPrompt = (text: string) => setInput(text);
 
-  // Quick replies attach only to the most recent AI message.
-  const lastAiIndex = useMemo(() => {
+  // Quick replies belong to the most recent AI message.
+  const lastAi = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'ai') return i;
+      if (messages[i].role === 'ai') return messages[i];
     }
-    return -1;
+    return null;
   }, [messages]);
+  const showQuickReplies = !!lastAi && !loading && (lastAi.quickReplies?.length ?? 0) > 0;
 
   const handleBack = () => {
     if (nav.canGoBack()) nav.goBack();
     else nav.getParent()?.navigate('Home');
   };
 
-  // Composer bottom: above tab bar normally, just above keyboard when shown.
-  const composerBottom = kbH > 0
-    ? Math.max(8, kbH - insets.bottom + 8)
-    : COMPOSER_OFFSET;
+  // Tab bar's TOP edge from the screen bottom (matches TabBar.tsx).
+  const tabBarTop = Math.max(insets.bottom, 12) + TAB_BAR_HEIGHT;
+  // Sticky-bottom container sits above the tab bar when no keyboard;
+  // jumps just above the keyboard when shown.
+  const stickyBottom = kbH > 0 ? kbH + 8 : tabBarTop + TAB_BAR_GAP;
+
+  const onStickyLayout = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    if (Math.abs(h - stickyH) > 1) setStickyH(h);
+  };
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
@@ -190,9 +203,10 @@ export default function AIChat() {
           style={styles.iconBtn}>
           <Icon d={I.arrowL} size={HEADER_ICON} color={colors.ink} strokeWidth={2.2} />
         </Pressable>
+
         <View style={styles.aiPill}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{'</>'}</Text>
+            <AtomLogo size={AVATAR_ATOM} strokeWidth={10} showDot />
           </View>
           <View>
             <Text style={styles.aiName}>Native AI</Text>
@@ -202,43 +216,60 @@ export default function AIChat() {
             </View>
           </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="More"
-          hitSlop={8}
-          style={styles.iconBtn}>
-          <Icon d={I.more} size={HEADER_ICON} color={colors.ink} strokeWidth={2} />
-        </Pressable>
+
+        {/* Spacer keeps the title visually centered now that the menu is gone. */}
+        <View style={styles.iconBtn} />
       </View>
 
       <ScrollView
         ref={scrollRef}
+        style={{ flex: 1 }}
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: composerBottom + SEND_SIZE + COMPOSER_PAD * 2 + 24 },
+          {
+            flexGrow: 1,
+            justifyContent: messages.length === 0 ? 'center' : 'flex-end',
+            paddingBottom: stickyBottom + stickyH + 16,
+          },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         {messages.length === 0 ? (
           <EmptyState onPick={fillPrompt} />
         ) : (
-          messages.map((m, i) => (
-            <React.Fragment key={m.id}>
-              {m.role === 'user' ? (
-                <UserBubble text={m.text} ts={m.ts} />
-              ) : (
-                <AiBubble text={m.text} code={m.code} ts={m.ts} />
-              )}
-              {m.role === 'ai' && i === lastAiIndex && !loading && m.quickReplies?.length ? (
-                <QuickReplies replies={m.quickReplies} onPick={send} />
-              ) : null}
-            </React.Fragment>
+          messages.map((m) => (
+            m.role === 'user'
+              ? <UserBubble key={m.id} text={m.text} ts={m.ts} />
+              : <AiBubble   key={m.id} text={m.text} code={m.code} ts={m.ts} />
           ))
         )}
         {loading && <TypingBubble />}
       </ScrollView>
 
-      <View style={[styles.composer, { bottom: composerBottom }]}>
+      {/* Sticky bottom: quick replies + composer.
+       *  Bottom edge sits at `stickyBottom` from screen bottom, so it's
+       *  always above the tab bar (or above the keyboard when shown). */}
+      <View
+        onLayout={onStickyLayout}
+        style={[styles.stickyBottom, { bottom: stickyBottom }]}>
+        {showQuickReplies && (
+          <ScrollView
+            horizontal
+            keyboardShouldPersistTaps="handled"
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.qrRow}>
+            {lastAi!.quickReplies!.map((r) => (
+              <Pressable
+                key={r}
+                onPress={() => send(r)}
+                accessibilityRole="button"
+                accessibilityLabel={`Send quick reply: ${r}`}
+                style={({ pressed }) => [styles.qrPill, pressed && { opacity: 0.7 }]}>
+                <Text style={styles.qrText}>{r}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
         <Composer value={input} onChange={setInput} onSend={() => send(input)} />
       </View>
     </SafeAreaView>
@@ -253,8 +284,8 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyAvatarRing}>
-        <View style={styles.emptyAvatar}>
-          <Text style={styles.emptyAvatarText}>{'</>'}</Text>
+        <View style={styles.emptyAvatarInner}>
+          <AtomLogo size={56} strokeWidth={8} showDot />
         </View>
       </View>
       <Text style={styles.emptyHead}>Ready when you are.</Text>
@@ -279,47 +310,36 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
 
 function AiBubble({ text, code, ts }: { text: string; code?: { lang?: string; code: string }; ts?: string }) {
   return (
-    <View style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
+    <Animated.View
+      entering={FadeInUp.duration(220).springify().damping(16)}
+      style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
       <View style={styles.aiBubble}>
         <Text style={styles.aiText}>{text}</Text>
         {code ? <CodeBlock language={code.lang} code={code.code} /> : null}
       </View>
       {ts ? <Text style={styles.ts}>{ts}</Text> : null}
-    </View>
+    </Animated.View>
   );
 }
 
 function UserBubble({ text, ts }: { text: string; ts?: string }) {
   return (
-    <View style={[styles.bubbleRow, { alignItems: 'flex-end' }]}>
+    <Animated.View
+      entering={FadeInUp.duration(220).springify().damping(16)}
+      style={[styles.bubbleRow, { alignItems: 'flex-end' }]}>
       <View style={styles.userBubble}>
         <Text style={styles.userText}>{text}</Text>
       </View>
       {ts ? <Text style={[styles.ts, { textAlign: 'right' }]}>{ts}</Text> : null}
-    </View>
-  );
-}
-
-function QuickReplies({ replies, onPick }: { replies: string[]; onPick: (s: string) => void }) {
-  return (
-    <View style={styles.qrRow}>
-      {replies.map((r) => (
-        <Pressable
-          key={r}
-          onPress={() => onPick(r)}
-          accessibilityRole="button"
-          accessibilityLabel={`Send quick reply: ${r}`}
-          style={({ pressed }) => [styles.qrPill, pressed && { opacity: 0.7 }]}>
-          <Text style={styles.qrText}>{r}</Text>
-        </Pressable>
-      ))}
-    </View>
+    </Animated.View>
   );
 }
 
 function TypingBubble() {
   return (
-    <View style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
+    <Animated.View
+      entering={FadeInUp.duration(180)}
+      style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
       <View style={[styles.aiBubble, styles.typingBubble]}>
         <View style={styles.dotsRow}>
           <Dot delay={0} />
@@ -327,7 +347,7 @@ function TypingBubble() {
           <Dot delay={300} />
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -412,10 +432,7 @@ const styles = StyleSheet.create({
     width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2,
     backgroundColor: colors.ink,
     alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: {
-    color: colors.coral, fontFamily: type.family.mono,
-    fontSize: AVATAR_FS, fontWeight: '800', letterSpacing: AVATAR_LS,
+    overflow: 'hidden',
   },
   aiName: {
     fontFamily: type.family.sans, fontSize: NAME_FS, fontWeight: '800',
@@ -439,14 +456,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginBottom: 18,
   },
-  emptyAvatar: {
+  emptyAvatarInner: {
     width: 64, height: 64, borderRadius: 32,
     backgroundColor: colors.ink,
     alignItems: 'center', justifyContent: 'center',
-  },
-  emptyAvatarText: {
-    color: colors.coral, fontFamily: type.family.mono,
-    fontSize: 20, fontWeight: '800', letterSpacing: -0.6,
+    overflow: 'hidden',
   },
   emptyHead: {
     color: colors.ink, fontFamily: type.family.sans,
@@ -506,10 +520,15 @@ const styles = StyleSheet.create({
     fontWeight: '600', marginTop: TS_MT,
   },
 
-  /* Quick replies */
+  /* Sticky bottom: pills + composer above the tab bar / keyboard. */
+  stickyBottom: {
+    position: 'absolute',
+    left: 16, right: 16,
+  },
   qrRow: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: QR_GAP,
-    marginTop: -6, marginBottom: BUBBLE_GAP,
+    flexDirection: 'row', alignItems: 'center', gap: QR_GAP,
+    paddingHorizontal: 2,
+    paddingBottom: QR_ROW_MB,
   },
   qrPill: {
     paddingVertical: QR_PV, paddingHorizontal: QR_PH,
@@ -528,7 +547,6 @@ const styles = StyleSheet.create({
   typingDot: { width: DOT, height: DOT, borderRadius: DOT / 2, backgroundColor: colors.mute },
 
   /* Composer */
-  composer: { position: 'absolute', left: 16, right: 16 },
   composerInner: {
     backgroundColor: colors.card,
     borderRadius: COMPOSER_RADIUS,
