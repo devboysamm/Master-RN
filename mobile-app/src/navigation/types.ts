@@ -1,9 +1,11 @@
 export type AuthStackParamList = {
   Splash: undefined;
   Welcome: undefined;
-  Auth: { mode?: 'signup' | 'signin' } | undefined;
+  Auth: { mode?: 'signup' | 'signin'; returnTo?: AppTabName } | undefined;
   Forgot: undefined;
 };
+
+export type AppTabName = 'Home' | 'Explore' | 'Progress' | 'Chat' | 'Profile';
 
 export type ContentRoutes = {
   ModuleDetail: { moduleId: number };

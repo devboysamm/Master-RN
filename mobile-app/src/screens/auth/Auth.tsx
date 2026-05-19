@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet, ScrollView,
   KeyboardAvoidingView, Platform,
@@ -93,9 +93,34 @@ export default function Auth() {
   const nav = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const route = useRoute<RouteProp<AuthStackParamList, 'Auth'>>();
   const initialMode: Mode = route.params?.mode === 'signin' ? 'signin' : 'signup';
+  const returnTo = route.params?.returnTo;
   const [mode, setMode] = useState<Mode>(initialMode);
   const [showPw, setShowPw] = useState(false);
-  const { signIn, signUp, continueAsGuest } = useAuth();
+  const { signIn, signUp, continueAsGuest, cancelAuth } = useAuth();
+
+  // Unified back handler: when `returnTo` is set, we entered AuthFlow
+  // from inside the app — cancel and return the user to that tab.
+  // Otherwise fall back to normal back / guest-continue behavior.
+  const handleBack = () => {
+    if (returnTo) {
+      cancelAuth();
+      return;
+    }
+    if (nav.canGoBack()) nav.goBack();
+    else continueAsGuest();
+  };
+
+  // iOS swipe-back gesture (and hardware back on Android) — intercept
+  // only when `returnTo` is set so the normal Welcome → Auth flow keeps
+  // its default swipe-back behavior.
+  useEffect(() => {
+    if (!returnTo) return;
+    const sub = nav.addListener('beforeRemove', (e) => {
+      e.preventDefault();
+      cancelAuth();
+    });
+    return sub;
+  }, [nav, returnTo, cancelAuth]);
   const { control, handleSubmit, watch, formState: { isSubmitting, errors } } = useForm({
     defaultValues: { name: '', email: '', password: '' },
   });
@@ -119,14 +144,7 @@ export default function Auth() {
           {/* Top bar: back + small atom */}
           <View style={styles.topBar}>
             <Pressable
-              onPress={() => {
-                // Auth might be the AuthStack's initial route (e.g. when a
-                // guest taps Sign in from inside the app). In that case
-                // there's no screen to go back to — drop back into the app
-                // as a guest instead of throwing GO_BACK.
-                if (nav.canGoBack()) nav.goBack();
-                else continueAsGuest();
-              }}
+              onPress={handleBack}
               accessibilityRole="button"
               accessibilityLabel="Back"
               hitSlop={8}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -43,7 +43,13 @@ const ChatStack = createNativeStackNavigator<ChatStackParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabParamList>();
 
-function AuthFlow({ pendingAuthMode }: { pendingAuthMode: 'signin' | 'signup' | null }) {
+function AuthFlow({
+  pendingAuthMode,
+  pendingReturnTab,
+}: {
+  pendingAuthMode: 'signin' | 'signup' | null;
+  pendingReturnTab: 'Home' | 'Explore' | 'Progress' | 'Chat' | 'Profile' | null;
+}) {
   // When a guest taps "Sign in" / "Create account" from inside the app,
   // skip Splash + Welcome and open the Auth screen on the matching tab.
   const initialRouteName = pendingAuthMode ? 'Auth' : 'Splash';
@@ -56,7 +62,11 @@ function AuthFlow({ pendingAuthMode }: { pendingAuthMode: 'signin' | 'signup' | 
       <AuthStack.Screen
         name="Auth"
         component={Auth}
-        initialParams={pendingAuthMode ? { mode: pendingAuthMode } : undefined}
+        initialParams={
+          pendingAuthMode
+            ? { mode: pendingAuthMode, returnTo: pendingReturnTab ?? undefined }
+            : undefined
+        }
       />
       <AuthStack.Screen name="Forgot" component={Forgot} />
     </AuthStack.Navigator>
@@ -117,8 +127,17 @@ function ProfileTab() {
 }
 
 function AppTabs() {
+  const { pendingReturnTab, clearPendingReturnTab } = useAuth();
+  // If the user just bailed out of AuthFlow (cancelled or finished), land
+  // back on the tab they came from — read it once at mount, then clear.
+  const initialRouteName = (pendingReturnTab ?? 'Home') as keyof AppTabParamList;
+  useEffect(() => {
+    if (pendingReturnTab) clearPendingReturnTab();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <Tabs.Navigator
+      initialRouteName={initialRouteName}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.cream } }}
       tabBar={(props) => <TabBar {...props} />}>
       <Tabs.Screen name="Home" component={HomeTab} />
@@ -131,7 +150,7 @@ function AppTabs() {
 }
 
 export default function RootNavigator() {
-  const { user, isGuest, hydrated, pendingAuthMode } = useAuth();
+  const { user, isGuest, hydrated, pendingAuthMode, pendingReturnTab } = useAuth();
   if (!hydrated) return <View style={{ flex: 1, backgroundColor: colors.splashBg }} />;
   const authed = !!user || isGuest;
   return (
@@ -141,7 +160,12 @@ export default function RootNavigator() {
           <RootStack.Screen name="App" component={AppTabs} />
         ) : (
           <RootStack.Screen name="Auth">
-            {() => <AuthFlow pendingAuthMode={pendingAuthMode} />}
+            {() => (
+              <AuthFlow
+                pendingAuthMode={pendingAuthMode}
+                pendingReturnTab={pendingReturnTab}
+              />
+            )}
           </RootStack.Screen>
         )}
       </RootStack.Navigator>

@@ -84,9 +84,11 @@ export default function Profile() {
   const comingSoon = () => Alert.alert('Coming soon', 'This is on the v1.1 roadmap.');
 
   // Guest buttons jump into the AuthFlow and land directly on the Auth
-  // screen with the requested mode pre-selected.
-  const goCreate = () => requestAuth('signup');
-  const goSignIn = () => requestAuth('signin');
+  // screen with the requested mode pre-selected. `returnTo` ensures that
+  // pressing back on Auth (or swiping back) drops the user back here on
+  // the Profile tab — not on Home (the default tab).
+  const goCreate = () => requestAuth('signup', { returnTo: 'Profile' });
+  const goSignIn = () => requestAuth('signin', { returnTo: 'Profile' });
 
   const goToBookmarks = () => {
     nav.dispatch(CommonActions.navigate({
@@ -105,7 +107,7 @@ export default function Profile() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* HERO */}
-        <View style={styles.hero}>
+        <View style={[styles.hero, isGuest && styles.heroGuest]}>
           <RadialGlow size={HERO_GLOW_SIZE} intensity={0.15} style={styles.heroGlow} />
           <Text style={styles.heroDeco} pointerEvents="none" allowFontScaling={false}>
             {'</>'}
@@ -287,6 +289,11 @@ const styles = StyleSheet.create({
     paddingBottom: HERO_PAD_BOTTOM,
     overflow: 'hidden',
     position: 'relative',
+  },
+  // Guest variant: shave 4px off top + bottom for a slightly tighter card.
+  heroGuest: {
+    paddingTop: HERO_PAD_TOP - 4,
+    paddingBottom: HERO_PAD_BOTTOM - 4,
   },
   heroGlow: { position: 'absolute', top: HERO_GLOW_TOP, right: HERO_GLOW_RIGHT },
   heroDeco: {
