@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, ScrollView, Pressable, StyleSheet, Alert,
 } from 'react-native';
@@ -11,9 +11,6 @@ import { colors, type } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { useBookmarks } from '../../storage/bookmarks';
 import { useCompleted } from '../../storage/completed';
-import { useModules } from '../../api/hooks';
-import { getModuleLessons } from '../../api/modules';
-import type { Lesson } from '../../api/mock';
 
 // All sizes: spec × 1.2 to match the rest of the app.
 /* Hero (mirrors ModuleDetail hero) */
@@ -34,8 +31,8 @@ const HERO_DECO_LS = -4;
 /* Avatar — content shrunk × 0.8 from the original hero scale. */
 const AVATAR_SIZE = 50;          // 62 × 0.8
 const AVATAR_FS = 21;            // 26 × 0.8
-const NAME_FS = 19;              // 24 × 0.8
-const META_FS = 11;              // 14 × 0.8
+const NAME_FS = 20;              // 24 × 0.8 + 1
+const META_FS = 13;              // 14 × 0.8 + 2
 
 /* Hero buttons (guest) — × 0.8 */
 const BIG_BTN_PV = 11;           // 14 × 0.8
@@ -46,14 +43,14 @@ const BIG_BTN_R = 14;            // 18 × 0.8
 /* Sign out pill — × 0.8 */
 const SIGNOUT_PV = 6;            // 7 × 0.8
 const SIGNOUT_PH = 10;           // 12 × 0.8
-const SIGNOUT_FS = 10;           // 11 × 0.8 + 1 for readability
+const SIGNOUT_FS = 12;           // bumped +2 for readability
 
 /* Stats mini cards — only the typography scales × 0.8 (tile radius +
  * padding stay so the extra space distributes as breathing room). */
 const STAT_RADIUS = 17;
 const STAT_PAD_V = 14;
-const STAT_NUM_FS = 18;          // 22 × 0.8
-const STAT_LABEL_FS = 9;         // 11 × 0.8
+const STAT_NUM_FS = 19;          // 22 × 0.8 + 1
+const STAT_LABEL_FS = 10;        // 11 × 0.8 + 1
 
 /* In-hero gaps — × 0.8 */
 const IDENTITY_GAP = 11;         // 14 × 0.8 (avatar ↔ text)
@@ -78,23 +75,6 @@ export default function Profile() {
   const { user, isGuest, signOut, requestAuth } = useAuth();
   const { bookmarks } = useBookmarks();
   const { completed } = useCompleted();
-  const { data: modulesData } = useModules();
-  const modules = modulesData ?? [];
-
-  const [totalLessons, setTotalLessons] = useState<number | null>(null);
-
-  // Lightweight total-lessons aggregator. Parallel fetch on mount.
-  useEffect(() => {
-    if (!modules.length) { setTotalLessons(null); return; }
-    let cancelled = false;
-    Promise.all(
-      modules.map((m) => getModuleLessons(m.id).catch(() => [] as Lesson[])),
-    ).then((results) => {
-      if (cancelled) return;
-      setTotalLessons(results.reduce((s, arr) => s + arr.length, 0));
-    });
-    return () => { cancelled = true; };
-  }, [modules.length]);
 
   const totalMinutes = useMemo(() => {
     // Without lesson lookup we can't be exact — estimate 5 min per completed.
@@ -116,10 +96,6 @@ export default function Profile() {
   };
   const goHelp = () => nav.navigate('HelpFeedback');
   const goAbout = () => nav.navigate('About');
-
-  const progressPct = totalLessons && totalLessons > 0
-    ? Math.round((completed.length / totalLessons) * 100)
-    : 0;
 
   const name = user?.name || (isGuest ? 'Guest' : 'You');
   const email = user?.email || 'Guest account';
@@ -154,7 +130,6 @@ export default function Profile() {
           <View style={{ marginTop: SECTION_MT }}>
             <Text style={styles.sectionLabel}>YOUR ACTIVITY</Text>
             <View style={{ gap: ROW_LIST_GAP }}>
-              <Row icon={I.pie}      title="Your progress"     meta={`${progressPct}%`} onPress={comingSoon} />
               <Row icon={I.bookmark} title="Saved lessons"     meta={String(bookmarks.length)} onPress={goToBookmarks} />
               <Row icon={I.chat}     title="Help and feedback" onPress={goHelp} />
               <Row icon={I.shield}   title="About Master RN"   meta="v1.0" onPress={goAbout} />
@@ -201,7 +176,7 @@ function GuestHero({ name, onCreate, onSignIn }: { name: string; onCreate: () =>
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', gap: BUTTONS_GAP, marginTop: 18 }}>
+      <View style={{ flexDirection: 'row', gap: BUTTONS_GAP, marginTop: 23 }}>
         <BigBtn label="Create account" variant="primary" onPress={onCreate} />
         <BigBtn label="Sign in"        variant="glass"   onPress={onSignIn} />
       </View>
