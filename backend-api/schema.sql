@@ -59,3 +59,23 @@ CREATE TABLE IF NOT EXISTS category_modules (
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
   FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(120),
+  password_hash VARCHAR(255),
+  email_verified TINYINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS otp_codes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  code VARCHAR(6) NOT NULL,
+  purpose VARCHAR(20) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  consumed TINYINT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_email_purpose (email, purpose, consumed)
+);
