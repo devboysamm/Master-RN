@@ -20,6 +20,7 @@ import {
 } from '@expo-google-fonts/jetbrains-mono';
 
 import { AuthProvider } from './src/context/AuthContext';
+import { TabHistoryProvider } from './src/context/TabHistoryContext';
 import RootNavigator from './src/navigation/RootNavigator';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -58,7 +59,9 @@ export default function App() {
       <SafeAreaProvider>
         <StatusBar style="auto" />
         <AuthProvider>
-          <RootNavigator />
+          <TabHistoryProvider>
+            <RootNavigator />
+          </TabHistoryProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

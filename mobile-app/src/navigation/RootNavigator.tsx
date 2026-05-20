@@ -21,11 +21,13 @@ import HelpFeedback from '../screens/app/HelpFeedback';
 import About from '../screens/app/About';
 import Notifications from '../screens/app/Notifications';
 import Cheatsheets from '../screens/app/Cheatsheets';
+import CheatsheetDetail from '../screens/app/CheatsheetDetail';
 import ReportProblem from '../screens/app/ReportProblem';
 import EditProfile from '../screens/app/EditProfile';
 
 import TabBar from '../components/TabBar';
 import { useAuth } from '../context/AuthContext';
+import { useTabHistory } from '../context/TabHistoryContext';
 import {
   AuthStackParamList,
   ExploreStackParamList,
@@ -88,7 +90,8 @@ function HomeTab() {
       <HomeStack.Screen name="LessonCode" component={LessonCode} />
       {/* Right-side slide-in feel: native-stack default push animation. */}
       <HomeStack.Screen name="Notifications"  component={Notifications}  options={{ animation: 'slide_from_right' }} />
-      <HomeStack.Screen name="Cheatsheets"    component={Cheatsheets}    options={{ animation: 'slide_from_right' }} />
+      <HomeStack.Screen name="Cheatsheets"      component={Cheatsheets}      options={{ animation: 'slide_from_right' }} />
+      <HomeStack.Screen name="CheatsheetDetail" component={CheatsheetDetail} options={{ animation: 'slide_from_right' }} />
       <HomeStack.Screen name="ReportProblem"  component={ReportProblem}  options={{ animation: 'slide_from_right' }} />
       <HomeStack.Screen name="HelpFeedback"   component={HelpFeedback}   options={{ animation: 'slide_from_right' }} />
       <HomeStack.Screen name="About"          component={About}          options={{ animation: 'slide_from_right' }} />
@@ -139,6 +142,7 @@ function ProfileTab() {
 
 function AppTabs() {
   const { pendingReturnTab, clearPendingReturnTab } = useAuth();
+  const { setPreviousTab } = useTabHistory();
   // If the user just bailed out of AuthFlow (cancelled or finished), land
   // back on the tab they came from — read it once at mount, then clear.
   const initialRouteName = (pendingReturnTab ?? 'Home') as keyof AppTabParamList;
@@ -150,7 +154,20 @@ function AppTabs() {
     <Tabs.Navigator
       initialRouteName={initialRouteName}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.cream } }}
-      tabBar={(props) => <TabBar {...props} />}>
+      tabBar={(props) => <TabBar {...props} />}
+      // Record the previously-focused tab on every tab press so screens
+      // like AIChat / LessonReader can route their back button to it.
+      screenListeners={({ navigation }) => ({
+        tabPress: (e) => {
+          // e.target = "TabName-<key>". Strip the suffix for the route name.
+          const next = (e.target || '').split('-')[0];
+          const state = navigation.getState();
+          const current = state?.routes?.[state.index]?.name as string | undefined;
+          if (current && current !== next) {
+            setPreviousTab(current as never);
+          }
+        },
+      })}>
       <Tabs.Screen name="Home" component={HomeTab} />
       <Tabs.Screen name="Explore" component={ExploreTab} />
       <Tabs.Screen name="Progress" component={ProgressTab} />

@@ -21,6 +21,7 @@ export type HomeStackParamList = ContentRoutes & {
   HomeMain: undefined;
   Notifications: undefined;
   Cheatsheets: undefined;
+  CheatsheetDetail: { id: string };
   ReportProblem: undefined;
   HelpFeedback: undefined;
   About: undefined;

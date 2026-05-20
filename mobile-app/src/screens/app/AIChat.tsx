@@ -19,6 +19,7 @@ import CodeBlock from '../../components/CodeBlock';
 import AtomLogo from '../../components/AtomLogo';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
+import { useTabHistory } from '../../context/TabHistoryContext';
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /* Sizing — spec × 1.2 to match the rest of the app.                        */
@@ -179,9 +180,15 @@ export default function AIChat() {
   }, [messages]);
   const showQuickReplies = !!lastAi && !loading && (lastAi.quickReplies?.length ?? 0) > 0;
 
+  const { previousTab } = useTabHistory();
   const handleBack = () => {
-    if (nav.canGoBack()) nav.goBack();
-    else nav.getParent()?.navigate('Home');
+    // Inner stack goBack wins when there's history (won't normally happen
+    // for the AIChat root, but covers the case of nested chat screens later).
+    if (nav.canGoBack()) { nav.goBack(); return; }
+    // Otherwise jump back to the tab the user came from. Default to Home
+    // if there's no history yet, and never bounce back to ourselves.
+    const target = previousTab && previousTab !== 'Chat' ? previousTab : 'Home';
+    nav.getParent()?.navigate(target);
   };
 
   // Hide the bottom tab bar while this screen is focused — chat needs the

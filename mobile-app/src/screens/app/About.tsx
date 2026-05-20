@@ -87,7 +87,7 @@ export default function About() {
 
         {description ? (
           <RenderHTML
-            contentWidth={width - 32}
+            contentWidth={width - 40}
             source={{ html: description }}
             baseStyle={baseStyle}
             tagsStyles={tagsStyles}
@@ -135,10 +135,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  /* Same outer padding pattern as HelpFeedback. flexGrow lets the
-   * footer pin to the viewport bottom when the description is short. */
+  /* Slightly roomier horizontal padding than HelpFeedback (20 vs 16) so
+   * the body paragraph and the v1.0 / Terms · Privacy lines sit cleanly
+   * indented from both edges. flexGrow lets the footer pin to the
+   * viewport bottom when the description is short. */
   scroll: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 140,
     flexGrow: 1,
