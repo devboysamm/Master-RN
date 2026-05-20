@@ -170,7 +170,7 @@ function Form() {
       {
         id: 'hk-5',
         title: 'useCallback',
-        description: 'Memoize a function so children don\\'t re-render on prop identity.',
+        description: "Memoize a function so children don't re-render on prop identity.",
         language: 'jsx',
         code: `const onPress = useCallback((id) => {
   setSelected(id);
