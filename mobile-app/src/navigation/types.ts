@@ -10,7 +10,6 @@ export type AppTabName = 'Home' | 'Explore' | 'Progress' | 'Chat' | 'Profile';
 export type ContentRoutes = {
   ModuleDetail: { moduleId: number };
   LessonReader: { lessonId: number; moduleId?: number };
-  LessonCode: { lessonId: number };
 };
 
 export type ExploreStackParamList = ContentRoutes & {

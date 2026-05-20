@@ -13,7 +13,6 @@ import Home from '../screens/app/Home';
 import Modules from '../screens/app/Modules';
 import ModuleDetail from '../screens/app/ModuleDetail';
 import LessonReader from '../screens/app/LessonReader';
-import LessonCode from '../screens/app/LessonCode';
 import Bookmarks from '../screens/app/Bookmarks';
 import AIChat from '../screens/app/AIChat';
 import Profile from '../screens/app/Profile';
@@ -87,7 +86,6 @@ function HomeTab() {
       <HomeStack.Screen name="HomeMain" component={Home} />
       <HomeStack.Screen name="ModuleDetail" component={ModuleDetail} />
       <HomeStack.Screen name="LessonReader" component={LessonReader} />
-      <HomeStack.Screen name="LessonCode" component={LessonCode} />
       {/* Right-side slide-in feel: native-stack default push animation. */}
       <HomeStack.Screen name="Notifications"  component={Notifications}  options={{ animation: 'slide_from_right' }} />
       <HomeStack.Screen name="Cheatsheets"      component={Cheatsheets}      options={{ animation: 'slide_from_right' }} />
@@ -105,7 +103,6 @@ function ExploreTab() {
       <ExploreStack.Screen name="Modules" component={Modules} />
       <ExploreStack.Screen name="ModuleDetail" component={ModuleDetail} />
       <ExploreStack.Screen name="LessonReader" component={LessonReader} />
-      <ExploreStack.Screen name="LessonCode" component={LessonCode} />
     </ExploreStack.Navigator>
   );
 }
@@ -116,7 +113,6 @@ function ProgressTab() {
       <ProgressStack.Screen name="Bookmarks" component={Bookmarks} />
       <ProgressStack.Screen name="ModuleDetail" component={ModuleDetail} />
       <ProgressStack.Screen name="LessonReader" component={LessonReader} />
-      <ProgressStack.Screen name="LessonCode" component={LessonCode} />
     </ProgressStack.Navigator>
   );
 }
