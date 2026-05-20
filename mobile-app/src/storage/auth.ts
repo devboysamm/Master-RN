@@ -1,25 +1,36 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const USER_KEY = 'mrn.user';
+// Single key holds the whole authenticated session { token, user }.
+const AUTH_KEY = 'mrn_auth';
 const GUEST_KEY = 'mrn.guest';
 
 export type StoredUser = {
-  id: string;
-  name: string;
+  id: number;
+  name: string | null;
   email: string;
 };
 
-export async function getUser(): Promise<StoredUser | null> {
-  const raw = await AsyncStorage.getItem(USER_KEY);
-  return raw ? JSON.parse(raw) : null;
+export type AuthSession = {
+  token: string;
+  user: StoredUser;
+};
+
+export async function getSession(): Promise<AuthSession | null> {
+  const raw = await AsyncStorage.getItem(AUTH_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthSession;
+  } catch {
+    return null;
+  }
 }
 
-export async function setUser(user: StoredUser): Promise<void> {
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+export async function setSession(session: AuthSession): Promise<void> {
+  await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(session));
 }
 
-export async function clearUser(): Promise<void> {
-  await AsyncStorage.removeItem(USER_KEY);
+export async function clearSession(): Promise<void> {
+  await AsyncStorage.removeItem(AUTH_KEY);
 }
 
 export async function getGuest(): Promise<boolean> {

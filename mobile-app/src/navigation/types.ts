@@ -2,6 +2,7 @@ export type AuthStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   Auth: { mode?: 'signup' | 'signin'; returnTo?: AppTabName } | undefined;
+  VerifyOtp: { email: string; name: string; password: string };
   Forgot: undefined;
 };
 

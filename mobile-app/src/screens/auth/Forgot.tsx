@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -11,6 +11,7 @@ import AtomLogo from '../../components/AtomLogo';
 import RadialGlow from '../../components/RadialGlow';
 import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
+import { useAuth } from '../../context/AuthContext';
 import { colors, type } from '../../theme/tokens';
 import { AuthStackParamList } from '../../navigation/types';
 
@@ -41,6 +42,7 @@ const SUB_MT = 14;
 const SUB_FS = 16;
 
 const FORM_MT = 26;
+const FIELD_GAP = 14;
 const LABEL_FS = 11;
 const LABEL_LS = 1.4;
 const LABEL_MB = 7;
@@ -59,20 +61,53 @@ const CTA_ARROW = 19;
 const BACK_LINK_MT = 22;
 const BACK_LINK_FS = 14;
 
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+type Step = 'email' | 'reset' | 'done';
+
 export default function Forgot() {
   const nav = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const [sent, setSent] = useState(false);
+  const { forgotPassword, resetPassword } = useAuth();
+  const [step, setStep] = useState<Step>('email');
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [showPw, setShowPw] = useState(false);
+
   const { control, handleSubmit, watch, formState: { isSubmitting, errors } } = useForm({
-    defaultValues: { email: '' },
+    defaultValues: { email: '', code: '', newPassword: '' },
   });
   const email = watch('email');
 
-  const onSubmit = handleSubmit(async () => {
-    // Stub: in a real build this hits POST /api/auth/forgot. For now we just
-    // show a confirmation that the (mock) reset email was queued.
-    await new Promise((r) => setTimeout(r, 500));
-    setSent(true);
+  const submitEmail = handleSubmit(async (vals) => {
+    setServerError(null);
+    try {
+      await forgotPassword(vals.email.trim());
+      setStep('reset');
+    } catch (e: any) {
+      setServerError(e?.message || 'Something went wrong. Please try again.');
+    }
   });
+
+  const submitReset = handleSubmit(async (vals) => {
+    setServerError(null);
+    try {
+      await resetPassword(vals.email.trim(), vals.code.trim(), vals.newPassword);
+      setStep('done');
+    } catch (e: any) {
+      setServerError(e?.message || 'Could not reset your password.');
+    }
+  });
+
+  const title =
+    step === 'email' ? 'Forgot\npassword?' :
+    step === 'reset' ? 'Enter the\nreset code' :
+    'Password\nupdated';
+
+  const subtitle =
+    step === 'email'
+      ? 'Enter the email tied to your account and we’ll send you a 6-digit reset code.'
+      : step === 'reset'
+      ? `Enter the code we sent to ${email || 'your email'} and choose a new password.`
+      : 'Your password has been updated. Sign in with your new password.';
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
@@ -84,7 +119,7 @@ export default function Forgot() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.topBar}>
             <Pressable
-              onPress={() => nav.goBack()}
+              onPress={() => (step === 'reset' ? setStep('email') : nav.goBack())}
               accessibilityRole="button"
               accessibilityLabel="Back"
               hitSlop={8}
@@ -95,25 +130,17 @@ export default function Forgot() {
           </View>
 
           <Text style={styles.kicker}>RESET ACCESS</Text>
-          <Text style={styles.title}>
-            {sent ? 'Check your\ninbox' : 'Forgot\npassword?'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {sent
-              ? `We sent a reset link to ${email || 'your email'}. Follow the link to choose a new password.`
-              : 'Enter the email tied to your account and we’ll send you a reset link.'}
-          </Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
 
-          {!sent && (
+          {/* STEP 1 — email */}
+          {step === 'email' && (
             <View style={styles.form}>
               <Text style={styles.label}>EMAIL</Text>
               <Controller
                 control={control}
                 name="email"
-                rules={{
-                  required: 'Email is required',
-                  pattern: { value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, message: 'Invalid email' },
-                }}
+                rules={{ required: 'Email is required', pattern: { value: EMAIL_RE, message: 'Invalid email' } }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View style={styles.inputWrap}>
                     <TextInput
@@ -130,24 +157,96 @@ export default function Forgot() {
                 )}
               />
               {errors.email?.message ? <Text style={styles.err}>{String(errors.email.message)}</Text> : null}
+              {serverError ? <Text style={styles.err}>{serverError}</Text> : null}
 
               <Pressable
-                onPress={onSubmit}
+                onPress={submitEmail}
                 disabled={isSubmitting}
                 accessibilityRole="button"
-                accessibilityLabel="Send reset link"
-                style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}>
-                <Text style={styles.ctaText}>
-                  {isSubmitting ? '…' : 'Send reset link'}
-                </Text>
-                <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />
+                accessibilityLabel="Send reset code"
+                style={({ pressed }) => [styles.cta, isSubmitting && { opacity: 0.7 }, pressed && { opacity: 0.9 }]}>
+                <Text style={styles.ctaText}>Send reset code</Text>
+                {isSubmitting
+                  ? <ActivityIndicator color={colors.white} />
+                  : <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />}
               </Pressable>
             </View>
           )}
 
-          {sent && (
+          {/* STEP 2 — code + new password */}
+          {step === 'reset' && (
+            <View style={styles.form}>
+              <Text style={styles.label}>RESET CODE</Text>
+              <Controller
+                control={control}
+                name="code"
+                rules={{ required: 'Code is required', pattern: { value: /^\d{6}$/, message: 'Enter the 6-digit code' } }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View style={styles.inputWrap}>
+                    <TextInput
+                      value={value}
+                      onChangeText={(v) => onChange(v.replace(/\D/g, '').slice(0, 6))}
+                      onBlur={onBlur}
+                      placeholder="123456"
+                      placeholderTextColor="rgba(255,255,255,0.35)"
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      style={[styles.input, { fontFamily: type.family.mono, letterSpacing: 4 }]}
+                    />
+                  </View>
+                )}
+              />
+              {errors.code?.message ? <Text style={styles.err}>{String(errors.code.message)}</Text> : null}
+
+              <Text style={[styles.label, { marginTop: FIELD_GAP }]}>NEW PASSWORD</Text>
+              <Controller
+                control={control}
+                name="newPassword"
+                rules={{ required: 'Password is required', minLength: { value: 8, message: 'Min 8 characters' } }}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View style={styles.inputWrap}>
+                    <TextInput
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      placeholder="••••••••"
+                      placeholderTextColor="rgba(255,255,255,0.35)"
+                      secureTextEntry={!showPw}
+                      autoCapitalize="none"
+                      style={[styles.input, { fontFamily: type.family.mono }]}
+                    />
+                    <Pressable
+                      onPress={() => setShowPw((v) => !v)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Toggle password visibility"
+                      hitSlop={8}
+                      style={styles.eye}>
+                      <Icon d={showPw ? I.eyeOff : I.eye} size={19} color="rgba(255,255,255,0.55)" />
+                    </Pressable>
+                  </View>
+                )}
+              />
+              {errors.newPassword?.message ? <Text style={styles.err}>{String(errors.newPassword.message)}</Text> : null}
+              {serverError ? <Text style={styles.err}>{serverError}</Text> : null}
+
+              <Pressable
+                onPress={submitReset}
+                disabled={isSubmitting}
+                accessibilityRole="button"
+                accessibilityLabel="Update password"
+                style={({ pressed }) => [styles.cta, isSubmitting && { opacity: 0.7 }, pressed && { opacity: 0.9 }]}>
+                <Text style={styles.ctaText}>Update password</Text>
+                {isSubmitting
+                  ? <ActivityIndicator color={colors.white} />
+                  : <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />}
+              </Pressable>
+            </View>
+          )}
+
+          {/* STEP 3 — done */}
+          {step === 'done' && (
             <Pressable
-              onPress={() => nav.goBack()}
+              onPress={() => nav.navigate('Auth', { mode: 'signin' })}
               accessibilityRole="button"
               accessibilityLabel="Back to sign in"
               style={({ pressed }) => [styles.cta, { marginTop: FORM_MT }, pressed && { opacity: 0.9 }]}>
@@ -156,16 +255,18 @@ export default function Forgot() {
             </Pressable>
           )}
 
-          <Pressable
-            onPress={() => nav.goBack()}
-            accessibilityRole="link"
-            accessibilityLabel="Remember password? Sign in"
-            hitSlop={6}
-            style={styles.backLinkWrap}>
-            <Text style={styles.backLink}>
-              Remember your password? <Text style={styles.backLinkAccent}>Sign in</Text>
-            </Text>
-          </Pressable>
+          {step !== 'done' && (
+            <Pressable
+              onPress={() => nav.navigate('Auth', { mode: 'signin' })}
+              accessibilityRole="link"
+              accessibilityLabel="Remember password? Sign in"
+              hitSlop={6}
+              style={styles.backLinkWrap}>
+              <Text style={styles.backLink}>
+                Remember your password? <Text style={styles.backLinkAccent}>Sign in</Text>
+              </Text>
+            </Pressable>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -174,18 +275,8 @@ export default function Forgot() {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.splashBg },
-  glowWrap: {
-    position: 'absolute',
-    top: GLOW_TOP,
-    right: GLOW_RIGHT,
-    width: GLOW_SIZE,
-    height: GLOW_SIZE,
-  },
-  scroll: {
-    paddingHorizontal: PAD_H,
-    paddingTop: PAD_TOP,
-    paddingBottom: PAD_BOTTOM,
-  },
+  glowWrap: { position: 'absolute', top: GLOW_TOP, right: GLOW_RIGHT, width: GLOW_SIZE, height: GLOW_SIZE },
+  scroll: { paddingHorizontal: PAD_H, paddingTop: PAD_TOP, paddingBottom: PAD_BOTTOM },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backBtn: {
     width: BACK_SIZE, height: BACK_SIZE, borderRadius: BACK_R,
@@ -232,8 +323,11 @@ const styles = StyleSheet.create({
     borderRadius: INPUT_R,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.10)',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
+    flex: 1,
     paddingHorizontal: INPUT_PAD_H,
     paddingVertical: INPUT_PAD_V,
     color: colors.white,
@@ -241,6 +335,7 @@ const styles = StyleSheet.create({
     fontSize: INPUT_FS,
     fontWeight: '600',
   },
+  eye: { paddingHorizontal: INPUT_PAD_H, justifyContent: 'center', alignSelf: 'stretch' },
   err: { color: colors.coral, fontFamily: type.family.sans, fontSize: 13, fontWeight: '600', marginTop: 5 },
   cta: {
     marginTop: CTA_MT,

@@ -1,14 +1,19 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import * as auth from '../storage/auth';
-
-type SignUpInput = { name: string; email: string; password: string };
-type SignInInput = { email: string; password: string };
+import * as authApi from '../api/auth';
+import { ApiError } from '../api/client';
 
 type AuthMode = 'signin' | 'signup';
 type TabName = 'Home' | 'Explore' | 'Progress' | 'Chat' | 'Profile';
 
+function toStoredUser(u: authApi.AuthUser): auth.StoredUser {
+  return { id: u.id, name: u.name, email: u.email };
+}
+
 type AuthState = {
   user: auth.StoredUser | null;
+  /** Raw JWT — exposed so authenticated requests can attach it. */
+  token: string | null;
   isGuest: boolean;
   hydrated: boolean;
   /**
@@ -18,13 +23,22 @@ type AuthState = {
    */
   pendingAuthMode: AuthMode | null;
   /**
-   * Which tab to land on after the AuthFlow exits (whether the user signed
-   * in/up, cancelled with the back button, or swiped back). AppTabs reads
-   * this on mount as its `initialRouteName`, then clears it.
+   * Which tab to land on after the AuthFlow exits. AppTabs reads this on
+   * mount as its `initialRouteName`, then clears it.
    */
   pendingReturnTab: TabName | null;
-  signIn: (input: SignInInput) => Promise<void>;
-  signUp: (input: SignUpInput) => Promise<void>;
+
+  /** Send a signup OTP. Does NOT authenticate — caller shows the OTP screen. */
+  signUp: (email: string, name: string, password: string) => Promise<void>;
+  /** Verify the signup OTP → stores token+user → authenticated. */
+  verifyOtp: (email: string, code: string) => Promise<void>;
+  /** Log in with email + password → stores token+user → authenticated. */
+  signIn: (email: string, password: string) => Promise<void>;
+  /** Request a password-reset OTP. */
+  forgotPassword: (email: string) => Promise<void>;
+  /** Complete a password reset with the emailed OTP. */
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
+
   signOut: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
   /** Drop into AuthFlow and land on Auth with the given mode pre-selected. */
@@ -39,76 +53,115 @@ const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<auth.StoredUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [pendingAuthMode, setPendingAuthMode] = useState<AuthMode | null>(null);
   const [pendingReturnTab, setPendingReturnTab] = useState<TabName | null>(null);
 
+  // On launch: restore a stored session and validate it against /me.
   useEffect(() => {
     (async () => {
-      const [u, g] = await Promise.all([auth.getUser(), auth.getGuest()]);
-      setUserState(u);
+      const [session, g] = await Promise.all([auth.getSession(), auth.getGuest()]);
+      if (session?.token) {
+        // Optimistically restore so the UI doesn't flash the auth flow.
+        setToken(session.token);
+        setUserState(session.user);
+        try {
+          const { user: fresh } = await authApi.me(session.token);
+          const stored = toStoredUser(fresh);
+          await auth.setSession({ token: session.token, user: stored });
+          setUserState(stored);
+        } catch (err) {
+          // Only log out on an actual 401 — a network blip shouldn't nuke
+          // the session and force a re-login when offline.
+          if (err instanceof ApiError && err.status === 401) {
+            await auth.clearSession();
+            setToken(null);
+            setUserState(null);
+          }
+        }
+      }
       setIsGuest(g);
       setHydrated(true);
     })();
   }, []);
 
-  const value: AuthState = useMemo(() => ({
-    user,
-    isGuest,
-    hydrated,
-    pendingAuthMode,
-    pendingReturnTab,
-    signIn: async ({ email }) => {
-      const u: auth.StoredUser = { id: `u_${Date.now()}`, name: email.split('@')[0] || 'Friend', email };
-      await auth.setUser(u);
+  const value: AuthState = useMemo(() => {
+    const applySession = async (resp: authApi.TokenResponse) => {
+      const stored = toStoredUser(resp.user);
+      await auth.setSession({ token: resp.token, user: stored });
       await auth.setGuest(false);
-      setUserState(u);
+      setToken(resp.token);
+      setUserState(stored);
       setIsGuest(false);
       setPendingAuthMode(null);
       // pendingReturnTab intentionally preserved — AppTabs consumes it.
-    },
-    signUp: async ({ name, email }) => {
-      const u: auth.StoredUser = { id: `u_${Date.now()}`, name, email };
-      await auth.setUser(u);
-      await auth.setGuest(false);
-      setUserState(u);
-      setIsGuest(false);
-      setPendingAuthMode(null);
-    },
-    signOut: async () => {
-      await auth.clearUser();
-      await auth.setGuest(false);
-      setUserState(null);
-      setIsGuest(false);
-      setPendingAuthMode(null);
-      setPendingReturnTab(null);
-    },
-    continueAsGuest: async () => {
-      await auth.setGuest(true);
-      setIsGuest(true);
-      setPendingAuthMode(null);
-    },
-    requestAuth: async (mode, opts) => {
-      // Set the mode + returnTo hints *before* clearing auth state so the
-      // AuthFlow re-mounts with the correct initial route on the very
-      // next render.
-      setPendingAuthMode(mode);
-      setPendingReturnTab(opts?.returnTo ?? null);
-      await auth.clearUser();
-      await auth.setGuest(false);
-      setUserState(null);
-      setIsGuest(false);
-    },
-    cancelAuth: async () => {
-      // Bail out of AuthFlow back into the tabs as a guest. pendingReturnTab
-      // is preserved so AppTabs lands on the originating tab.
-      await auth.setGuest(true);
-      setIsGuest(true);
-      setPendingAuthMode(null);
-    },
-    clearPendingReturnTab: () => setPendingReturnTab(null),
-  }), [user, isGuest, hydrated, pendingAuthMode, pendingReturnTab]);
+    };
+
+    return {
+      user,
+      token,
+      isGuest,
+      hydrated,
+      pendingAuthMode,
+      pendingReturnTab,
+
+      signUp: async (email, name, password) => {
+        // Sends the OTP email; intentionally does not authenticate.
+        await authApi.signup(email, name, password);
+      },
+      verifyOtp: async (email, code) => {
+        const resp = await authApi.verifyOtp(email, code);
+        await applySession(resp);
+      },
+      signIn: async (email, password) => {
+        const resp = await authApi.login(email, password);
+        await applySession(resp);
+      },
+      forgotPassword: async (email) => {
+        await authApi.forgotPassword(email);
+      },
+      resetPassword: async (email, code, newPassword) => {
+        await authApi.resetPassword(email, code, newPassword);
+      },
+
+      signOut: async () => {
+        await auth.clearSession();
+        await auth.setGuest(false);
+        setToken(null);
+        setUserState(null);
+        setIsGuest(false);
+        setPendingAuthMode(null);
+        setPendingReturnTab(null);
+      },
+      continueAsGuest: async () => {
+        await auth.setGuest(true);
+        setIsGuest(true);
+        setPendingAuthMode(null);
+      },
+      requestAuth: async (mode, opts) => {
+        // Set the mode + returnTo hints *before* clearing auth state so the
+        // AuthFlow re-mounts with the correct initial route on the very
+        // next render.
+        setPendingAuthMode(mode);
+        setPendingReturnTab(opts?.returnTo ?? null);
+        await auth.clearSession();
+        await auth.setGuest(false);
+        setToken(null);
+        setUserState(null);
+        setIsGuest(false);
+      },
+      cancelAuth: async () => {
+        // Bail out of AuthFlow back into the tabs as a guest. pendingReturnTab
+        // is preserved so AppTabs lands on the originating tab.
+        await auth.setGuest(true);
+        setIsGuest(true);
+        setPendingAuthMode(null);
+      },
+      clearPendingReturnTab: () => setPendingReturnTab(null),
+    };
+  }, [user, token, isGuest, hydrated, pendingAuthMode, pendingReturnTab]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

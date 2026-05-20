@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
@@ -96,6 +96,7 @@ export default function Auth() {
   const returnTo = route.params?.returnTo;
   const [mode, setMode] = useState<Mode>(initialMode);
   const [showPw, setShowPw] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const { signIn, signUp, continueAsGuest, cancelAuth } = useAuth();
 
   // Unified back handler: when `returnTo` is set, we entered AuthFlow
@@ -129,9 +130,27 @@ export default function Auth() {
   const strength = strengthOf(password);
 
   const onSubmit = handleSubmit(async (vals) => {
-    if (mode === 'signup') await signUp(vals);
-    else await signIn({ email: vals.email, password: vals.password });
+    setServerError(null);
+    try {
+      if (mode === 'signup') {
+        // Sends an OTP; the verify step is what authenticates.
+        await signUp(vals.email.trim(), vals.name.trim(), vals.password);
+        nav.navigate('VerifyOtp', {
+          email: vals.email.trim(),
+          name: vals.name.trim(),
+          password: vals.password,
+        });
+      } else {
+        // On success the app re-renders into the authed tabs automatically.
+        await signIn(vals.email.trim(), vals.password);
+      }
+    } catch (e: any) {
+      setServerError(e?.message || 'Something went wrong. Please try again.');
+    }
   });
+
+  // Reset the server error when the user switches tabs.
+  const switchMode = (next: Mode) => { setServerError(null); setMode(next); };
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top', 'bottom']}>
@@ -164,8 +183,8 @@ export default function Auth() {
 
           {/* Segmented tabs */}
           <View style={styles.tabs}>
-            <TabBtn label="Sign up" active={mode === 'signup'} onPress={() => setMode('signup')} />
-            <TabBtn label="Sign in" active={mode === 'signin'} onPress={() => setMode('signin')} />
+            <TabBtn label="Sign up" active={mode === 'signup'} onPress={() => switchMode('signup')} />
+            <TabBtn label="Sign in" active={mode === 'signin'} onPress={() => switchMode('signin')} />
           </View>
 
           {/* Form */}
@@ -201,7 +220,7 @@ export default function Auth() {
               error={errors.password?.message}
               control={control}
               name="password"
-              rules={{ required: 'Password is required', minLength: { value: 6, message: 'Min 6 characters' } }}
+              rules={{ required: 'Password is required', minLength: { value: 8, message: 'Min 8 characters' } }}
               placeholder="••••••••"
               secureTextEntry={!showPw}
               rightIcon={showPw ? I.eyeOff : I.eye}
@@ -239,17 +258,27 @@ export default function Auth() {
             )}
           </View>
 
+          {/* Server error (wrong creds, unverified, etc.) */}
+          {serverError ? (
+            <View style={styles.serverErrWrap}>
+              <Text style={styles.serverErr}>{serverError}</Text>
+            </View>
+          ) : null}
+
           {/* Primary CTA */}
           <Pressable
             onPress={onSubmit}
             disabled={isSubmitting}
             accessibilityRole="button"
+            accessibilityState={{ disabled: isSubmitting }}
             accessibilityLabel={mode === 'signup' ? 'Create account' : 'Sign in'}
-            style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}>
+            style={({ pressed }) => [styles.cta, isSubmitting && { opacity: 0.7 }, pressed && { opacity: 0.9 }]}>
             <Text style={styles.ctaText}>
-              {isSubmitting ? '…' : mode === 'signup' ? 'Create account' : 'Sign in'}
+              {mode === 'signup' ? 'Create account' : 'Sign in'}
             </Text>
-            <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />
+            {isSubmitting
+              ? <ActivityIndicator color={colors.white} />
+              : <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />}
           </Pressable>
 
           {/* Divider + social */}
@@ -447,6 +476,16 @@ const styles = StyleSheet.create({
   },
   eye: { paddingHorizontal: INPUT_PAD_H, justifyContent: 'center', alignSelf: 'stretch' },
   err: { color: colors.coral, fontFamily: type.family.sans, fontSize: 13, fontWeight: '600', marginTop: 5 },
+  serverErrWrap: {
+    marginTop: CTA_MT,
+    backgroundColor: 'rgba(242,106,74,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(242,106,74,0.35)',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  serverErr: { color: colors.coral, fontFamily: type.family.sans, fontSize: 14, fontWeight: '700' },
   strength: { flexDirection: 'row', alignItems: 'center', gap: STR_GAP, marginTop: STR_MT },
   strengthBars: { flex: 1, flexDirection: 'row', gap: STR_BAR_GAP },
   strengthBar: { flex: 1, height: STR_BAR_H, borderRadius: 2 },

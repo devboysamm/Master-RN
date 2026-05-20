@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import Splash from '../screens/auth/Splash';
 import Welcome from '../screens/auth/Welcome';
 import Auth from '../screens/auth/Auth';
+import VerifyOtp from '../screens/auth/VerifyOtp';
 import Forgot from '../screens/auth/Forgot';
 
 import Home from '../screens/app/Home';
@@ -73,6 +74,7 @@ function AuthFlow({
             : undefined
         }
       />
+      <AuthStack.Screen name="VerifyOtp" component={VerifyOtp} />
       <AuthStack.Screen name="Forgot" component={Forgot} />
     </AuthStack.Navigator>
   );

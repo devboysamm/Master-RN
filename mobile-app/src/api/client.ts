@@ -15,10 +15,12 @@ type RequestOptions = {
   body?: unknown;
   timeoutMs?: number;
   signal?: AbortSignal;
+  /** When set, sent as `Authorization: Bearer <token>`. */
+  token?: string;
 };
 
 export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, timeoutMs = 30000, signal } = opts;
+  const { method = 'GET', body, timeoutMs = 30000, signal, token } = opts;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const linkedSignal = signal
@@ -27,13 +29,18 @@ export async function request<T>(path: string, opts: RequestOptions = {}): Promi
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: body ? JSON.stringify(body) : undefined,
       signal: linkedSignal,
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || json?.success === false) {
-      throw new ApiError(json?.message || `Request failed (${res.status})`, res.status);
+      // Content routes return { message }, auth routes return { error }.
+      const msg = json?.message || json?.error || `Request failed (${res.status})`;
+      throw new ApiError(msg, res.status);
     }
     return (json?.data ?? json) as T;
   } finally {
