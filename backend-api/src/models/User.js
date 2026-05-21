@@ -54,6 +54,30 @@ async function markVerified(id) {
   await pool.query(`UPDATE users SET email_verified = 1 WHERE id = ?`, [id]);
 }
 
+// Admin: update name and/or email_verified for any user. Returns fresh row.
+async function adminUpdate(id, fields) {
+  const sets = [];
+  const params = [];
+  if (Object.prototype.hasOwnProperty.call(fields, 'name')) {
+    sets.push('name = ?');
+    params.push(fields.name);
+  }
+  if (Object.prototype.hasOwnProperty.call(fields, 'email_verified')) {
+    sets.push('email_verified = ?');
+    params.push(fields.email_verified ? 1 : 0);
+  }
+  if (sets.length === 0) return findById(id);
+  params.push(id);
+  await pool.query(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, params);
+  return findById(id);
+}
+
+// Admin: delete a user. Returns the number of rows removed.
+async function remove(id) {
+  const [result] = await pool.query(`DELETE FROM users WHERE id = ?`, [id]);
+  return result.affectedRows;
+}
+
 // Update only the provided profile fields; returns the fresh row.
 async function updateProfile(id, fields) {
   const sets = [];
@@ -87,5 +111,7 @@ module.exports = {
   setPasswordHash,
   markVerified,
   updateProfile,
+  adminUpdate,
+  remove,
   publicShape,
 };

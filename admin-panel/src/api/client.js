@@ -58,6 +58,11 @@ export const Categories = {
 
 export const Users = {
   list: () => api.get('/api/users').then(unwrap),
+  get: (id) => api.get(`/api/users/${id}`).then(unwrap),
+  update: (id, body) => api.patch(`/api/users/${id}`, body).then(unwrap),
+  remove: (id) => api.delete(`/api/users/${id}`).then(unwrap),
+  resetPassword: (id, newPassword) =>
+    api.post(`/api/users/${id}/reset-password`, { newPassword }).then(unwrap),
 };
 
 export const Health = {

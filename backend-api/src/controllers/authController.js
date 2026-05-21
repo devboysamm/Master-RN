@@ -51,6 +51,16 @@ async function getOrCreateOtp(email, purpose) {
   return code;
 }
 
+// Send the OTP email but never let a delivery failure break the request —
+// the OTP row is already persisted, so we just log a clear line and move on.
+async function sendOtpSafely(email, code, purpose) {
+  try {
+    await sendOtpEmail(email, code, purpose);
+  } catch (err) {
+    console.error(`OTP EMAIL FAILED for ${email}: ${err.message}`);
+  }
+}
+
 function fail(res, status, error) {
   return res.status(status).json({ error });
 }
@@ -89,7 +99,7 @@ async function signup(req, res) {
     }
 
     const code = await getOrCreateOtp(email, 'signup');
-    await sendOtpEmail(email, code, 'signup');
+    await sendOtpSafely(email, code, 'signup');
 
     return res.json({ message: 'OTP sent' });
   } catch (err) {
@@ -161,7 +171,7 @@ async function forgotPassword(req, res) {
     const user = await User.findByEmail(email);
     if (user) {
       const code = await getOrCreateOtp(email, 'reset');
-      await sendOtpEmail(email, code, 'reset');
+      await sendOtpSafely(email, code, 'reset');
     }
     return res.json(generic);
   } catch (err) {
@@ -192,6 +202,20 @@ async function resetPassword(req, res) {
     await Otp.markConsumed(otp.id);
 
     return res.json({ message: 'Password updated' });
+  } catch (err) {
+    return serverError(res, err);
+  }
+}
+
+// TEMP DEBUG — read the newest OTP for an email while email delivery is
+// broken. Remove this handler + its route once Resend is working.
+async function debugLastOtp(req, res) {
+  try {
+    const email = normEmail(req.query.email);
+    if (!validEmail(email)) return fail(res, 400, 'A valid ?email= query param is required');
+    const row = await Otp.findNewestForEmail(email);
+    if (!row) return fail(res, 404, 'No OTP found for that email');
+    return res.json(row);
   } catch (err) {
     return serverError(res, err);
   }
@@ -247,4 +271,5 @@ module.exports = {
   resetPassword,
   me,
   updateMe,
+  debugLastOtp, // TEMP DEBUG
 };

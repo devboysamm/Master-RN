@@ -46,17 +46,21 @@ async function sendOtpEmail(toEmail, code, purpose) {
     console.warn('[email] RESEND_API_KEY not set — skipping OTP email to', toEmail);
     return { skipped: true };
   }
-  const { data, error } = await client.emails.send({
+  const result = await client.emails.send({
     from: FROM,
     to: toEmail,
     subject: SUBJECT,
     html: otpHtml(code, purpose),
   });
-  if (error) {
-    console.error('[email] Resend error:', error);
-    throw new Error('Failed to send email');
+  // Resend resolves with { data, error } rather than throwing — surface the
+  // full error object (it carries name + message: rate limit, domain not
+  // verified, recipient blocked, etc.) and re-throw the real reason.
+  if (result?.error) {
+    console.error('[email] Resend send failed:', result.error);
+    const reason = result.error.message || result.error.name || 'Unknown Resend error';
+    throw new Error(reason);
   }
-  return data;
+  return result?.data;
 }
 
 module.exports = { sendOtpEmail };

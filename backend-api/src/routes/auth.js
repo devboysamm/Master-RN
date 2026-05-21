@@ -12,4 +12,7 @@ router.post('/reset-password', ctrl.resetPassword);
 router.get('/me', requireAuth, ctrl.me);
 router.patch('/me', requireAuth, ctrl.updateMe);
 
+// TEMP DEBUG — remove with ctrl.debugLastOtp once email delivery works.
+router.get('/_debug/last-otp', ctrl.debugLastOtp);
+
 module.exports = router;
