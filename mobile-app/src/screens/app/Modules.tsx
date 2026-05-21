@@ -9,9 +9,14 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
 import Icon from '../../components/Icon';
+import { GatePopup } from '../../components/BlurGate';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
+import { useAuth } from '../../context/AuthContext';
 import { useModules, useCategories, useCategoryModules } from '../../api/hooks';
+
+// Guests get the first 5 modules free (by order_index rank); 6+ are locked.
+const FREE_MODULES_FOR_GUEST = 5;
 import { useCompleted } from '../../storage/completed';
 import { useLastLesson } from '../../storage/lastLesson';
 import { getModuleLessons } from '../../api/modules';
@@ -98,6 +103,7 @@ function formatTime(totalMinutes: number): string {
 
 export default function Modules() {
   const nav = useNavigation<NativeStackNavigationProp<ExploreStackParamList>>();
+  const { isGuest } = useAuth();
   const { data, loading, error, refresh } = useModules();
   const { data: categories } = useCategories();
   const { completed } = useCompleted();
@@ -106,6 +112,17 @@ export default function Modules() {
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState<number | null>(null);
+  const [gateVisible, setGateVisible] = useState(false);
+
+  // Rank every module by order_index; a module's 1-based rank is its
+  // "position". For guests, positions > 5 are locked.
+  const lockedModuleIds = useMemo(() => {
+    if (!isGuest) return new Set<number>();
+    const ranked = [...modules].sort(
+      (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
+    );
+    return new Set(ranked.slice(FREE_MODULES_FOR_GUEST).map((m) => m.id));
+  }, [isGuest, modules]);
 
   // Fetch category-scoped module list when a category is picked.
   const catFiltered = useCategoryModules(selectedCatId);
@@ -197,17 +214,25 @@ export default function Modules() {
           <Text style={styles.empty}>No modules in this category yet.</Text>
         ) : (
           <View style={{ gap: LIST_GAP, marginTop: LIST_MT }}>
-            {displayModules.map((m, i) => (
-              <ModuleCard
-                key={m.id}
-                module={m as Mod}
-                index={i}
-                isCurrent={m.id === currentModuleId}
-                lessons={lessonsByModule[m.id] ?? []}
-                completedIds={completedIds}
-                onPress={() => nav.navigate('ModuleDetail', { moduleId: m.id })}
-              />
-            ))}
+            {displayModules.map((m, i) => {
+              const locked = lockedModuleIds.has(m.id);
+              return (
+                <ModuleCard
+                  key={m.id}
+                  module={m as Mod}
+                  index={i}
+                  isCurrent={m.id === currentModuleId}
+                  locked={locked}
+                  lessons={lessonsByModule[m.id] ?? []}
+                  completedIds={completedIds}
+                  onPress={() =>
+                    locked
+                      ? setGateVisible(true)
+                      : nav.navigate('ModuleDetail', { moduleId: m.id })
+                  }
+                />
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -234,6 +259,8 @@ export default function Modules() {
           setFilterOpen(false);
         }}
       />
+
+      <GatePopup visible={gateVisible} onClose={() => setGateVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -246,12 +273,13 @@ type ModuleCardProps = {
   module: Mod;
   index: number;
   isCurrent: boolean;
+  locked?: boolean;
   lessons: Lesson[];
   completedIds: Set<number>;
   onPress: () => void;
 };
 
-function ModuleCard({ module: m, index, isCurrent, lessons, completedIds, onPress }: ModuleCardProps) {
+function ModuleCard({ module: m, index, isCurrent, locked, lessons, completedIds, onPress }: ModuleCardProps) {
   const lessonCount = lessons.length;
   const totalMinutes = lessons.reduce((s, l) => s + (l.read_time || 0), 0);
   const completedInModule = lessons.filter((l) => completedIds.has(l.id)).length;
@@ -263,26 +291,33 @@ function ModuleCard({ module: m, index, isCurrent, lessons, completedIds, onPres
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${m.title}`}
+      accessibilityLabel={locked ? `Locked — sign in to unlock ${m.title}` : `Open ${m.title}`}
       style={({ pressed }) => [
         styles.card,
         isCurrent && styles.cardCurrent,
         pressed && { opacity: 0.85 },
       ]}>
-      {m.image_url ? (
-        <Image
-          source={{ uri: m.image_url }}
-          style={[styles.thumb, { backgroundColor: m.background_color }]}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={[styles.thumb, { backgroundColor: m.background_color }]} />
-      )}
+      <View>
+        {m.image_url ? (
+          <Image
+            source={{ uri: m.image_url }}
+            style={[styles.thumb, { backgroundColor: m.background_color }]}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.thumb, { backgroundColor: m.background_color }]} />
+        )}
+        {locked && (
+          <View style={styles.thumbLock}>
+            <Icon d={I.shield} size={22} color={colors.white} strokeWidth={2} />
+          </View>
+        )}
+      </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={styles.kicker}>
           MODULE {String(m.order_index || index + 1).padStart(2, '0')}
         </Text>
-        <Text style={styles.cardTitle} numberOfLines={1}>{m.title}</Text>
+        <Text style={[styles.cardTitle, locked && { color: colors.mute }]} numberOfLines={1}>{m.title}</Text>
         {lessonCount > 0 ? (
           <View style={styles.cardMetaRow}>
             <Icon d={I.layers} size={CARD_META_ICON} color={colors.mute} strokeWidth={2} />
@@ -294,19 +329,27 @@ function ModuleCard({ module: m, index, isCurrent, lessons, completedIds, onPres
         ) : (
           <Text style={styles.cardMeta}>Loading…</Text>
         )}
-        <View style={styles.track}>
-          <View
-            style={[
-              styles.fill,
-              {
-                width: `${pctRounded}%`,
-                backgroundColor: done ? colors.ok : colors.coral,
-              },
-            ]}
-          />
-        </View>
+        {locked ? (
+          <Text style={styles.lockedHint}>Sign in to unlock</Text>
+        ) : (
+          <View style={styles.track}>
+            <View
+              style={[
+                styles.fill,
+                {
+                  width: `${pctRounded}%`,
+                  backgroundColor: done ? colors.ok : colors.coral,
+                },
+              ]}
+            />
+          </View>
+        )}
       </View>
-      <Text style={[styles.pct, done && { color: colors.ok }]}>{pctRounded}%</Text>
+      {locked ? (
+        <Icon d={I.shield} size={20} color={colors.mute} strokeWidth={2} />
+      ) : (
+        <Text style={[styles.pct, done && { color: colors.ok }]}>{pctRounded}%</Text>
+      )}
     </Pressable>
   );
 }
@@ -459,6 +502,20 @@ const styles = StyleSheet.create({
     width: THUMB_W,
     height: THUMB_H,
     borderRadius: THUMB_R,
+  },
+  thumbLock: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: THUMB_R,
+    backgroundColor: 'rgba(22,19,17,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockedHint: {
+    marginTop: TRACK_MT,
+    color: colors.mute,
+    fontFamily: type.family.sans,
+    fontSize: CARD_META_FS,
+    fontWeight: '700',
   },
   kicker: {
     color: colors.coralDeep,

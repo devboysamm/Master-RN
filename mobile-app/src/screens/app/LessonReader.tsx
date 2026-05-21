@@ -10,7 +10,7 @@ import RadialGlow from '../../components/RadialGlow';
 import SlideToComplete from '../../components/SlideToComplete';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
-import BlurGate from '../../components/BlurGate';
+import BlurGate, { GatePopup } from '../../components/BlurGate';
 import { I } from '../../theme/icons';
 import { colors, type, radii } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
@@ -94,10 +94,8 @@ export default function LessonReader() {
   const done = isCompleted(params.lessonId);
   const bookmarked = isBookmarked(params.lessonId);
 
-  // Guests get the first 5 lessons of every module free. `idx` is the
-  // 0-based position within the module, so position 6+ means idx >= 5.
-  // While the list is still loading idx is -1 → not gated.
-  const gated = isGuest && idx >= 5;
+  const [gateVisible, setGateVisible] = useState(false);
+  const showGate = () => setGateVisible(true);
 
   const { sanitized, blocks } = useMemo(() => extractCodeBlocks(l?.content || ''), [l?.content]);
   const parts = sanitized.split(/<div data-codeblock="(\d+)"><\/div>/g);
@@ -129,6 +127,28 @@ export default function LessonReader() {
     return pos >= 0 && pos + 1 < allModules.length ? allModules[pos + 1] : null;
   }, [m, allModules]);
 
+  // Guest gate: free modules are ranked 1–5 by order_index; within them the
+  // first 7 lessons read. `modulePos` is this module's 1-based rank (0 while
+  // the module list is still loading → treated as not-yet-gated).
+  const modulePos = useMemo(() => {
+    if (!m) return 0;
+    const p = allModules.findIndex((x) => x.id === m.id);
+    return p >= 0 ? p + 1 : 0;
+  }, [m, allModules]);
+  const nextModulePos = useMemo(() => {
+    if (!nextModule) return 0;
+    const p = allModules.findIndex((x) => x.id === nextModule.id);
+    return p >= 0 ? p + 1 : 0;
+  }, [nextModule, allModules]);
+
+  // This lesson is gated for a guest if it's lesson 8+ (idx >= 7) OR lives in
+  // a module ranked 6+. idx is -1 while lessons load → never gated mid-load.
+  const gated = isGuest && idx >= 0 && (idx >= 7 || modulePos >= 6);
+
+  // Advancing must not cross into gated content.
+  const guestBlockNextLesson = isGuest && (idx + 1 >= 7 || modulePos >= 6);
+  const guestBlockNextModule = isGuest && nextModulePos >= 6;
+
   // Lazy-fetch the first lesson of the next module so tapping
   // "Next module →" lands the user directly in it.
   const [nextModuleFirstLesson, setNextModuleFirstLesson] = useState<Lesson | null>(null);
@@ -147,18 +167,22 @@ export default function LessonReader() {
     nextLesson
       ? {
           label: 'Next',
-          onPress: () => nav.navigate('LessonReader', {
-            lessonId: nextLesson.id,
-            moduleId: params.moduleId,
-          }),
+          onPress: guestBlockNextLesson
+            ? showGate
+            : () => nav.navigate('LessonReader', {
+                lessonId: nextLesson.id,
+                moduleId: params.moduleId,
+              }),
         }
       : isLastInModule && nextModule && nextModuleFirstLesson
       ? {
           label: 'Next module',
-          onPress: () => nav.navigate('LessonReader', {
-            lessonId: nextModuleFirstLesson.id,
-            moduleId: nextModule.id,
-          }),
+          onPress: guestBlockNextModule
+            ? showGate
+            : () => nav.navigate('LessonReader', {
+                lessonId: nextModuleFirstLesson.id,
+                moduleId: nextModule.id,
+              }),
         }
       : isLastInModule && !nextModule
       ? {
@@ -345,6 +369,8 @@ export default function LessonReader() {
           )}
         </View>
       )}
+
+      <GatePopup visible={gateVisible} onClose={() => setGateVisible(false)} />
     </SafeAreaView>
   );
 }

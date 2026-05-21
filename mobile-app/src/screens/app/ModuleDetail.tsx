@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, Pressable, StyleSheet, RefreshControl,
 } from 'react-native';
@@ -9,12 +9,18 @@ import Icon from '../../components/Icon';
 import RadialGlow from '../../components/RadialGlow';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
-import { useModule, useModuleLessons } from '../../api/hooks';
+import { GatePopup } from '../../components/BlurGate';
+import { useModule, useModuleLessons, useModules } from '../../api/hooks';
+import { useAuth } from '../../context/AuthContext';
 import { useBookmarks } from '../../storage/bookmarks';
 import { useCompleted } from '../../storage/completed';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
 import { ExploreStackParamList } from '../../navigation/types';
+
+// Guests: free in modules ranked 1–5; within a free module, lessons 1–7 read.
+const FREE_MODULES_FOR_GUEST = 5;
+const FREE_LESSONS_FOR_GUEST = 7;
 
 // All values: spec × 1.2 (named constants make the audit obvious).
 /* HERO */
@@ -119,13 +125,33 @@ function formatTime(totalMinutes: number): string {
 export default function ModuleDetail() {
   const nav = useNavigation<NativeStackNavigationProp<ExploreStackParamList>>();
   const { params } = useRoute<RouteProp<ExploreStackParamList, 'ModuleDetail'>>();
+  const { isGuest } = useAuth();
   const mod = useModule(params.moduleId);
   const lessonsState = useModuleLessons(params.moduleId);
+  const allModulesState = useModules();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { isCompleted } = useCompleted();
 
+  const [gateVisible, setGateVisible] = useState(false);
+
   const m = mod.data;
   const lessons = lessonsState.data ?? [];
+
+  // This module's 1-based rank among all modules (by order_index). Guests
+  // can't open modules ranked 6+, but they can still land here from Home, so
+  // a locked module locks every lesson in it.
+  const moduleLocked = useMemo(() => {
+    if (!isGuest || !m) return false;
+    const ranked = [...(allModulesState.data ?? [])].sort(
+      (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
+    );
+    const rank = ranked.findIndex((x) => x.id === m.id);
+    return rank >= 0 && rank >= FREE_MODULES_FOR_GUEST;
+  }, [isGuest, m, allModulesState.data]);
+
+  // For guests: lesson is locked if its module is locked, or it sits past the
+  // free-lesson cutoff (0-based index >= 7 → lesson position 8+).
+  const isLessonLocked = (i: number) => isGuest && (moduleLocked || i >= FREE_LESSONS_FOR_GUEST);
   const prereqs = useMemo(
     () => (m?.prerequisites || '').split(',').map((s) => s.trim()).filter(Boolean),
     [m?.prerequisites],
@@ -244,19 +270,26 @@ export default function ModuleDetail() {
             <Text style={styles.empty}>No lessons yet.</Text>
           ) : (
             lessons.map((l, i) => {
-              const done = isCompleted(l.id);
-              const isCurrent = !done && i === currentIndex;
+              const locked = isLessonLocked(i);
+              const done = !locked && isCompleted(l.id);
+              const isCurrent = !locked && !done && i === currentIndex;
               const bookmarked = isBookmarked(l.id);
               const isLast = i === lessons.length - 1;
               const num = String(l.lesson_order || i + 1).padStart(2, '0');
-              const statusSuffix = done ? ' · Completed' : isCurrent ? ' · In progress' : '';
+              const statusSuffix = locked
+                ? ' · Locked'
+                : done ? ' · Completed' : isCurrent ? ' · In progress' : '';
 
               return (
                 <Pressable
                   key={l.id}
-                  onPress={() => nav.navigate('LessonReader', { lessonId: l.id, moduleId: params.moduleId })}
+                  onPress={() =>
+                    locked
+                      ? setGateVisible(true)
+                      : nav.navigate('LessonReader', { lessonId: l.id, moduleId: params.moduleId })
+                  }
                   accessibilityRole="button"
-                  accessibilityLabel={`Open lesson ${l.title}`}
+                  accessibilityLabel={locked ? `Locked — sign in to unlock ${l.title}` : `Open lesson ${l.title}`}
                   style={({ pressed }) => [
                     styles.lessonRow,
                     !isLast && styles.lessonRowBorder,
@@ -267,10 +300,12 @@ export default function ModuleDetail() {
                       styles.badge,
                       done && { backgroundColor: colors.ok },
                       isCurrent && { backgroundColor: colors.coral },
-                      !done && !isCurrent && styles.badgeFuture,
+                      (locked || (!done && !isCurrent)) && styles.badgeFuture,
                     ]}>
                     {done ? (
                       <Icon d={I.check} size={BADGE_CHECK} color={colors.white} strokeWidth={2.4} />
+                    ) : locked ? (
+                      <Icon d={I.shield} size={BADGE_CHECK} color={colors.mute} strokeWidth={2} />
                     ) : (
                       <Text
                         style={[
@@ -282,7 +317,7 @@ export default function ModuleDetail() {
                   </View>
 
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.lessonTitle} numberOfLines={1}>{l.title}</Text>
+                    <Text style={[styles.lessonTitle, locked && { color: colors.mute }]} numberOfLines={1}>{l.title}</Text>
                     <View style={styles.lessonSubRow}>
                       <Icon d={I.clock} size={LESSON_TIME_ICON} color={colors.mute} strokeWidth={2} />
                       <Text style={styles.lessonSub} numberOfLines={1}>
@@ -291,24 +326,30 @@ export default function ModuleDetail() {
                     </View>
                   </View>
 
-                  <Pressable
-                    onPress={(e) => { e.stopPropagation(); toggleBookmark(l.id); }}
-                    accessibilityRole="button"
-                    accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
-                    hitSlop={10}>
-                    <Icon
-                      d={I.bookmark}
-                      size={BOOKMARK_SIZE}
-                      color={bookmarked ? colors.coral : colors.mute}
-                      fill={bookmarked ? colors.coral : 'none'}
-                    />
-                  </Pressable>
+                  {locked ? (
+                    <Icon d={I.shield} size={BOOKMARK_SIZE} color={colors.mute} strokeWidth={2} />
+                  ) : (
+                    <Pressable
+                      onPress={(e) => { e.stopPropagation(); toggleBookmark(l.id); }}
+                      accessibilityRole="button"
+                      accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                      hitSlop={10}>
+                      <Icon
+                        d={I.bookmark}
+                        size={BOOKMARK_SIZE}
+                        color={bookmarked ? colors.coral : colors.mute}
+                        fill={bookmarked ? colors.coral : 'none'}
+                      />
+                    </Pressable>
+                  )}
                 </Pressable>
               );
             })
           )}
         </View>
       </ScrollView>
+
+      <GatePopup visible={gateVisible} onClose={() => setGateVisible(false)} />
     </SafeAreaView>
   );
 }
