@@ -94,8 +94,15 @@ export default function LessonReader() {
   const done = isCompleted(params.lessonId);
   const bookmarked = isBookmarked(params.lessonId);
 
-  const [gateVisible, setGateVisible] = useState(false);
-  const showGate = () => setGateVisible(true);
+  // Gate popup state. `null` = hidden; an object = shown with that copy
+  // (empty object → default "unlock" copy; custom for the save prompt).
+  const [gate, setGate] = useState<{ title?: string; subtitle?: string } | null>(null);
+  const showGate = () => setGate({});
+  const showSaveGate = () =>
+    setGate({
+      title: 'Sign in to save lessons',
+      subtitle: 'Create a free account to bookmark lessons and pick up where you left off.',
+    });
 
   const { sanitized, blocks } = useMemo(() => extractCodeBlocks(l?.content || ''), [l?.content]);
   const parts = sanitized.split(/<div data-codeblock="(\d+)"><\/div>/g);
@@ -277,15 +284,15 @@ export default function LessonReader() {
           <Text style={[styles.title, { flex: 1 }]}>{l?.title || ' '}</Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
-            onPress={() => toggleBookmark(params.lessonId)}
+            accessibilityLabel={isGuest ? 'Sign in to save' : bookmarked ? 'Remove bookmark' : 'Bookmark'}
+            onPress={() => (isGuest ? showSaveGate() : toggleBookmark(params.lessonId))}
             hitSlop={10}
             style={styles.titleBookmark}>
             <Icon
               d={I.bookmark}
               size={18}
-              color={bookmarked ? colors.coral : colors.mute}
-              fill={bookmarked ? colors.coral : 'none'}
+              color={!isGuest && bookmarked ? colors.coral : colors.mute}
+              fill={!isGuest && bookmarked ? colors.coral : 'none'}
             />
           </Pressable>
         </View>
@@ -370,7 +377,12 @@ export default function LessonReader() {
         </View>
       )}
 
-      <GatePopup visible={gateVisible} onClose={() => setGateVisible(false)} />
+      <GatePopup
+        visible={gate !== null}
+        title={gate?.title}
+        subtitle={gate?.subtitle}
+        onClose={() => setGate(null)}
+      />
     </SafeAreaView>
   );
 }

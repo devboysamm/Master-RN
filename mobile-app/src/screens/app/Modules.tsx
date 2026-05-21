@@ -221,7 +221,8 @@ export default function Modules() {
                   key={m.id}
                   module={m as Mod}
                   index={i}
-                  isCurrent={m.id === currentModuleId}
+                  isCurrent={!isGuest && m.id === currentModuleId}
+                  isGuest={isGuest}
                   locked={locked}
                   lessons={lessonsByModule[m.id] ?? []}
                   completedIds={completedIds}
@@ -273,17 +274,19 @@ type ModuleCardProps = {
   module: Mod;
   index: number;
   isCurrent: boolean;
+  isGuest?: boolean;
   locked?: boolean;
   lessons: Lesson[];
   completedIds: Set<number>;
   onPress: () => void;
 };
 
-function ModuleCard({ module: m, index, isCurrent, locked, lessons, completedIds, onPress }: ModuleCardProps) {
+function ModuleCard({ module: m, index, isCurrent, isGuest, locked, lessons, completedIds, onPress }: ModuleCardProps) {
   const lessonCount = lessons.length;
   const totalMinutes = lessons.reduce((s, l) => s + (l.read_time || 0), 0);
   const completedInModule = lessons.filter((l) => completedIds.has(l.id)).length;
-  const pct = lessonCount > 0 ? completedInModule / lessonCount : 0;
+  // Guests have no progress tracking → always 0 / empty.
+  const pct = isGuest ? 0 : lessonCount > 0 ? completedInModule / lessonCount : 0;
   const pctRounded = Math.round(pct * 100);
   const done = pctRounded === 100;
 

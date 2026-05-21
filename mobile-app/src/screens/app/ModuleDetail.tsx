@@ -132,7 +132,12 @@ export default function ModuleDetail() {
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { isCompleted } = useCompleted();
 
-  const [gateVisible, setGateVisible] = useState(false);
+  const [gate, setGate] = useState<{ title?: string; subtitle?: string } | null>(null);
+  const showSaveGate = () =>
+    setGate({
+      title: 'Sign in to save lessons',
+      subtitle: 'Create a free account to bookmark lessons and pick up where you left off.',
+    });
 
   const m = mod.data;
   const lessons = lessonsState.data ?? [];
@@ -285,7 +290,7 @@ export default function ModuleDetail() {
                   key={l.id}
                   onPress={() =>
                     locked
-                      ? setGateVisible(true)
+                      ? setGate({})
                       : nav.navigate('LessonReader', { lessonId: l.id, moduleId: params.moduleId })
                   }
                   accessibilityRole="button"
@@ -330,15 +335,18 @@ export default function ModuleDetail() {
                     <Icon d={I.shield} size={BOOKMARK_SIZE} color={colors.mute} strokeWidth={2} />
                   ) : (
                     <Pressable
-                      onPress={(e) => { e.stopPropagation(); toggleBookmark(l.id); }}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        if (isGuest) showSaveGate(); else toggleBookmark(l.id);
+                      }}
                       accessibilityRole="button"
-                      accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Bookmark'}
+                      accessibilityLabel={isGuest ? 'Sign in to save' : bookmarked ? 'Remove bookmark' : 'Bookmark'}
                       hitSlop={10}>
                       <Icon
                         d={I.bookmark}
                         size={BOOKMARK_SIZE}
-                        color={bookmarked ? colors.coral : colors.mute}
-                        fill={bookmarked ? colors.coral : 'none'}
+                        color={!isGuest && bookmarked ? colors.coral : colors.mute}
+                        fill={!isGuest && bookmarked ? colors.coral : 'none'}
                       />
                     </Pressable>
                   )}
@@ -349,7 +357,12 @@ export default function ModuleDetail() {
         </View>
       </ScrollView>
 
-      <GatePopup visible={gateVisible} onClose={() => setGateVisible(false)} />
+      <GatePopup
+        visible={gate !== null}
+        title={gate?.title}
+        subtitle={gate?.subtitle}
+        onClose={() => setGate(null)}
+      />
     </SafeAreaView>
   );
 }

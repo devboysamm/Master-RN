@@ -133,7 +133,7 @@ export default function Profile() {
           <View style={{ marginTop: SECTION_MT }}>
             <Text style={styles.sectionLabel}>YOUR ACTIVITY</Text>
             <View style={{ gap: ROW_LIST_GAP }}>
-              <Row icon={I.bookmark} title="Saved lessons"     meta={String(bookmarks.length)} onPress={goToBookmarks} />
+              <Row icon={I.bookmark} title="Saved lessons"     meta="0" onPress={goToBookmarks} />
               <Row icon={I.chat}     title="Help and feedback" onPress={goHelp} />
               <Row icon={I.shield}   title="About Master RN"   meta="v1.0" onPress={goAbout} />
             </View>

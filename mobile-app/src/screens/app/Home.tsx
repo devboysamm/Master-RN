@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -43,14 +43,23 @@ export default function Home() {
   const greetName = user?.name || (isGuest ? 'Guest' : 'Friend');
   const completedIds = new Set(completed);
 
-  // Global progress — rough, but stable as completed count grows.
+  // Guests have no progress tracking — header ring stays empty.
   const totalLessons = Math.max((modules?.length ?? 1) * 7, completed.length + 1);
-  const progress = Math.min(1, completed.length / Math.max(1, totalLessons));
+  const progress = isGuest ? 0 : Math.min(1, completed.length / Math.max(1, totalLessons));
+
+  // First module (by order_index) + its first lesson — guests always start here.
+  const sortedModules = useMemo(
+    () => [...(modules ?? [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)),
+    [modules],
+  );
+  const firstModule = sortedModules[0] ?? null;
+  const { data: firstModuleLessons } = useModuleLessons(firstModule?.id ?? 0);
+  const firstLesson = firstModuleLessons?.[0] ?? null;
 
   // When a category chip is active, swap the Modules list for its filtered set.
   const sourceModules = activeCatId === ALL_CATEGORY_ID ? (modules ?? []) : (categoryModules ?? []);
   const visibleModules = sourceModules.slice(0, 2);
-  const currentModuleId = lastLesson?.moduleId ?? null;
+  const currentModuleId = isGuest ? null : (lastLesson?.moduleId ?? null);
 
   const chips: CategoryChip[] = [
     { id: ALL_CATEGORY_ID, name: 'All' },
@@ -91,10 +100,19 @@ export default function Home() {
       />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <NowPlayingCard
-          lastLesson={lastLesson}
+          lastLesson={isGuest ? null : lastLesson}
+          zeroProgress={isGuest}
           onPress={() => {
-            if (lastLesson) openLesson(lastLesson.lessonId, lastLesson.moduleId);
-            else openAllModules();
+            if (isGuest) {
+              // Guests always begin a fresh run at lesson 1 of the first module.
+              if (firstModule && firstLesson) openLesson(firstLesson.id, firstModule.id);
+              else if (firstModule) openModule(firstModule.id);
+              else openAllModules();
+            } else if (lastLesson) {
+              openLesson(lastLesson.lessonId, lastLesson.moduleId);
+            } else {
+              openAllModules();
+            }
           }}
         />
 
@@ -136,6 +154,7 @@ export default function Home() {
                 module={m}
                 index={i}
                 isCurrent={m.id === currentModuleId}
+                isGuest={isGuest}
                 completedIds={completedIds}
                 onPress={() => openModule(m.id)}
               />
@@ -183,13 +202,14 @@ export default function Home() {
 
 type NowPlayingCardProps = {
   lastLesson: ReturnType<typeof useLastLesson>['lastLesson'];
+  zeroProgress?: boolean;
   onPress: () => void;
 };
 
-function NowPlayingCard({ lastLesson, onPress }: NowPlayingCardProps) {
+function NowPlayingCard({ lastLesson, zeroProgress, onPress }: NowPlayingCardProps) {
   const lessonNumber = lastLesson?.lessonNumber || 1;
   const totalLessons = lastLesson?.totalLessons || 8;
-  const progress = Math.min(1, lessonNumber / Math.max(1, totalLessons));
+  const progress = zeroProgress ? 0 : Math.min(1, lessonNumber / Math.max(1, totalLessons));
   const minutesLeft = Math.max(1, Math.round((totalLessons - lessonNumber) * 1.5));
   const moduleLabel = lastLesson?.moduleNumber
     ? `M${String(lastLesson.moduleNumber).padStart(2, '0')}`
@@ -286,16 +306,18 @@ type ModuleRowProps = {
   };
   index: number;
   isCurrent: boolean;
+  isGuest?: boolean;
   completedIds: Set<number>;
   onPress: () => void;
 };
 
-function ModuleRow({ module: m, index, isCurrent, completedIds, onPress }: ModuleRowProps) {
+function ModuleRow({ module: m, index, isCurrent, isGuest, completedIds, onPress }: ModuleRowProps) {
   const { data: lessons } = useModuleLessons(m.id);
   const lessonCount = lessons?.length ?? 0;
   const totalMinutes = lessons?.reduce((s, l) => s + (l.read_time || 0), 0) ?? 0;
   const completedInModule = lessons?.filter((l) => completedIds.has(l.id)).length ?? 0;
-  const progress = lessonCount > 0 ? completedInModule / lessonCount : 0;
+  // Guests have no progress tracking → always 0 / empty.
+  const progress = isGuest ? 0 : lessonCount > 0 ? completedInModule / lessonCount : 0;
   const pct = Math.round(progress * 100);
   const done = pct === 100;
 

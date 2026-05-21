@@ -6,9 +6,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from '../../components/Icon';
 import RadialGlow from '../../components/RadialGlow';
 import Skeleton from '../../components/Skeleton';
+import PillButton from '../../components/PillButton';
 import { I } from '../../theme/icons';
 import { ProgressStackParamList } from '../../navigation/types';
 import { colors, type } from '../../theme/tokens';
+import { useAuth } from '../../context/AuthContext';
 import { useModules } from '../../api/hooks';
 import { getModuleLessons } from '../../api/modules';
 import { lessonsForModule, type Lesson, type Module } from '../../api/mock';
@@ -67,6 +69,7 @@ type Aggregated = {
 
 export default function Bookmarks() {
   const nav = useNavigation<NativeStackNavigationProp<ProgressStackParamList>>();
+  const { isGuest, requestAuth } = useAuth();
   const { bookmarks, toggleBookmark } = useBookmarks();
   const modulesState = useModules();
   const modules = modulesState.data ?? [];
@@ -103,6 +106,33 @@ export default function Bookmarks() {
     .filter((l) => bookmarks.includes(l.id))
     .reduce((s, l) => s + (l.read_time || 0), 0);
   const visible = (lessons ?? []).filter((l) => bookmarks.includes(l.id));
+
+  // Guests have no saved lessons — show a locked state, never a list.
+  if (isGuest) {
+    return (
+      <SafeAreaView style={styles.wrap} edges={['top']}>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Saved</Text>
+          <Text style={styles.sub}>Lessons you've bookmarked</Text>
+        </View>
+        <View style={styles.lockedWrap}>
+          <View style={styles.lockedIconRing}>
+            <Icon d={I.bookmark} size={32} color={colors.coral} strokeWidth={2} fill={colors.coral} />
+          </View>
+          <Text style={styles.lockedTitle}>Sign in to save lessons</Text>
+          <Text style={styles.lockedSub}>
+            Bookmark lessons to build your own reading list and find them here.
+          </Text>
+          <PillButton
+            variant="primary"
+            onPress={() => requestAuth('signup')}
+            style={styles.lockedCta}>
+            Sign in or Register
+          </PillButton>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
@@ -278,6 +308,43 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   bookmarkBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+
+  /* Guest locked state */
+  lockedWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 36,
+    paddingBottom: 80,
+  },
+  lockedIconRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.coralSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  lockedTitle: {
+    fontFamily: type.family.sans,
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.ink,
+    letterSpacing: -0.4,
+    textAlign: 'center',
+  },
+  lockedSub: {
+    fontFamily: type.family.sans,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.mute,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 8,
+    maxWidth: 300,
+  },
+  lockedCta: { alignSelf: 'stretch', maxWidth: 320, marginTop: 24 },
 
   /* Empty state */
   empty: {
