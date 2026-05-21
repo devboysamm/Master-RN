@@ -112,7 +112,7 @@ export default function Modules() {
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState<number | null>(null);
-  const [gateVisible, setGateVisible] = useState(false);
+  const [gate, setGate] = useState<{ title?: string; subtitle?: string } | null>(null);
 
   // Rank every module by order_index; a module's 1-based rank is its
   // "position". For guests, positions > 5 are locked.
@@ -228,7 +228,7 @@ export default function Modules() {
                   completedIds={completedIds}
                   onPress={() =>
                     locked
-                      ? setGateVisible(true)
+                      ? setGate({})
                       : nav.navigate('ModuleDetail', { moduleId: m.id })
                   }
                 />
@@ -261,7 +261,12 @@ export default function Modules() {
         }}
       />
 
-      <GatePopup visible={gateVisible} onClose={() => setGateVisible(false)} />
+      <GatePopup
+        visible={gate !== null}
+        title={gate?.title}
+        subtitle={gate?.subtitle}
+        onClose={() => setGate(null)}
+      />
     </SafeAreaView>
   );
 }
