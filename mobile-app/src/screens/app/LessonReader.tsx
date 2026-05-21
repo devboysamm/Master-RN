@@ -432,7 +432,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   lessonOfTotal: { color: 'rgba(255,255,255,0.8)', fontFamily: type.family.mono, fontSize: 14, fontWeight: '700' },
-  scroll: { padding: 16, paddingBottom: 140 },
+  // Bottom action button is position:absolute (bottom:30, height 56 → top at
+  // ~86px). Pad the scroll content past it so the last line of lesson text
+  // always ends above the pill and is never hidden underneath it.
+  scroll: { padding: 16, paddingBottom: 150 },
   kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
   kickerPill: { width: KICKER_PILL_W, height: KICKER_PILL_H, borderRadius: 2, backgroundColor: colors.coral },
   kickerText: { color: colors.coral, fontFamily: type.family.mono, fontSize: KICKER_FS, fontWeight: '800', letterSpacing: KICKER_LS, flexShrink: 1 },
