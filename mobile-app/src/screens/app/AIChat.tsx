@@ -22,6 +22,7 @@ import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { useTabHistory } from '../../context/TabHistoryContext';
+import { sendChat, type ChatMessage } from '../../api/chat';
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /* Sizing — spec × 1.2 to match the rest of the app.                        */
@@ -91,15 +92,6 @@ type Message = {
   quickReplies?: string[];
 };
 
-const SAMPLE_CODE = `function Counter() {
-  const [n, setN] = useState(0);
-  return (
-    <Pressable onPress={() => setN(n + 1)}>
-      <Text>{n}</Text>
-    </Pressable>
-  );
-}`;
-
 const EXAMPLE_PROMPTS = [
   'How does useState work?',
   'Explain useEffect',
@@ -145,31 +137,40 @@ export default function AIChat() {
     );
   }, [messages.length, loading]);
 
+  // Map our chat bubbles into the backend's { role, content } history shape.
+  const toHistory = (msgs: Message[]): ChatMessage[] =>
+    msgs.map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+
+  const runChat = async (history: Message[]) => {
+    try {
+      const { reply } = await sendChat(toHistory(history));
+      const aiMsg: Message = { id: `a_${Date.now()}`, role: 'ai', text: reply, ts: nowStr() };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch {
+      // Network/server error — show a recoverable error bubble, never crash.
+      const errMsg: Message = {
+        id: `e_${Date.now()}`,
+        role: 'ai',
+        text: 'Something went wrong — try again.',
+        ts: nowStr(),
+      };
+      setMessages((prev) => [...prev, errMsg]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const send = (text: string) => {
     const t = text.trim();
     if (!t) return;
     Keyboard.dismiss();
     const userMsg: Message = { id: `u_${Date.now()}`, role: 'user', text: t, ts: nowStr() };
-    setMessages((prev) => [...prev, userMsg]);
+    // Send the full conversation (prior turns + this one) so the AI has context.
+    const history = [...messages, userMsg];
+    setMessages(history);
     setInput('');
     setLoading(true);
-    // Mocked reply — real API in Phase 2.
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: `a_${Date.now()}`,
-        role: 'ai',
-        text: t.toLowerCase().includes('usestate')
-          ? 'Sure — `useState` gives a component a piece of memory. You pass the initial value and get back a getter and a setter. Calling the setter triggers a re-render.'
-          : 'Great question! Here is a mocked reply — once the model is wired up you\'ll get a real answer.',
-        code: t.toLowerCase().includes('usestate')
-          ? { lang: 'jsx', code: SAMPLE_CODE }
-          : undefined,
-        ts: nowStr(),
-        quickReplies: ['Tell me more', 'Show example', 'Why?'],
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-      setLoading(false);
-    }, 1200);
+    runChat(history);
   };
 
   const fillPrompt = (text: string) => setInput(text);
