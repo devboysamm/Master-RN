@@ -151,7 +151,13 @@ function AppTabs() {
   return (
     <Tabs.Navigator
       initialRouteName={initialRouteName}
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.cream } }}
+      screenOptions={{
+        headerShown: false,
+        sceneStyle: { backgroundColor: colors.cream },
+        // Smooth cross-tab transition (bottom-tabs only — does NOT affect
+        // the native-stack push animation when opening inner screens).
+        animation: 'shift',
+      }}
       tabBar={(props) => <TabBar {...props} />}
       // Record the previously-focused tab on every tab press so screens
       // like AIChat / LessonReader can route their back button to it.

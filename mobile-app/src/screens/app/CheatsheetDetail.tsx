@@ -16,9 +16,9 @@ const HEADER_PH = 19;
 const BACK_SIZE = 41;
 const HEADER_TITLE_FS = 19;
 
-const SNIPPET_GAP = 19;            // spec 16 × 1.2
-const SNIPPET_TITLE_FS = 17;       // spec 14 × 1.2
-const SNIPPET_DESC_FS = 14;        // spec 12 × 1.2
+const SNIPPET_GAP = 18;            // matches Modules list gap rhythm
+const SNIPPET_TITLE_FS = 16;       // = Modules CARD_TITLE_FS
+const SNIPPET_DESC_FS = 14;        // body copy
 const SNIPPET_DESC_LH = 22;
 const SNIPPET_TITLE_MB = 5;
 const SNIPPET_DESC_MB = 6;

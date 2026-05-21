@@ -123,13 +123,13 @@ export default function VerifyOtp() {
     setSuccess(true);
     Keyboard.dismiss();
     // Pop the check in (~400ms scale + fade), hold, then flip auth state.
-    checkOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) });
-    checkScale.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.back(1.6)) });
-    labelOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
+    checkOpacity.value = withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) });
+    checkScale.value = withTiming(1, { duration: 650, easing: Easing.out(Easing.back(1.6)) });
+    labelOpacity.value = withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) });
     commitTimer.current = setTimeout(() => {
       // Flipping auth state swaps AuthFlow → app tabs (lands on Home).
       commit();
-    }, 900);
+    }, 1800);
   };
 
   const verify = async () => {
@@ -190,36 +190,40 @@ export default function VerifyOtp() {
             We sent a code to <Text style={styles.subtitleEmail}>{email}</Text>. It expires in 10 minutes.
           </Text>
 
-          {/* Tap anywhere on the boxes to focus the hidden input. */}
-          <Pressable onPress={() => inputRef.current?.focus()} style={styles.boxesRow}>
-            {Array.from({ length: CODE_LEN }).map((_, i) => {
-              const filled = i < code.length;
-              const active = i === code.length;
-              return (
-                <View
-                  key={i}
-                  style={[styles.box, (filled || active) && styles.boxActive]}>
-                  <Text style={styles.boxText}>{code[i] ?? ''}</Text>
-                </View>
-              );
-            })}
-          </Pressable>
-
-          {/* Single hidden input drives the boxes. No maxLength so a pasted
-           *  code with separators (e.g. "12 34 56") isn't truncated before
-           *  we strip non-digits. iOS SMS autofill fills it via the
-           *  oneTimeCode content type. */}
-          <TextInput
-            ref={inputRef}
-            value={code}
-            onChangeText={onChangeCode}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            autoComplete="one-time-code"
-            importantForAutofill="yes"
-            style={styles.hiddenInput}
-            caretHidden
-          />
+          {/* The 6 boxes are purely visual; the real TextInput is an
+           *  invisible (transparent) layer sitting directly ON TOP of the
+           *  row. That way a long-press anywhere on the row hits the
+           *  TextInput and the iOS "Paste" callout appears. No maxLength so
+           *  a pasted code with separators isn't truncated before we strip
+           *  non-digits. iOS SMS autofill fills it via oneTimeCode. */}
+          <View style={styles.boxesWrap}>
+            <View style={styles.boxesRow}>
+              {Array.from({ length: CODE_LEN }).map((_, i) => {
+                const filled = i < code.length;
+                const active = i === code.length;
+                return (
+                  <View
+                    key={i}
+                    style={[styles.box, (filled || active) && styles.boxActive]}>
+                    <Text style={styles.boxText}>{code[i] ?? ''}</Text>
+                  </View>
+                );
+              })}
+            </View>
+            <TextInput
+              ref={inputRef}
+              value={code}
+              onChangeText={onChangeCode}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              importantForAutofill="yes"
+              contextMenuHidden={false}
+              caretHidden
+              selectionColor="transparent"
+              style={styles.overlayInput}
+            />
+          </View>
 
           {error ? <Text style={styles.err}>{error}</Text> : null}
 
@@ -315,7 +319,8 @@ const styles = StyleSheet.create({
   },
   subtitleEmail: { color: colors.white, fontWeight: '700' },
 
-  boxesRow: { flexDirection: 'row', gap: BOX_GAP, marginTop: BOXES_MT },
+  boxesWrap: { marginTop: BOXES_MT, position: 'relative' },
+  boxesRow: { flexDirection: 'row', gap: BOX_GAP },
   box: {
     flex: 1,
     height: BOX_H,
@@ -333,7 +338,15 @@ const styles = StyleSheet.create({
     fontSize: BOX_FS,
     fontWeight: '800',
   },
-  hiddenInput: { position: 'absolute', opacity: 0, height: 1, width: 1 },
+  // Invisible but fully interactive — covers the box row so long-press
+  // shows the iOS Paste menu and tapping focuses the keyboard.
+  overlayInput: {
+    ...StyleSheet.absoluteFillObject,
+    color: 'transparent',
+    textAlign: 'center',
+    fontSize: BOX_FS,
+    zIndex: 2,
+  },
 
   err: { color: colors.coral, fontFamily: type.family.sans, fontSize: 14, fontWeight: '700', marginTop: 14 },
 

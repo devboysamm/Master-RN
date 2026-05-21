@@ -13,12 +13,18 @@ const HEADER_PH = 19;
 const BACK_SIZE = 41;
 const HEADER_TITLE_FS = 19;
 
-const CARD_RADIUS = 22;      // spec 18 × 1.2 ≈ 22
-const CARD_PAD = 19;         // spec 16 × 1.2
-const LIST_GAP = 14;         // spec 12 × 1.2
-const TITLE_FS = 17;         // spec 14 × 1.2
-const SUB_FS = 13;           // spec 11 × 1.2
-const ICON_TILE = 41;        // spec 34 × 1.2
+// Matched to Modules card constants so a cheatsheet card and a module
+// card read as the same family.
+const CARD_RADIUS = 22;      // = Modules CARD_RADIUS
+const CARD_PAD_V = 16;       // = Modules CARD_PAD_V
+const CARD_PAD_H = 18;       // = Modules CARD_PAD_H
+const CARD_GAP = 12;         // = Modules CARD_GAP (icon ↔ text)
+const LIST_GAP = 12;         // = Modules LIST_GAP (between cards)
+const TITLE_FS = 16;         // = Modules CARD_TITLE_FS
+const TITLE_MT = 0;
+const SUB_FS = 12;           // = Modules CARD_META_FS
+const SUB_MT = 3;
+const ICON_TILE = 41;
 const ICON_SIZE = 19;
 
 export default function Cheatsheets() {
@@ -101,8 +107,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: CARD_PAD,
+    gap: CARD_GAP,
+    paddingVertical: CARD_PAD_V,
+    paddingHorizontal: CARD_PAD_H,
     backgroundColor: colors.card,
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
@@ -118,12 +125,13 @@ const styles = StyleSheet.create({
     fontSize: TITLE_FS,
     fontWeight: '800',
     color: colors.ink,
+    marginTop: TITLE_MT,
   },
   subtitle: {
     fontFamily: type.family.sans,
     fontSize: SUB_FS,
     color: colors.mute,
     fontWeight: '700',
-    marginTop: 3,
+    marginTop: SUB_MT,
   },
 });
