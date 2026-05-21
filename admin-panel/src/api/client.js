@@ -43,6 +43,11 @@ export const AppContent = {
   update: (body) => api.put('/api/app-content', body).then(unwrap),
 };
 
+export const Legal = {
+  get: (key) => api.get(`/api/legal/${key}`).then(unwrap),
+  update: (key, body) => api.put(`/api/legal/${key}`, { body }).then(unwrap),
+};
+
 export const Categories = {
   list: () => api.get('/api/categories').then(unwrap),
   get: (id) => api.get(`/api/categories/${id}`).then(unwrap),

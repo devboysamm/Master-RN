@@ -9,6 +9,7 @@ import Media from './pages/Media';
 import Categories from './pages/Categories';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
+import Legal from './pages/Legal';
 import { MRN } from './theme/tokens';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/categories"     element={<Categories />} />
             <Route path="/users"          element={<Users />} />
             <Route path="/settings"       element={<Settings />} />
+            <Route path="/legal"          element={<Legal />} />
             <Route path="*"               element={<Navigate to="/" replace />} />
           </Routes>
         </main>
