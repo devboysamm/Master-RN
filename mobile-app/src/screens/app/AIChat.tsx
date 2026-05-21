@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
   FadeInUp,
 } from 'react-native-reanimated';
+import Markdown, { type RenderRules, type ASTNode } from 'react-native-markdown-display';
 import Icon from '../../components/Icon';
 import CodeBlock from '../../components/CodeBlock';
 import AtomLogo from '../../components/AtomLogo';
@@ -386,13 +387,82 @@ function AiBubble({ text, code, ts }: { text: string; code?: { lang?: string; co
       entering={FadeInUp.duration(220).springify().damping(16)}
       style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
       <View style={styles.aiBubble}>
-        <Text style={styles.aiText}>{text}</Text>
+        {/* Assistant replies arrive as markdown — render bold/italic, inline
+            code, headings, lists, and fenced code blocks properly. */}
+        <Markdown style={markdownStyles} rules={markdownRules}>{text}</Markdown>
         {code ? <CodeBlock language={code.lang} code={code.code} /> : null}
       </View>
       {ts ? <Text style={styles.ts}>{ts}</Text> : null}
     </Animated.View>
   );
 }
+
+// Fenced + indented code blocks reuse the app's CodeBlock component so they
+// match the look used in lessons (dark window chrome, syntax colours,
+// horizontal scroll for long lines).
+const markdownRules: RenderRules = {
+  fence: (node) => {
+    const n = node as ASTNode & { sourceInfo?: string };
+    const lang = (n.sourceInfo || '').trim().split(/\s+/)[0] || undefined;
+    return <CodeBlock key={n.key} code={n.content} language={lang} />;
+  },
+  code_block: (node) => {
+    const n = node as ASTNode & { sourceInfo?: string };
+    const lang = (n.sourceInfo || '').trim().split(/\s+/)[0] || undefined;
+    return <CodeBlock key={n.key} code={n.content} language={lang} />;
+  },
+};
+
+// MRN-themed markdown: Manrope body in ink, JetBrains Mono for code, coral
+// accents for inline code + links. Keeps assistant text feeling native to the
+// app rather than a default markdown sheet.
+const markdownStyles = StyleSheet.create({
+  body: {
+    color: colors.ink,
+    fontFamily: type.family.sans,
+    fontSize: BUBBLE_FS,
+    lineHeight: BUBBLE_LH,
+    fontWeight: '500',
+  },
+  paragraph: { marginTop: 0, marginBottom: 8 },
+  heading1: {
+    fontFamily: type.family.sans, fontSize: 20, fontWeight: '800',
+    color: colors.ink, lineHeight: 26, marginTop: 6, marginBottom: 6,
+  },
+  heading2: {
+    fontFamily: type.family.sans, fontSize: 18, fontWeight: '800',
+    color: colors.ink, lineHeight: 24, marginTop: 6, marginBottom: 5,
+  },
+  heading3: {
+    fontFamily: type.family.sans, fontSize: 16, fontWeight: '800',
+    color: colors.ink, lineHeight: 22, marginTop: 4, marginBottom: 4,
+  },
+  strong: { fontWeight: '800', color: colors.ink },
+  em: { fontStyle: 'italic' },
+  code_inline: {
+    fontFamily: type.family.mono,
+    fontSize: 13,
+    color: colors.coralDeep,
+    backgroundColor: colors.cardAlt,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  bullet_list: { marginBottom: 8 },
+  ordered_list: { marginBottom: 8 },
+  list_item: { marginBottom: 3 },
+  bullet_list_icon: { color: colors.coral },
+  ordered_list_icon: { color: colors.coral, fontWeight: '700' },
+  link: { color: colors.coralDeep, textDecorationLine: 'underline', fontWeight: '700' },
+  blockquote: {
+    backgroundColor: colors.cardAlt,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.coral,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+});
 
 function UserBubble({ text, ts }: { text: string; ts?: string }) {
   return (
