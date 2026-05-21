@@ -58,7 +58,7 @@ function AuthFlow({
 }) {
   // When a guest taps "Sign in" / "Create account" from inside the app,
   // skip Splash + Welcome and open the Auth screen on the matching tab.
-  const initialRouteName = pendingAuthMode ? 'Auth' : 'Splash';
+  const initialRouteName = pendingAuthMode ? 'AuthMain' : 'Splash';
   return (
     <AuthStack.Navigator
       initialRouteName={initialRouteName}
@@ -66,7 +66,7 @@ function AuthFlow({
       <AuthStack.Screen name="Splash" component={Splash} />
       <AuthStack.Screen name="Welcome" component={Welcome} />
       <AuthStack.Screen
-        name="Auth"
+        name="AuthMain"
         component={Auth}
         initialParams={
           pendingAuthMode
@@ -130,7 +130,7 @@ function ChatTab() {
 function ProfileTab() {
   return (
     <ProfileStack.Navigator screenOptions={stackOptions}>
-      <ProfileStack.Screen name="Profile" component={Profile} />
+      <ProfileStack.Screen name="ProfileMain" component={Profile} />
       <ProfileStack.Screen name="HelpFeedback" component={HelpFeedback} />
       <ProfileStack.Screen name="About" component={About} />
       <ProfileStack.Screen name="EditProfile" component={EditProfile} options={{ animation: 'slide_from_right' }} />

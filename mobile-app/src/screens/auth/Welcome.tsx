@@ -79,8 +79,8 @@ export default function Welcome() {
         </View>
 
         <View style={styles.actions}>
-          <BigBtn label="Create account" variant="primary" onPress={() => nav.navigate('Auth', { mode: 'signup' })} />
-          <BigBtn label="Sign in"        variant="glass"   onPress={() => nav.navigate('Auth', { mode: 'signin' })} />
+          <BigBtn label="Create account" variant="primary" onPress={() => nav.navigate('AuthMain', { mode: 'signup' })} />
+          <BigBtn label="Sign in"        variant="glass"   onPress={() => nav.navigate('AuthMain', { mode: 'signin' })} />
 
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />

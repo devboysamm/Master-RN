@@ -246,7 +246,7 @@ export default function Forgot() {
           {/* STEP 3 — done */}
           {step === 'done' && (
             <Pressable
-              onPress={() => nav.navigate('Auth', { mode: 'signin' })}
+              onPress={() => nav.navigate('AuthMain', { mode: 'signin' })}
               accessibilityRole="button"
               accessibilityLabel="Back to sign in"
               style={({ pressed }) => [styles.cta, { marginTop: FORM_MT }, pressed && { opacity: 0.9 }]}>
@@ -257,7 +257,7 @@ export default function Forgot() {
 
           {step !== 'done' && (
             <Pressable
-              onPress={() => nav.navigate('Auth', { mode: 'signin' })}
+              onPress={() => nav.navigate('AuthMain', { mode: 'signin' })}
               accessibilityRole="link"
               accessibilityLabel="Remember password? Sign in"
               hitSlop={6}

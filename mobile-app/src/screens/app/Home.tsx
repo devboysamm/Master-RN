@@ -76,7 +76,7 @@ export default function Home() {
   };
   const openProfile = () => {
     nav.dispatch(
-      CommonActions.navigate({ name: 'Profile' as never, params: { screen: 'Profile' } as never }),
+      CommonActions.navigate({ name: 'Profile' as never, params: { screen: 'ProfileMain' } as never }),
     );
   };
   const openChat = () => {

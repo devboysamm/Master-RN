@@ -1,7 +1,7 @@
 export type AuthStackParamList = {
   Splash: undefined;
   Welcome: undefined;
-  Auth: { mode?: 'signup' | 'signin'; returnTo?: AppTabName } | undefined;
+  AuthMain: { mode?: 'signup' | 'signin'; returnTo?: AppTabName } | undefined;
   VerifyOtp: { email: string; name: string; password: string };
   Forgot: undefined;
 };
@@ -36,7 +36,7 @@ export type ChatStackParamList = {
 };
 
 export type ProfileStackParamList = {
-  Profile: undefined;
+  ProfileMain: undefined;
   HelpFeedback: undefined;
   About: undefined;
   EditProfile: undefined;

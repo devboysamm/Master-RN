@@ -91,7 +91,7 @@ const GUEST_FS = 14;         // 12 × 1.2
 
 export default function Auth() {
   const nav = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const route = useRoute<RouteProp<AuthStackParamList, 'Auth'>>();
+  const route = useRoute<RouteProp<AuthStackParamList, 'AuthMain'>>();
   const initialMode: Mode = route.params?.mode === 'signin' ? 'signin' : 'signup';
   const returnTo = route.params?.returnTo;
   const [mode, setMode] = useState<Mode>(initialMode);
