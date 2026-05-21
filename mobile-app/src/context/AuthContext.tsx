@@ -30,8 +30,13 @@ type AuthState = {
 
   /** Send a signup OTP. Does NOT authenticate — caller shows the OTP screen. */
   signUp: (email: string, name: string, password: string) => Promise<void>;
-  /** Verify the signup OTP → stores token+user → authenticated. */
-  verifyOtp: (email: string, code: string) => Promise<void>;
+  /**
+   * Verify the signup OTP. Resolves with a `commit()` you call when ready to
+   * actually log the user in (so the screen can show a success animation
+   * first). Throws on a bad/expired code. The committer always lands the
+   * user on Home (a fresh signup ignores any stale pendingReturnTab).
+   */
+  verifyOtp: (email: string, code: string) => Promise<() => Promise<void>>;
   /** Log in with email + password → stores token+user → authenticated. */
   signIn: (email: string, password: string) => Promise<void>;
   /** Request a password-reset OTP. */
@@ -112,8 +117,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await authApi.signup(email, name, password);
       },
       verifyOtp: async (email, code) => {
+        // Verify the code immediately (throws on failure), but defer the
+        // visible auth flip so the screen can play its success animation.
         const resp = await authApi.verifyOtp(email, code);
-        await applySession(resp);
+        const stored = toStoredUser(resp.user);
+        return async () => {
+          await auth.setSession({ token: resp.token, user: stored });
+          await auth.setGuest(false);
+          // Fresh signup always lands on Home — clear any stale
+          // pendingReturnTab (e.g. 'Profile' from a guest deep-link).
+          setPendingReturnTab(null);
+          setToken(resp.token);
+          setUserState(stored);
+          setIsGuest(false);
+          setPendingAuthMode(null);
+        };
       },
       signIn: async (email, password) => {
         const resp = await authApi.login(email, password);

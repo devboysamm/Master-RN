@@ -1,9 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AtomLogo from '../../components/AtomLogo';
@@ -66,11 +72,23 @@ export default function VerifyOtp() {
   const { verifyOtp, signUp } = useAuth();
 
   const inputRef = useRef<TextInput>(null);
+  const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [code, setCode] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [success, setSuccess] = useState(false);
+
+  // Success-animation values.
+  const checkScale = useSharedValue(0.5);
+  const checkOpacity = useSharedValue(0);
+  const labelOpacity = useSharedValue(0);
+  const checkStyle = useAnimatedStyle(() => ({
+    opacity: checkOpacity.value,
+    transform: [{ scale: checkScale.value }],
+  }));
+  const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.value }));
 
   // Resend cooldown ticker.
   useEffect(() => {
@@ -85,12 +103,34 @@ export default function VerifyOtp() {
     return () => clearTimeout(t);
   }, []);
 
+  // Clean up the deferred commit if we unmount mid-animation.
+  useEffect(() => () => {
+    if (commitTimer.current) clearTimeout(commitTimer.current);
+  }, []);
+
+  // Handles both single-digit typing AND pasting a full code (with or
+  // without separators) — strip non-digits, keep the first 6.
   const onChangeCode = (v: string) => {
     setError(null);
-    setCode(v.replace(/\D/g, '').slice(0, CODE_LEN));
+    const digits = v.replace(/\D/g, '').slice(0, CODE_LEN);
+    setCode(digits);
+    if (digits.length === CODE_LEN) Keyboard.dismiss();
   };
 
-  const canVerify = code.length === CODE_LEN && !verifying;
+  const canVerify = code.length === CODE_LEN && !verifying && !success;
+
+  const runSuccess = (commit: () => Promise<void>) => {
+    setSuccess(true);
+    Keyboard.dismiss();
+    // Pop the check in (~400ms scale + fade), hold, then flip auth state.
+    checkOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.cubic) });
+    checkScale.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.back(1.6)) });
+    labelOpacity.value = withTiming(1, { duration: 400, easing: Easing.out(Easing.cubic) });
+    commitTimer.current = setTimeout(() => {
+      // Flipping auth state swaps AuthFlow → app tabs (lands on Home).
+      commit();
+    }, 900);
+  };
 
   const verify = async () => {
     if (code.length !== CODE_LEN) {
@@ -100,9 +140,9 @@ export default function VerifyOtp() {
     setVerifying(true);
     setError(null);
     try {
-      // On success the context flips to authenticated → RootNavigator
-      // swaps the AuthFlow out for the app tabs automatically.
-      await verifyOtp(email, code);
+      // verifyOtp resolves with a committer once the code is confirmed.
+      const commit = await verifyOtp(email, code);
+      runSuccess(commit);
     } catch (e: any) {
       setError(e?.message || 'Verification failed. Please try again.');
       setVerifying(false);
@@ -165,14 +205,18 @@ export default function VerifyOtp() {
             })}
           </Pressable>
 
+          {/* Single hidden input drives the boxes. No maxLength so a pasted
+           *  code with separators (e.g. "12 34 56") isn't truncated before
+           *  we strip non-digits. iOS SMS autofill fills it via the
+           *  oneTimeCode content type. */}
           <TextInput
             ref={inputRef}
             value={code}
             onChangeText={onChangeCode}
             keyboardType="number-pad"
-            maxLength={CODE_LEN}
             textContentType="oneTimeCode"
             autoComplete="one-time-code"
+            importantForAutofill="yes"
             style={styles.hiddenInput}
             caretHidden
           />
@@ -213,6 +257,22 @@ export default function VerifyOtp() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Success moment — covers the form, then auth flips to the app. */}
+      {success && (
+        <View style={styles.successOverlay} pointerEvents="none">
+          <View style={styles.successGlow} pointerEvents="none">
+            <RadialGlow size={GLOW_SIZE} intensity={0.12} color={colors.ok} />
+          </View>
+          <Animated.View style={[styles.successBadge, checkStyle]}>
+            <Icon d={I.check} size={48} color={colors.white} strokeWidth={2.6} />
+          </Animated.View>
+          <Animated.Text style={[styles.successTitle, labelStyle]}>You're all set</Animated.Text>
+          <Animated.Text style={[styles.successSub, labelStyle]}>
+            Email verified — taking you in…
+          </Animated.Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -292,4 +352,45 @@ const styles = StyleSheet.create({
   resendWrap: { marginTop: RESEND_MT, alignItems: 'center', padding: 8 },
   resend: { color: 'rgba(255,255,255,0.55)', fontFamily: type.family.sans, fontSize: RESEND_FS, fontWeight: '600' },
   resendLink: { color: colors.coral, fontWeight: '800', textDecorationLine: 'underline' },
+
+  /* Success overlay */
+  successOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.splashBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  successGlow: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginLeft: -GLOW_SIZE / 2,
+    marginTop: -GLOW_SIZE / 2 - 40,
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
+  },
+  successBadge: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.ok,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successTitle: {
+    marginTop: 24,
+    color: colors.white,
+    fontFamily: type.family.sans,
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  successSub: {
+    marginTop: 8,
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: type.family.sans,
+    fontSize: 15,
+    fontWeight: '500',
+  },
 });
