@@ -10,8 +10,10 @@ import RadialGlow from '../../components/RadialGlow';
 import SlideToComplete from '../../components/SlideToComplete';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
+import BlurGate from '../../components/BlurGate';
 import { I } from '../../theme/icons';
 import { colors, type, radii } from '../../theme/tokens';
+import { useAuth } from '../../context/AuthContext';
 import { useLesson, useModule, useModuleLessons, useModules } from '../../api/hooks';
 import { getModuleLessons } from '../../api/modules';
 import type { Lesson } from '../../api/mock';
@@ -77,6 +79,7 @@ export default function LessonReader() {
   const nav = useNavigation<NativeStackNavigationProp<ExploreStackParamList>>();
   const { params } = useRoute<RouteProp<ExploreStackParamList, 'LessonReader'>>();
   const { width } = useWindowDimensions();
+  const { isGuest } = useAuth();
   const lesson = useLesson(params.lessonId);
   const mod = useModule(params.moduleId ?? lesson.data?.module_id ?? 0);
   const lessonsState = useModuleLessons(params.moduleId ?? lesson.data?.module_id ?? 0);
@@ -90,6 +93,11 @@ export default function LessonReader() {
   const total = lessons.length;
   const done = isCompleted(params.lessonId);
   const bookmarked = isBookmarked(params.lessonId);
+
+  // Guests get the first 5 lessons of every module free. `idx` is the
+  // 0-based position within the module, so position 6+ means idx >= 5.
+  // While the list is still loading idx is -1 → not gated.
+  const gated = isGuest && idx >= 5;
 
   const { sanitized, blocks } = useMemo(() => extractCodeBlocks(l?.content || ''), [l?.content]);
   const parts = sanitized.split(/<div data-codeblock="(\d+)"><\/div>/g);
@@ -209,6 +217,29 @@ export default function LessonReader() {
         )}
       </View>
 
+      {gated ? (
+        <BlurGate>
+          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            {m && (
+              <View style={styles.kickerRow}>
+                <View style={styles.kickerPill} />
+                <Text style={styles.kickerText} numberOfLines={1}>
+                  {m.title.toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { flex: 1 }]}>{l?.title || ' '}</Text>
+            </View>
+            {!!l?.description && <Text style={styles.subTitle}>{l.description}</Text>}
+            <View style={{ marginTop: 16, gap: 10 }}>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} height={i % 3 === 0 ? 18 : 14} width={i % 4 === 0 ? '100%' : '85%'} />
+              ))}
+            </View>
+          </ScrollView>
+        </BlurGate>
+      ) : (
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {m && (
           <View style={styles.kickerRow}>
@@ -287,15 +318,18 @@ export default function LessonReader() {
           </View>
         )}
       </ScrollView>
+      )}
 
-      <View style={styles.slideWrap}>
-        <SlideToComplete
-          done={done}
-          label="Slide to complete"
-          meta={total ? `LESSON ${(idx >= 0 ? idx + 1 : 1)} / ${total}` : undefined}
-          onComplete={() => markCompleted(params.lessonId)}
-        />
-      </View>
+      {!gated && (
+        <View style={styles.slideWrap}>
+          <SlideToComplete
+            done={done}
+            label="Slide to complete"
+            meta={total ? `LESSON ${(idx >= 0 ? idx + 1 : 1)} / ${total}` : undefined}
+            onComplete={() => markCompleted(params.lessonId)}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }

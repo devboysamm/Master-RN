@@ -17,8 +17,10 @@ import Animated, {
 import Icon from '../../components/Icon';
 import CodeBlock from '../../components/CodeBlock';
 import AtomLogo from '../../components/AtomLogo';
+import PillButton from '../../components/PillButton';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
+import { useAuth } from '../../context/AuthContext';
 import { useTabHistory } from '../../context/TabHistoryContext';
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -121,6 +123,7 @@ function nowStr(): string {
 export default function AIChat() {
   const nav = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const { isGuest, requestAuth } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -194,10 +197,13 @@ export default function AIChat() {
   // Hide the bottom tab bar while this screen is focused — chat needs the
   // full bottom edge for the composer and pills.
   useFocusEffect(useCallback(() => {
+    // Guests see the sign-in wall, which keeps the tab bar so they can
+    // navigate away — only the real chat hides it.
+    if (isGuest) return;
     const parent = nav.getParent();
     parent?.setOptions({ tabBarStyle: { display: 'none' } });
     return () => parent?.setOptions({ tabBarStyle: undefined });
-  }, [nav]));
+  }, [nav, isGuest]));
 
   // With the tab bar hidden, the sticky bottom can sit just above the
   // safe-area edge (or just above the keyboard when it's open).
@@ -217,6 +223,41 @@ export default function AIChat() {
       ? <UserBubble text={item.text} ts={item.ts} />
       : <AiBubble   text={item.text} code={item.code} ts={item.ts} />
   );
+
+  // Hard wall for guests: no chat UI, no blur, no dismiss.
+  if (isGuest) {
+    return (
+      <SafeAreaView style={styles.wrap} edges={['top']}>
+        <View style={styles.header}>
+          <Pressable
+            onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={8}
+            style={styles.iconBtn}>
+            <Icon d={I.arrowL} size={HEADER_ICON} color={colors.ink} strokeWidth={2.2} />
+          </Pressable>
+          <View style={{ flex: 1 }} />
+          <View style={styles.iconBtn} />
+        </View>
+        <View style={styles.wallHolder}>
+          <View style={styles.wallAtom}>
+            <AtomLogo size={EMPTY_ATOM} strokeWidth={8} showDot />
+          </View>
+          <Text style={styles.wallHead}>Sign in to use Native AI</Text>
+          <Text style={styles.wallSub}>
+            Your personal React Native tutor is available once you have a free account.
+          </Text>
+          <PillButton
+            variant="primary"
+            onPress={() => requestAuth('signup')}
+            style={styles.wallCta}>
+            Sign in or Register
+          </PillButton>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
@@ -590,4 +631,25 @@ const styles = StyleSheet.create({
     width: SEND_SIZE, height: SEND_SIZE, borderRadius: SEND_SIZE / 2,
     alignItems: 'center', justifyContent: 'center',
   },
+
+  /* Guest sign-in wall */
+  wallHolder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 80,
+  },
+  wallAtom: { marginBottom: 22 },
+  wallHead: {
+    color: colors.ink, fontFamily: type.family.sans,
+    fontSize: EMPTY_HEAD_FS, fontWeight: '800', letterSpacing: -0.4,
+    textAlign: 'center',
+  },
+  wallSub: {
+    color: colors.mute, fontFamily: type.family.sans,
+    fontSize: EMPTY_SUB_FS, lineHeight: EMPTY_SUB_LH, fontWeight: '500',
+    textAlign: 'center', marginTop: 8, maxWidth: 300,
+  },
+  wallCta: { alignSelf: 'stretch', maxWidth: 360, marginTop: 26 },
 });

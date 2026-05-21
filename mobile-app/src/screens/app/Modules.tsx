@@ -9,8 +9,10 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
 import Icon from '../../components/Icon';
+import BlurGate from '../../components/BlurGate';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
+import { useAuth } from '../../context/AuthContext';
 import { useModules, useCategories, useCategoryModules } from '../../api/hooks';
 import { useCompleted } from '../../storage/completed';
 import { useLastLesson } from '../../storage/lastLesson';
@@ -98,6 +100,7 @@ function formatTime(totalMinutes: number): string {
 
 export default function Modules() {
   const nav = useNavigation<NativeStackNavigationProp<ExploreStackParamList>>();
+  const { isGuest } = useAuth();
   const { data, loading, error, refresh } = useModules();
   const { data: categories } = useCategories();
   const { completed } = useCompleted();
@@ -162,15 +165,7 @@ export default function Modules() {
     parent?.navigate('Chat' as never);
   };
 
-  return (
-    <SafeAreaView style={styles.wrap} edges={['top']}>
-      <ScreenHeader
-        title="All Modules"
-        showBack={nav.canGoBack()}
-        rightIcon={I.filter}
-        rightLabel="Filter"
-        onRightPress={() => setFilterOpen(true)}
-      />
+  const scroll = (
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -219,6 +214,18 @@ export default function Modules() {
           </View>
         )}
       </ScrollView>
+  );
+
+  return (
+    <SafeAreaView style={styles.wrap} edges={['top']}>
+      <ScreenHeader
+        title="All Modules"
+        showBack={nav.canGoBack()}
+        rightIcon={I.filter}
+        rightLabel="Filter"
+        onRightPress={() => setFilterOpen(true)}
+      />
+      {isGuest ? <BlurGate>{scroll}</BlurGate> : scroll}
 
       <FilterSheet
         open={filterOpen}
