@@ -20,6 +20,15 @@ async function findById(id) {
   return rows[0] || null;
 }
 
+// Admin listing — newest first. Deliberately omits password_hash.
+async function findAll() {
+  const [rows] = await pool.query(
+    `SELECT id, name, email, email_verified, created_at
+     FROM users ORDER BY created_at DESC, id DESC`
+  );
+  return rows;
+}
+
 async function create({ email, name, passwordHash }) {
   const [result] = await pool.query(
     `INSERT INTO users (email, name, password_hash, email_verified)
@@ -72,6 +81,7 @@ function publicShape(user) {
 module.exports = {
   findByEmail,
   findById,
+  findAll,
   create,
   updateCredentials,
   setPasswordHash,

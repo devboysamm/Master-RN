@@ -8,6 +8,7 @@ const appContentRoutes = require('./routes/appContent');
 const categoriesRoutes = require('./routes/categories');
 const uploadsRoutes = require('./routes/uploads');
 const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -55,6 +56,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 app.use('/api/modules', modulesRoutes);
 app.use('/api', lessonsRoutes);
 app.use('/api/app-content', appContentRoutes);

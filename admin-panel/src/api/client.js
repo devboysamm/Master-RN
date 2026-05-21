@@ -56,6 +56,10 @@ export const Categories = {
     api.delete(`/api/categories/${id}/modules/${moduleId}`).then(unwrap),
 };
 
+export const Users = {
+  list: () => api.get('/api/users').then(unwrap),
+};
+
 export const Health = {
   check: () => api.get('/health').then((r) => r.data),
 };
