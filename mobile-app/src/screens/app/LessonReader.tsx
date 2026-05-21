@@ -353,25 +353,40 @@ export default function LessonReader() {
 
       {!gated && (
         <View style={styles.slideWrap}>
-          <SlideToComplete
-            // Remount per lesson so the completed/slider state and the knob
-            // position never carry over from the previously-viewed lesson.
-            key={params.lessonId}
-            done={done}
-            label="Slide to complete"
-            meta={total ? `LESSON ${(idx >= 0 ? idx + 1 : 1)} / ${total}` : undefined}
-            onComplete={() => markCompleted(params.lessonId)}
-          />
-          {done && nextButton && nextButton.label !== 'Finish' && (
+          {!done ? (
+            <SlideToComplete
+              // Remount per lesson so the completed/slider state and the knob
+              // position never carry over from the previously-viewed lesson.
+              key={params.lessonId}
+              done={false}
+              label="Slide to complete"
+              meta={total ? `LESSON ${(idx >= 0 ? idx + 1 : 1)} / ${total}` : undefined}
+              onComplete={() => markCompleted(params.lessonId)}
+            />
+          ) : !nextButton || nextButton.label === 'Finish' ? (
+            // Very last lesson overall — nothing to advance to.
+            <View style={[styles.completedBar, styles.completedBarCenter]}>
+              <Icon d={I.check} size={20} color={colors.white} strokeWidth={2.6} />
+              <Text style={styles.completedMain}>Completed</Text>
+            </View>
+          ) : (
+            // Completed + advance: one green button. onPress already routes to
+            // showGate when the next lesson/module is locked for a guest.
             <Pressable
               onPress={nextButton.onPress}
               accessibilityRole="button"
-              accessibilityLabel={nextButton.label === 'Next module' ? 'Next module' : 'Next lesson'}
-              style={({ pressed }) => [styles.nextLessonBtn, pressed && { opacity: 0.85 }]}>
-              <Text style={styles.nextLessonText}>
-                {nextButton.label === 'Next module' ? 'Next module' : 'Next lesson'}
-              </Text>
-              <Icon d={I.arrowR} size={16} color={colors.coral} strokeWidth={2.4} />
+              accessibilityLabel={`Completed. ${nextButton.label === 'Next module' ? 'Next module' : 'Next lesson'}`}
+              style={({ pressed }) => [styles.completedBar, styles.completedBarRow, pressed && { opacity: 0.9 }]}>
+              <View style={styles.completedSide}>
+                <Icon d={I.check} size={18} color="rgba(255,255,255,0.92)" strokeWidth={2.6} />
+                <Text style={styles.completedSmall}>Completed</Text>
+              </View>
+              <View style={styles.completedSide}>
+                <Text style={styles.completedMain}>
+                  {nextButton.label === 'Next module' ? 'Next module' : 'Next lesson'}
+                </Text>
+                <Icon d={I.arrowR} size={18} color={colors.white} strokeWidth={2.6} />
+              </View>
             </Pressable>
           )}
         </View>
@@ -442,22 +457,29 @@ const styles = StyleSheet.create({
   // Tab bar is hidden on this screen (useFocusEffect), so the slide
   // can sit close to the bottom with a comfortable safe-area margin.
   slideWrap: { position: 'absolute', left: 14, right: 14, bottom: 30 },
-  nextLessonBtn: {
+  // Merged "Completed + advance" button — same green + pill shape as the
+  // SlideToComplete done state, so the bottom always shows ONE element.
+  completedBar: {
+    height: 56,
+    borderRadius: 999,
+    backgroundColor: colors.ok,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 10,
-    paddingVertical: 12,
-    borderRadius: 999,
-    backgroundColor: colors.card,
-    borderWidth: 1.5,
-    borderColor: colors.coral,
+    paddingHorizontal: 22,
   },
-  nextLessonText: {
-    color: colors.coral,
+  completedBarCenter: { justifyContent: 'center', gap: 8 },
+  completedBarRow: { justifyContent: 'space-between' },
+  completedSide: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  completedSmall: {
+    color: 'rgba(255,255,255,0.85)',
     fontFamily: type.family.sans,
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  completedMain: {
+    color: colors.white,
+    fontFamily: type.family.sans,
+    fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
