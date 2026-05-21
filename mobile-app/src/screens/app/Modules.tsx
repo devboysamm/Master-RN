@@ -9,10 +9,8 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ErrorState from '../../components/ErrorState';
 import Skeleton from '../../components/Skeleton';
 import Icon from '../../components/Icon';
-import BlurGate from '../../components/BlurGate';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
-import { useAuth } from '../../context/AuthContext';
 import { useModules, useCategories, useCategoryModules } from '../../api/hooks';
 import { useCompleted } from '../../storage/completed';
 import { useLastLesson } from '../../storage/lastLesson';
@@ -100,7 +98,6 @@ function formatTime(totalMinutes: number): string {
 
 export default function Modules() {
   const nav = useNavigation<NativeStackNavigationProp<ExploreStackParamList>>();
-  const { isGuest } = useAuth();
   const { data, loading, error, refresh } = useModules();
   const { data: categories } = useCategories();
   const { completed } = useCompleted();
@@ -225,7 +222,7 @@ export default function Modules() {
         rightLabel="Filter"
         onRightPress={() => setFilterOpen(true)}
       />
-      {isGuest ? <BlurGate>{scroll}</BlurGate> : scroll}
+      {scroll}
 
       <FilterSheet
         open={filterOpen}

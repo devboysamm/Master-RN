@@ -218,7 +218,7 @@ export default function LessonReader() {
       </View>
 
       {gated ? (
-        <BlurGate>
+        <BlurGate onDismiss={() => nav.goBack()}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             {m && (
               <View style={styles.kickerRow}>
@@ -323,11 +323,26 @@ export default function LessonReader() {
       {!gated && (
         <View style={styles.slideWrap}>
           <SlideToComplete
+            // Remount per lesson so the completed/slider state and the knob
+            // position never carry over from the previously-viewed lesson.
+            key={params.lessonId}
             done={done}
             label="Slide to complete"
             meta={total ? `LESSON ${(idx >= 0 ? idx + 1 : 1)} / ${total}` : undefined}
             onComplete={() => markCompleted(params.lessonId)}
           />
+          {done && nextButton && nextButton.label !== 'Finish' && (
+            <Pressable
+              onPress={nextButton.onPress}
+              accessibilityRole="button"
+              accessibilityLabel={nextButton.label === 'Next module' ? 'Next module' : 'Next lesson'}
+              style={({ pressed }) => [styles.nextLessonBtn, pressed && { opacity: 0.85 }]}>
+              <Text style={styles.nextLessonText}>
+                {nextButton.label === 'Next module' ? 'Next module' : 'Next lesson'}
+              </Text>
+              <Icon d={I.arrowR} size={16} color={colors.coral} strokeWidth={2.4} />
+            </Pressable>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -389,4 +404,23 @@ const styles = StyleSheet.create({
   // Tab bar is hidden on this screen (useFocusEffect), so the slide
   // can sit close to the bottom with a comfortable safe-area margin.
   slideWrap: { position: 'absolute', left: 14, right: 14, bottom: 30 },
+  nextLessonBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 10,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderColor: colors.coral,
+  },
+  nextLessonText: {
+    color: colors.coral,
+    fontFamily: type.family.sans,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
 });

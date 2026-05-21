@@ -21,6 +21,7 @@ import {
 
 import { AuthProvider } from './src/context/AuthContext';
 import { TabHistoryProvider } from './src/context/TabHistoryContext';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import RootNavigator from './src/navigation/RootNavigator';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -58,11 +59,13 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRoot}>
       <SafeAreaProvider>
         <StatusBar style="auto" />
-        <AuthProvider>
-          <TabHistoryProvider>
-            <RootNavigator />
-          </TabHistoryProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <TabHistoryProvider>
+              <RootNavigator />
+            </TabHistoryProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
