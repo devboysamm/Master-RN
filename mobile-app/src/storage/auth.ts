@@ -8,6 +8,7 @@ export type StoredUser = {
   id: number;
   name: string | null;
   email: string;
+  bio: string | null;
 };
 
 export type AuthSession = {

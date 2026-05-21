@@ -1,11 +1,11 @@
 const pool = require('../config/db');
 
 // Never include password_hash in the default projection used for responses.
-const SAFE_COLS = 'id, email, name, email_verified, created_at';
+const SAFE_COLS = 'id, email, name, bio, email_verified, created_at';
 
 async function findByEmail(email) {
   const [rows] = await pool.query(
-    `SELECT id, email, name, password_hash, email_verified, created_at
+    `SELECT id, email, name, bio, password_hash, email_verified, created_at
      FROM users WHERE email = ? LIMIT 1`,
     [email]
   );
@@ -45,10 +45,28 @@ async function markVerified(id) {
   await pool.query(`UPDATE users SET email_verified = 1 WHERE id = ?`, [id]);
 }
 
+// Update only the provided profile fields; returns the fresh row.
+async function updateProfile(id, fields) {
+  const sets = [];
+  const params = [];
+  if (Object.prototype.hasOwnProperty.call(fields, 'name')) {
+    sets.push('name = ?');
+    params.push(fields.name);
+  }
+  if (Object.prototype.hasOwnProperty.call(fields, 'bio')) {
+    sets.push('bio = ?');
+    params.push(fields.bio);
+  }
+  if (sets.length === 0) return findById(id);
+  params.push(id);
+  await pool.query(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, params);
+  return findById(id);
+}
+
 // Strip the hash before sending a user back to a client.
 function publicShape(user) {
   if (!user) return null;
-  return { id: user.id, email: user.email, name: user.name };
+  return { id: user.id, email: user.email, name: user.name, bio: user.bio ?? null };
 }
 
 module.exports = {
@@ -58,5 +76,6 @@ module.exports = {
   updateCredentials,
   setPasswordHash,
   markVerified,
+  updateProfile,
   publicShape,
 };

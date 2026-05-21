@@ -1,6 +1,6 @@
 import { request } from './client';
 
-export type AuthUser = { id: number; email: string; name: string | null };
+export type AuthUser = { id: number; email: string; name: string | null; bio: string | null };
 export type TokenResponse = { token: string; user: AuthUser };
 export type MessageResponse = { message: string };
 
@@ -36,3 +36,13 @@ export const resetPassword = (email: string, code: string, newPassword: string) 
 
 export const me = (token: string) =>
   request<{ user: AuthUser }>('/api/auth/me', { method: 'GET', token });
+
+export const updateMe = (
+  token: string,
+  fields: { name?: string; bio?: string },
+) =>
+  request<{ user: AuthUser }>('/api/auth/me', {
+    method: 'PATCH',
+    token,
+    body: fields,
+  });

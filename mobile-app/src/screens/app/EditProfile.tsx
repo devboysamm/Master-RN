@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,11 +14,6 @@ const HEADER_PV = 14;
 const HEADER_PH = 19;
 const BACK_SIZE = 41;
 const HEADER_TITLE_FS = 19;
-
-const BANNER_PV = 12;
-const BANNER_PH = 14;
-const BANNER_RADIUS = 13;
-const BANNER_FS = 13;
 
 const AVATAR_SIZE = 96;
 const AVATAR_FS = 36;
@@ -38,13 +33,36 @@ const BTN_RADIUS = 17;
 
 export default function EditProfile() {
   const nav = useNavigation<any>();
-  const { user, isGuest } = useAuth();
+  const { user, updateProfile } = useAuth();
 
-  const initialName = user?.name || (isGuest ? 'Guest' : 'You');
-  const initialEmail = user?.email || 'guest@masterrn.dev';
+  const initialEmail = user?.email ?? '';
 
-  const [name, setName] = useState(initialName);
-  const [bio, setBio] = useState('');
+  const [name, setName] = useState(user?.name ?? '');
+  const [bio, setBio] = useState(user?.bio ?? '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const avatarLetter = (name.trim()[0] || initialEmail[0] || 'Y').toUpperCase();
+
+  const onSave = async () => {
+    const trimmedName = name.trim();
+    const trimmedBio = bio.trim();
+    if (trimmedName.length < 1) { setError('Name is required.'); return; }
+    if (trimmedName.length > 120) { setError('Name must be 120 characters or fewer.'); return; }
+    if (trimmedBio.length > 300) { setError('Bio must be 300 characters or fewer.'); return; }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await updateProfile(trimmedName, trimmedBio);
+      setSaved(true);
+      setTimeout(() => nav.goBack(), 700);
+    } catch (e: any) {
+      setError(e?.message || 'Could not save changes. Please try again.');
+      setSaving(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.wrap} edges={['top']}>
@@ -66,18 +84,9 @@ export default function EditProfile() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <View style={styles.banner}>
-            <Icon d={I.shield} size={16} color={colors.coralDeep} strokeWidth={2} />
-            <Text style={styles.bannerText}>
-              Profile editing will be available once authentication is set up.
-            </Text>
-          </View>
-
           <View style={styles.avatarWrap}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {(initialName[0] || 'Y').toUpperCase()}
-              </Text>
+              <Text style={styles.avatarText}>{avatarLetter}</Text>
             </View>
             <View style={styles.cam} pointerEvents="none">
               <Icon d={I.edit} size={CAM_ICON} color={colors.white} strokeWidth={2.4} />
@@ -88,9 +97,10 @@ export default function EditProfile() {
             <Text style={styles.label}>NAME</Text>
             <TextInput
               value={name}
-              onChangeText={setName}
+              onChangeText={(v) => { setError(null); setName(v); }}
               placeholder="Your name"
               placeholderTextColor={colors.mute}
+              maxLength={120}
               style={styles.input}
               editable
             />
@@ -109,23 +119,35 @@ export default function EditProfile() {
             <Text style={styles.label}>BIO</Text>
             <TextInput
               value={bio}
-              onChangeText={setBio}
+              onChangeText={(v) => { setError(null); setBio(v); }}
               placeholder="Tell us about yourself"
               placeholderTextColor={colors.mute}
               multiline
+              maxLength={300}
               textAlignVertical="top"
               style={[styles.input, styles.textarea]}
             />
+            <Text style={styles.bioCount}>{bio.trim().length}/300</Text>
           </View>
 
+          {error ? <Text style={styles.err}>{error}</Text> : null}
+
           <Pressable
-            disabled
+            onPress={onSave}
+            disabled={saving || saved}
             accessibilityRole="button"
-            accessibilityLabel="Save changes (unavailable)"
-            accessibilityState={{ disabled: true }}
-            style={styles.btn}>
-            <Text style={styles.btnText}>Save changes</Text>
-            <Text style={styles.btnHint}>Available after Phase 2 auth</Text>
+            accessibilityLabel="Save changes"
+            accessibilityState={{ disabled: saving || saved }}
+            style={({ pressed }) => [
+              styles.btn,
+              (saving || saved) && { opacity: 0.85 },
+              pressed && { opacity: 0.9 },
+            ]}>
+            {saving ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={styles.btnText}>{saved ? 'Saved ✓' : 'Save changes'}</Text>
+            )}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -158,24 +180,6 @@ const styles = StyleSheet.create({
   },
 
   scroll: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 140, gap: 14 },
-
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: BANNER_PV,
-    paddingHorizontal: BANNER_PH,
-    borderRadius: BANNER_RADIUS,
-    backgroundColor: colors.coralSoft,
-  },
-  bannerText: {
-    flex: 1,
-    color: colors.coralDeep,
-    fontFamily: type.family.sans,
-    fontSize: BANNER_FS,
-    fontWeight: '600',
-    lineHeight: 18,
-  },
 
   avatarWrap: {
     alignSelf: 'center',
@@ -229,27 +233,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardAlt,
   },
   textarea: { minHeight: 96, lineHeight: 22 },
+  bioCount: {
+    alignSelf: 'flex-end',
+    marginRight: 4,
+    color: colors.mute,
+    fontFamily: type.family.mono,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  err: {
+    color: colors.coral,
+    fontFamily: type.family.sans,
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
 
   btn: {
     marginTop: 6,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
     paddingVertical: BTN_PV,
     borderRadius: BTN_RADIUS,
-    backgroundColor: 'rgba(242,106,74,0.55)',
-    opacity: 0.85,
+    backgroundColor: colors.coral,
   },
   btnText: {
     color: colors.white,
     fontFamily: type.family.sans,
     fontSize: BTN_FS,
     fontWeight: '800',
-  },
-  btnHint: {
-    color: 'rgba(255,255,255,0.85)',
-    fontFamily: type.family.mono,
-    fontSize: 11,
-    fontWeight: '700',
-    marginTop: 4,
-    letterSpacing: 0.6,
   },
 });

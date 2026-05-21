@@ -207,6 +207,38 @@ async function me(req, res) {
   }
 }
 
+async function updateMe(req, res) {
+  try {
+    const fields = {};
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'name')) {
+      const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+      if (name.length < 1 || name.length > 120) {
+        return fail(res, 400, 'Name must be between 1 and 120 characters');
+      }
+      fields.name = name;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'bio')) {
+      const bio = typeof req.body.bio === 'string' ? req.body.bio.trim() : '';
+      if (bio.length > 300) {
+        return fail(res, 400, 'Bio must be 300 characters or fewer');
+      }
+      fields.bio = bio.length === 0 ? null : bio;
+    }
+
+    if (Object.keys(fields).length === 0) {
+      return fail(res, 400, 'Nothing to update');
+    }
+
+    const user = await User.updateProfile(req.user.id, fields);
+    if (!user) return fail(res, 404, 'Account not found');
+    return res.json({ user: User.publicShape(user) });
+  } catch (err) {
+    return serverError(res, err);
+  }
+}
+
 module.exports = {
   signup,
   verifyOtp,
@@ -214,4 +246,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   me,
+  updateMe,
 };

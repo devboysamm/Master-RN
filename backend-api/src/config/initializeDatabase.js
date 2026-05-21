@@ -88,6 +88,8 @@ async function runMigrations(conn) {
   await addMissingColumn(conn, 'app_content', 'support_email', 'VARCHAR(255)');
   await addMissingColumn(conn, 'app_content', 'contact_url', 'VARCHAR(500)');
   await addMissingColumn(conn, 'app_content', 'help_content', 'TEXT');
+  // Users gained an editable bio after the table first shipped.
+  await addMissingColumn(conn, 'users', 'bio', 'VARCHAR(300)');
   // Widen image_url so it can hold base64-encoded PNG/SVG data URIs.
   await widenColumnIfNeeded(conn, 'modules', 'image_url', 'LONGTEXT');
   await seedDefaultCategories(conn);

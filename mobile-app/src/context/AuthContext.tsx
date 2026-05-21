@@ -7,7 +7,7 @@ type AuthMode = 'signin' | 'signup';
 type TabName = 'Home' | 'Explore' | 'Progress' | 'Chat' | 'Profile';
 
 function toStoredUser(u: authApi.AuthUser): auth.StoredUser {
-  return { id: u.id, name: u.name, email: u.email };
+  return { id: u.id, name: u.name, email: u.email, bio: u.bio ?? null };
 }
 
 type AuthState = {
@@ -43,6 +43,8 @@ type AuthState = {
   forgotPassword: (email: string) => Promise<void>;
   /** Complete a password reset with the emailed OTP. */
   resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
+  /** Update the signed-in user's profile (name / bio) and persist it. */
+  updateProfile: (name: string, bio: string) => Promise<void>;
 
   signOut: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
@@ -142,6 +144,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       resetPassword: async (email, code, newPassword) => {
         await authApi.resetPassword(email, code, newPassword);
+      },
+      updateProfile: async (name, bio) => {
+        if (!token) throw new Error('You must be signed in to edit your profile');
+        const { user: updated } = await authApi.updateMe(token, { name, bio });
+        const stored = toStoredUser(updated);
+        // Keep the in-memory user and the persisted session in sync.
+        await auth.setSession({ token, user: stored });
+        setUserState(stored);
       },
 
       signOut: async () => {
