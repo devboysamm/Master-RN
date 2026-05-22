@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View } from 'react-native';
@@ -82,6 +82,15 @@ function AuthFlow({
 
 const stackOptions = { headerShown: false } as const;
 
+// Safety net: paint every navigation surface (container + card backgrounds)
+// in the app's cream rather than the default white. If a scene ever fails to
+// lay out / render content, the user sees the branded cream background — never
+// a stark "white screen of death" that looks like a hard crash.
+const navTheme: Theme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: colors.cream, card: colors.cream },
+};
+
 function HomeTab() {
   return (
     <HomeStack.Navigator screenOptions={stackOptions}>
@@ -155,9 +164,12 @@ function AppTabs() {
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: colors.cream },
-        // Smooth cross-tab transition (bottom-tabs only — does NOT affect
-        // the native-stack push animation when opening inner screens).
-        animation: 'shift',
+        // NOTE: we deliberately do NOT set `animation: 'shift'` here. The
+        // animated scene transition could race the tab-bar show/hide
+        // re-layout (AIChat / LessonReader toggle the parent's tabBarStyle on
+        // focus) and occasionally leave a scene settled offscreen → an
+        // intermittent blank/white screen on tab switches with no JS error.
+        // A plain (non-animated) tab switch lays out deterministically.
       }}
       tabBar={(props) => <TabBar {...props} />}
       // Record the previously-focused tab on every tab press so screens
@@ -187,8 +199,18 @@ export default function RootNavigator() {
   if (!hydrated) return <View style={{ flex: 1, backgroundColor: colors.splashBg }} />;
   const authed = !!user || isGuest;
   return (
-    <NavigationContainer>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+    <NavigationContainer
+      theme={navTheme}
+      // Surface silently-dropped navigation actions (e.g. navigate() to a
+      // route name no navigator can handle). React Navigation otherwise
+      // no-ops these — which can look like a blank screen with no error.
+      onUnhandledAction={(action) => {
+        console.warn(
+          '[nav] unhandled navigation action (route may not exist):',
+          JSON.stringify(action),
+        );
+      }}>
+      <RootStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.cream } }}>
         {authed ? (
           <RootStack.Screen name="App" component={AppTabs} />
         ) : (
