@@ -70,6 +70,11 @@ export const Users = {
     api.post(`/api/users/${id}/reset-password`, { newPassword }).then(unwrap),
 };
 
+export const Reports = {
+  list: () => api.get('/api/problem-reports').then(unwrap),
+  setStatus: (id, status) => api.patch(`/api/problem-reports/${id}`, { status }).then(unwrap),
+};
+
 export const Health = {
   check: () => api.get('/health').then((r) => r.data),
 };

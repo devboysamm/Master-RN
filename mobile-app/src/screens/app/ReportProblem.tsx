@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, Pressable, StyleSheet, ScrollView, Linking,
+  View, Text, TextInput, Pressable, StyleSheet, ScrollView,
   KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,37 +8,60 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
-import { useAppContent } from '../../api/hooks';
+import { useAuth } from '../../context/AuthContext';
+import { submitProblemReport } from '../../api/problemReports';
 
 const HEADER_PV = 14;
 const HEADER_PH = 19;
 const BACK_SIZE = 41;
 const HEADER_TITLE_FS = 19;
 
-const CARD_RADIUS = 22;       // spec 18 × 1.2
-const CARD_PAD = 24;          // spec 20 × 1.2
-const INTRO_FS = 16;          // spec 13 × 1.2 ≈ 16
-const LABEL_FS = 12;          // spec 10 × 1.2
+const CARD_RADIUS = 22;
+const CARD_PAD = 24;
+const INTRO_FS = 16;
+const LABEL_FS = 12;
 const LABEL_LS = 1.2;
-const TEXTAREA_MIN_H = 168;   // spec 140 × 1.2 ≈ 168
+const TEXTAREA_MIN_H = 168;
 const TEXTAREA_FS = 16;
-const BTN_PV = 17;            // spec 14 × 1.2
-const BTN_FS = 16;            // spec 13 × 1.2 ≈ 16
+const BTN_PV = 17;
+const BTN_FS = 16;
 const BTN_RADIUS = 17;
 
-const DEFAULT_EMAIL = 'info@masterreactnative.dev';
+// App version is a plain JS constant (matches app.json) — no native module.
+const APP_VERSION = '1.0.0';
+const CATEGORIES = ['Bug', 'Content error', 'Suggestion', 'Other'] as const;
+type Category = (typeof CATEGORIES)[number];
 
 export default function ReportProblem() {
   const nav = useNavigation<any>();
-  const { data: content } = useAppContent();
-  const supportEmail = content?.support_email?.trim() || DEFAULT_EMAIL;
+  const { user } = useAuth();
   const [text, setText] = useState('');
+  const [category, setCategory] = useState<Category>('Bug');
+  const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const send = () => {
-    const subject = 'Bug Report — Master RN v1.0';
-    const body = text.trim() || '(describe what happened)';
-    const url = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    Linking.openURL(url).catch(() => {});
+  const canSend = text.trim().length > 0 && !submitting;
+
+  const send = async () => {
+    const message = text.trim();
+    if (!message || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await submitProblemReport({
+        message,
+        category,
+        app_version: APP_VERSION,
+        platform: Platform.OS,
+        user_email: user?.email || undefined,
+      });
+      setSent(true);
+    } catch {
+      setError('Could not send your report. Please check your connection and try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -61,27 +84,79 @@ export default function ReportProblem() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-          <View style={styles.card}>
-            <Text style={styles.intro}>Found a bug? Tell us what happened.</Text>
-            <Text style={styles.label}>WHAT WENT WRONG</Text>
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              placeholder="Steps to reproduce, what you expected, what happened…"
-              placeholderTextColor={colors.mute}
-              multiline
-              textAlignVertical="top"
-              style={styles.textarea}
-            />
-            <Pressable
-              onPress={send}
-              accessibilityRole="button"
-              accessibilityLabel="Send report"
-              style={({ pressed }) => [styles.btn, pressed && { opacity: 0.85 }]}>
-              <Text style={styles.btnText}>Send report</Text>
-              <Icon d={I.arrowR} size={16} color={colors.white} strokeWidth={2.4} />
-            </Pressable>
-          </View>
+          {sent ? (
+            <View style={styles.card}>
+              <View style={styles.successIcon}>
+                <Icon d={I.check} size={28} color={colors.white} strokeWidth={2.6} />
+              </View>
+              <Text style={styles.successTitle}>Thanks — we got your report</Text>
+              <Text style={styles.intro}>
+                Our team will take a look. We appreciate you helping make Master RN better.
+              </Text>
+              <Pressable
+                onPress={() => nav.goBack()}
+                accessibilityRole="button"
+                accessibilityLabel="Done"
+                style={({ pressed }) => [styles.btn, pressed && { opacity: 0.85 }]}>
+                <Text style={styles.btnText}>Done</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.intro}>Found a bug or have feedback? Tell us what happened.</Text>
+
+              <View>
+                <Text style={styles.label}>CATEGORY</Text>
+                <View style={styles.chipRow}>
+                  {CATEGORIES.map((c) => {
+                    const active = c === category;
+                    return (
+                      <Pressable
+                        key={c}
+                        onPress={() => setCategory(c)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={`Category: ${c}`}
+                        style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}>
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{c}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View>
+                <Text style={styles.label}>WHAT WENT WRONG</Text>
+                <TextInput
+                  value={text}
+                  onChangeText={setText}
+                  placeholder="Steps to reproduce, what you expected, what happened…"
+                  placeholderTextColor={colors.mute}
+                  multiline
+                  textAlignVertical="top"
+                  style={styles.textarea}
+                  editable={!submitting}
+                />
+              </View>
+
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+
+              <Pressable
+                onPress={send}
+                disabled={!canSend}
+                accessibilityRole="button"
+                accessibilityLabel="Send report"
+                accessibilityState={{ disabled: !canSend }}
+                style={({ pressed }) => [
+                  styles.btn,
+                  !canSend && { opacity: 0.45 },
+                  pressed && canSend && { opacity: 0.85 },
+                ]}>
+                <Text style={styles.btnText}>{submitting ? 'Sending…' : 'Send report'}</Text>
+                {!submitting && <Icon d={I.arrowR} size={16} color={colors.white} strokeWidth={2.4} />}
+              </Pressable>
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -119,7 +194,7 @@ const styles = StyleSheet.create({
     padding: CARD_PAD,
     borderWidth: 1,
     borderColor: colors.rule,
-    gap: 14,
+    gap: 16,
   },
   intro: {
     color: colors.inkSoft,
@@ -134,7 +209,22 @@ const styles = StyleSheet.create({
     fontSize: LABEL_FS,
     fontWeight: '700',
     letterSpacing: LABEL_LS,
+    marginBottom: 10,
   },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  chipIdle: { backgroundColor: colors.cream, borderColor: colors.rule },
+  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  chipText: {
+    color: colors.inkSoft, fontFamily: type.family.sans,
+    fontSize: 13, fontWeight: '700',
+  },
+  chipTextActive: { color: colors.white },
   textarea: {
     minHeight: TEXTAREA_MIN_H,
     backgroundColor: colors.cream,
@@ -147,6 +237,13 @@ const styles = StyleSheet.create({
     fontSize: TEXTAREA_FS,
     fontWeight: '500',
     lineHeight: 22,
+  },
+  error: {
+    color: colors.coralDeep,
+    fontFamily: type.family.sans,
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
   },
   btn: {
     flexDirection: 'row',
@@ -162,5 +259,17 @@ const styles = StyleSheet.create({
     fontFamily: type.family.sans,
     fontSize: BTN_FS,
     fontWeight: '800',
+  },
+  successIcon: {
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: colors.ok,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  successTitle: {
+    color: colors.ink,
+    fontFamily: type.family.sans,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
 });

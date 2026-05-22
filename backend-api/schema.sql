@@ -86,3 +86,21 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_email_purpose (email, purpose, consumed)
 );
+
+CREATE TABLE IF NOT EXISTS problem_reports (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  message TEXT,
+  category VARCHAR(40),
+  app_version VARCHAR(40),
+  platform VARCHAR(40),
+  user_email VARCHAR(190),
+  status VARCHAR(20) DEFAULT 'new',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS admin_users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(80) UNIQUE,
+  password_hash VARCHAR(255),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

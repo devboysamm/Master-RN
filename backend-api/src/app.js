@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
 const legalRoutes = require('./routes/legal');
 const chatRoutes = require('./routes/chat');
+const problemReportsRoutes = require('./routes/problemReports');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api/app-content', appContentRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/problem-reports', problemReportsRoutes);
 // /api/upload (POST single image) lives on uploadsRoutes.upload,
 // /api/uploads (GET list, DELETE /:filename) on uploadsRoutes.list.
 app.use('/api', uploadsRoutes.upload);
