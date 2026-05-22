@@ -289,9 +289,7 @@ export default function Auth() {
           </View>
 
           <View style={styles.socialRow}>
-            <SocialBtn brand="google" />
-            <SocialBtn brand="apple" />
-            <SocialBtn brand="github" />
+            <SocialBtn />
           </View>
 
           {/* Guest footer */}

@@ -3,10 +3,10 @@ import { Pressable, Text, StyleSheet, View, ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors, type } from '../theme/tokens';
 
-type Brand = 'google' | 'apple' | 'github';
-
+// GitHub is the only social provider for v1. Google/Apple were removed.
+// (OAuth itself is wired up later in a separate native-rebuild task — this
+// button is presentational for now.)
 type Props = {
-  brand: Brand;
   onPress?: () => void;
   style?: ViewStyle;
 };
@@ -20,44 +20,18 @@ const FONT = 14;
 const ICON = 17;
 const GAP = 7;
 
-export default function SocialBtn({ brand, onPress, style }: Props) {
+export default function SocialBtn({ onPress, style }: Props) {
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Sign in with ${labels[brand]}`}
+      accessibilityLabel="Sign in with GitHub"
       style={({ pressed }) => [styles.btn, style, pressed && { opacity: 0.85 }]}>
       <View style={styles.inner}>
-        {brand === 'google' && <GoogleIcon />}
-        {brand === 'apple'  && <AppleIcon />}
-        {brand === 'github' && <GithubIcon />}
-        <Text style={styles.label}>{labels[brand]}</Text>
+        <GithubIcon />
+        <Text style={styles.label}>GitHub</Text>
       </View>
     </Pressable>
-  );
-}
-
-const labels: Record<Brand, string> = { google: 'Google', apple: 'Apple', github: 'GitHub' };
-
-function GoogleIcon() {
-  return (
-    <Svg width={ICON} height={ICON} viewBox="0 0 24 24">
-      <Path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4c-.2 1.3-.9 2.4-2 3.1v2.6h3.2c1.9-1.7 3-4.3 3-7.5z" fill="#4285F4"/>
-      <Path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6C4.7 19.7 8.1 22 12 22z" fill="#34A853"/>
-      <Path d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1C2.4 8.8 2 10.4 2 12s.4 3.2 1.1 4.6L6.4 14z" fill="#FBBC05"/>
-      <Path d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8C17 3 14.7 2 12 2 8.1 2 4.7 4.3 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z" fill="#EA4335"/>
-    </Svg>
-  );
-}
-
-function AppleIcon() {
-  return (
-    <Svg width={ICON} height={ICON} viewBox="0 0 24 24">
-      <Path
-        d="M17.5 12.5c0-2.6 2.1-3.8 2.2-3.9-1.2-1.7-3-2-3.7-2-1.6-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.3 1.9 2.6 3.3 2.5 1.3-.1 1.8-.9 3.4-.9s2.1.9 3.4.9c1.4 0 2.3-1.2 3.2-2.5.7-1 1-2 1.4-3.1-2.5-1-3.2-3.3-3.2-3.7zM14.7 4.5C15.5 3.6 16 2.4 15.8 1c-1.1.1-2.5.8-3.3 1.7-.8.8-1.4 2-1.2 3.3 1.3.1 2.5-.6 3.4-1.5z"
-        fill="#FFFFFF"
-      />
-    </Svg>
   );
 }
 

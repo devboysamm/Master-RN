@@ -89,9 +89,7 @@ export default function Welcome() {
           </View>
 
           <View style={styles.socialRow}>
-            <SocialBtn brand="google" />
-            <SocialBtn brand="apple" />
-            <SocialBtn brand="github" />
+            <SocialBtn />
           </View>
 
           <Pressable
