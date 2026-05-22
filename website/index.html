@@ -158,25 +158,42 @@
         <p>A calm, focused interface that gets out of your way so you can focus on the code.</p>
       </div>
 
-      <div class="shot-row">
-        <div class="phone">
-          <img src="assets/screenshot-1.png" alt="Master React Native app screen" loading="lazy" />
+      <!-- Horizontal slider: swipe on touch, drag/trackpad on desktop, arrows
+           step one phone at a time, dots indicate position. CSS scroll-snap
+           centres each phone. -->
+      <div class="slider">
+        <div class="slider-viewport">
+          <button class="slider-arrow prev" id="shots-prev" type="button" aria-label="Previous screenshot">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+
+          <div class="slider-track" id="shots-track">
+            <div class="phone">
+              <img src="assets/screenshot-1.png" alt="Master React Native app screen" loading="lazy" />
+            </div>
+            <div class="phone">
+              <img src="assets/screenshot-2.png" alt="Master React Native app screen" loading="lazy" />
+            </div>
+            <div class="phone">
+              <img src="assets/screenshot-3.png" alt="Master React Native app screen" loading="lazy" />
+            </div>
+            <div class="phone">
+              <img src="assets/screenshot-4.png" alt="Master React Native app screen" loading="lazy" />
+            </div>
+            <div class="phone">
+              <img src="assets/screenshot-5.png" alt="Master React Native app screen" loading="lazy" />
+            </div>
+            <div class="phone">
+              <img src="assets/screenshot-6.png" alt="Master React Native app screen" loading="lazy" />
+            </div>
+          </div>
+
+          <button class="slider-arrow next" id="shots-next" type="button" aria-label="Next screenshot">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
-        <div class="phone">
-          <img src="assets/screenshot-2.png" alt="Master React Native app screen" loading="lazy" />
-        </div>
-        <div class="phone">
-          <img src="assets/screenshot-3.png" alt="Master React Native app screen" loading="lazy" />
-        </div>
-        <div class="phone">
-          <img src="assets/screenshot-4.png" alt="Master React Native app screen" loading="lazy" />
-        </div>
-        <div class="phone">
-          <img src="assets/screenshot-5.png" alt="Master React Native app screen" loading="lazy" />
-        </div>
-        <div class="phone">
-          <img src="assets/screenshot-6.png" alt="Master React Native app screen" loading="lazy" />
-        </div>
+
+        <div class="slider-dots" id="shots-dots" aria-label="Screenshot navigation"></div>
       </div>
     </div>
   </section>
@@ -224,6 +241,65 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+  <!-- Screenshots slider: arrows, scroll-snap sync, dot indicators -->
+  <script>
+    (function () {
+      var track = document.getElementById('shots-track');
+      if (!track) return;
+      var prev = document.getElementById('shots-prev');
+      var next = document.getElementById('shots-next');
+      var dotsWrap = document.getElementById('shots-dots');
+      var phones = [].slice.call(track.querySelectorAll('.phone'));
+      if (!phones.length) return;
+
+      // Width of one phone + the flex gap = how far one "step" scrolls.
+      function step() {
+        var cs = getComputedStyle(track);
+        var gap = parseFloat(cs.columnGap || cs.gap) || 0;
+        return phones[0].offsetWidth + gap;
+      }
+
+      // Build one dot per screenshot.
+      var dots = phones.map(function (_, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Go to screenshot ' + (i + 1));
+        b.addEventListener('click', function () {
+          track.scrollTo({ left: Math.round(i * step()), behavior: 'smooth' });
+        });
+        dotsWrap.appendChild(b);
+        return b;
+      });
+
+      function update() {
+        var max = track.scrollWidth - track.clientWidth;
+        var x = track.scrollLeft;
+        if (prev) prev.disabled = x <= 2;
+        if (next) next.disabled = x >= max - 2;
+        var idx = Math.round(x / step());
+        if (idx < 0) idx = 0;
+        if (idx > dots.length - 1) idx = dots.length - 1;
+        dots.forEach(function (d, i) { d.classList.toggle('active', i === idx); });
+      }
+
+      if (prev) prev.addEventListener('click', function () {
+        track.scrollBy({ left: -step(), behavior: 'smooth' });
+      });
+      if (next) next.addEventListener('click', function () {
+        track.scrollBy({ left: step(), behavior: 'smooth' });
+      });
+
+      // Keep arrows + dots in sync with manual swipe/drag scrolling.
+      var raf;
+      track.addEventListener('scroll', function () {
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(update);
+      });
+      window.addEventListener('resize', update);
+      update();
+    })();
   </script>
 </body>
 </html>
