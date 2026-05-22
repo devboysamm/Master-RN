@@ -86,3 +86,45 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 root@${{ secrets.SERVER_IP }} \
             "nginx -t && systemctl reload nginx"
+
+  deploy-website:
+    name: Deploy marketing website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for website directory
+        id: check_website
+        run: |
+          if [ -d "website" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "website/ not found — skipping website deploy."
+          fi
+
+      # Plain static HTML/CSS/JS — no build step (unlike the admin panel).
+
+      - name: Set up SSH
+        if: steps.check_website.outputs.exists == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync website to server
+        if: steps.check_website.outputs.exists == 'true'
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+            website/ \
+            root@${{ secrets.SERVER_IP }}:/var/www/main/
+
+      - name: Reload nginx
+        if: steps.check_website.outputs.exists == 'true'
+        run: |
+          ssh -i ~/.ssh/id_ed25519 root@${{ secrets.SERVER_IP }} \
+            "nginx -t && systemctl reload nginx"
