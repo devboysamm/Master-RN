@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0B0907"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "dev.masterreactnative.app",
       "buildNumber": "1",
@@ -29,7 +31,14 @@
     },
     "plugins": [
       "expo-font",
-      ["expo-splash-screen", { "backgroundColor": "#0B0907" }]
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B0907"
+        }
+      ],
+      "expo-web-browser",
+      "expo-notifications"
     ]
   }
 }
