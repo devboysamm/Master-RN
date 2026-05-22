@@ -81,8 +81,12 @@ export default function LessonReader() {
   const { width } = useWindowDimensions();
   const { isGuest } = useAuth();
   const lesson = useLesson(params.lessonId);
-  const mod = useModule(params.moduleId ?? lesson.data?.module_id ?? 0);
-  const lessonsState = useModuleLessons(params.moduleId ?? lesson.data?.module_id ?? 0);
+  // moduleId comes from the route param; until that (or the loaded lesson's
+  // module_id) is known we pass undefined so the hooks wait instead of
+  // fetching /modules/0 and falling back to mock data.
+  const moduleId = params.moduleId ?? lesson.data?.module_id;
+  const mod = useModule(moduleId);
+  const lessonsState = useModuleLessons(moduleId);
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { isCompleted, markCompleted } = useCompleted();
 

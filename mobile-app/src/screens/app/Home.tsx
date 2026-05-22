@@ -53,7 +53,9 @@ export default function Home() {
     [modules],
   );
   const firstModule = sortedModules[0] ?? null;
-  const { data: firstModuleLessons } = useModuleLessons(firstModule?.id ?? 0);
+  // Pass the real id (or undefined) — the hook waits for a valid id and never
+  // fetches /modules/0, so it can't fall back to mock data.
+  const { data: firstModuleLessons } = useModuleLessons(firstModule?.id);
   const firstLesson = firstModuleLessons?.[0] ?? null;
 
   // When a category chip is active, swap the Modules list for its filtered set.

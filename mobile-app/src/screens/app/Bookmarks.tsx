@@ -13,7 +13,7 @@ import { colors, type } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { useModules } from '../../api/hooks';
 import { getModuleLessons } from '../../api/modules';
-import { lessonsForModule, type Lesson, type Module } from '../../api/mock';
+import type { Lesson, Module } from '../../api/mock';
 import { useBookmarks } from '../../storage/bookmarks';
 
 // All numeric values: spec × 1.2 to stay consistent with the rest of the app.
@@ -86,9 +86,8 @@ export default function Bookmarks() {
             id: l.id, title: l.title, read_time: l.read_time, module_id: m.id, moduleTitle: m.title,
           }));
         } catch {
-          return lessonsForModule(m.id).map((l) => ({
-            id: l.id, title: l.title, read_time: l.read_time, module_id: m.id, moduleTitle: m.title,
-          }));
+          // Never substitute mock lessons — just skip this module's lessons.
+          return [] as Aggregated[];
         }
       }));
       if (!cancelled) setLessons(all.flat());
