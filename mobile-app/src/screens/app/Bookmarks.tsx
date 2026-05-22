@@ -343,7 +343,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     maxWidth: 300,
   },
-  lockedCta: { alignSelf: 'stretch', maxWidth: 320, marginTop: 24 },
+  // Centered, symmetric on every screen width: full-width up to a cap, then
+  // centered (not left-anchored like `alignSelf: 'stretch'` + maxWidth was).
+  lockedCta: { alignSelf: 'center', width: '100%', maxWidth: 320, marginTop: 24 },
 
   /* Empty state */
   empty: {
