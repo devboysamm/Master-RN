@@ -13,6 +13,7 @@ import SocialBtn from '../../components/SocialBtn';
 import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { useAuth } from '../../context/AuthContext';
+import { runGithubAuth } from '../../api/auth';
 import { colors, type } from '../../theme/tokens';
 import { AuthStackParamList } from '../../navigation/types';
 
@@ -97,7 +98,25 @@ export default function Auth() {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [showPw, setShowPw] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const { signIn, signUp, continueAsGuest, cancelAuth } = useAuth();
+  const [ghLoading, setGhLoading] = useState(false);
+  const { signIn, signUp, continueAsGuest, cancelAuth, finalizeTokenLogin } = useAuth();
+
+  // GitHub OAuth: browser flow → finalize login (flips into the authed tabs).
+  // Cancels are silent; failures reuse the inline serverError banner.
+  const onGithub = async () => {
+    setServerError(null);
+    setGhLoading(true);
+    try {
+      const res = await runGithubAuth();
+      if (res.type === 'cancel') return;
+      if (res.type === 'error') { setServerError(res.message); return; }
+      await finalizeTokenLogin(res.token);
+    } catch (e: any) {
+      setServerError(e?.message || 'GitHub sign-in failed. Please try again.');
+    } finally {
+      setGhLoading(false);
+    }
+  };
 
   // Unified back handler: when `returnTo` is set, we entered AuthFlow
   // from inside the app — cancel and return the user to that tab.
@@ -289,7 +308,7 @@ export default function Auth() {
           </View>
 
           <View style={styles.socialRow}>
-            <SocialBtn />
+            <SocialBtn loading={ghLoading} onPress={onGithub} />
           </View>
 
           {/* Guest footer */}

@@ -38,6 +38,35 @@ async function create({ email, name, passwordHash }) {
   return findById(result.insertId);
 }
 
+async function findByGithubId(githubId) {
+  const [rows] = await pool.query(
+    `SELECT ${SAFE_COLS} FROM users WHERE github_id = ? LIMIT 1`,
+    [String(githubId)]
+  );
+  return rows[0] || null;
+}
+
+// Create a GitHub-authenticated user: no password, email already verified by
+// GitHub (we only ever accept a primary *verified* email).
+async function createGithubUser({ email, name, githubId }) {
+  const [result] = await pool.query(
+    `INSERT INTO users (email, name, github_id, email_verified)
+     VALUES (?, ?, ?, 1)`,
+    [email, name ?? null, String(githubId)]
+  );
+  return findById(result.insertId);
+}
+
+// Link a GitHub id to an existing (email-matched) account. Only sets it when
+// absent so we never clobber a different already-linked id.
+async function linkGithubId(id, githubId) {
+  await pool.query(
+    `UPDATE users SET github_id = ? WHERE id = ? AND github_id IS NULL`,
+    [String(githubId), id]
+  );
+  return findById(id);
+}
+
 // Used when an unverified user re-submits signup — refresh their details.
 async function updateCredentials(id, { name, passwordHash }) {
   await pool.query(
@@ -105,8 +134,11 @@ function publicShape(user) {
 module.exports = {
   findByEmail,
   findById,
+  findByGithubId,
   findAll,
   create,
+  createGithubUser,
+  linkGithubId,
   updateCredentials,
   setPasswordHash,
   markVerified,

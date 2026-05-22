@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(120),
   bio VARCHAR(300),
   password_hash VARCHAR(255),
+  github_id VARCHAR(64) UNIQUE,
   email_verified TINYINT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

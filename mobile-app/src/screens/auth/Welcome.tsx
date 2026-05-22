@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import SocialBtn from '../../components/SocialBtn';
 import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { useAuth } from '../../context/AuthContext';
+import { runGithubAuth } from '../../api/auth';
 import { useAppContent } from '../../api/hooks';
 import { colors, type } from '../../theme/tokens';
 import { AuthStackParamList } from '../../navigation/types';
@@ -51,8 +52,29 @@ const DEFAULT_PRIVACY_URL = 'https://masterreactnative.dev/privacy';
 
 export default function Welcome() {
   const nav = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const { continueAsGuest } = useAuth();
+  const { continueAsGuest, finalizeTokenLogin } = useAuth();
   const { data: content } = useAppContent();
+
+  const [ghLoading, setGhLoading] = useState(false);
+  const [ghError, setGhError] = useState<string | null>(null);
+
+  // GitHub OAuth: open the browser flow → on success finalize login (which
+  // flips the app into the authed tabs). Cancels are silent; real failures
+  // show an inline message. Never crashes.
+  const onGithub = async () => {
+    setGhError(null);
+    setGhLoading(true);
+    try {
+      const res = await runGithubAuth();
+      if (res.type === 'cancel') return;
+      if (res.type === 'error') { setGhError(res.message); return; }
+      await finalizeTokenLogin(res.token);
+    } catch (e: any) {
+      setGhError(e?.message || 'GitHub sign-in failed. Please try again.');
+    } finally {
+      setGhLoading(false);
+    }
+  };
 
   const subtitle = content?.welcome_subtitle?.trim() || DEFAULT_SUBTITLE;
   const footerPrefix = content?.welcome_footer?.trim() || DEFAULT_FOOTER_PREFIX;
@@ -89,8 +111,10 @@ export default function Welcome() {
           </View>
 
           <View style={styles.socialRow}>
-            <SocialBtn />
+            <SocialBtn loading={ghLoading} onPress={onGithub} />
           </View>
+
+          {ghError ? <Text style={styles.socialErr}>{ghError}</Text> : null}
 
           <Pressable
             onPress={continueAsGuest}
@@ -198,6 +222,14 @@ const styles = StyleSheet.create({
     letterSpacing: OR_LS,
   },
   socialRow: { flexDirection: 'row', gap: SOCIAL_GAP },
+  socialErr: {
+    marginTop: 8,
+    color: colors.coral,
+    fontFamily: type.family.sans,
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
   guestWrap: { marginTop: GUEST_MT, padding: GUEST_P, alignItems: 'center' },
   guestText: {
     color: 'rgba(255,255,255,0.6)',

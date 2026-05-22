@@ -1,13 +1,13 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, Text, StyleSheet, View, ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { colors, type } from '../theme/tokens';
 
-// GitHub is the only social provider for v1. Google/Apple were removed.
-// (OAuth itself is wired up later in a separate native-rebuild task — this
-// button is presentational for now.)
+// GitHub is the only social provider for v1 (Google/Apple were removed).
 type Props = {
   onPress?: () => void;
+  /** While true: shows a spinner + "Connecting…" and ignores presses. */
+  loading?: boolean;
   style?: ViewStyle;
 };
 
@@ -20,16 +20,18 @@ const FONT = 14;
 const ICON = 17;
 const GAP = 7;
 
-export default function SocialBtn({ onPress, style }: Props) {
+export default function SocialBtn({ onPress, loading, style }: Props) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={loading}
       accessibilityRole="button"
+      accessibilityState={{ disabled: !!loading, busy: !!loading }}
       accessibilityLabel="Sign in with GitHub"
-      style={({ pressed }) => [styles.btn, style, pressed && { opacity: 0.85 }]}>
+      style={({ pressed }) => [styles.btn, style, (pressed || loading) && { opacity: 0.85 }]}>
       <View style={styles.inner}>
-        <GithubIcon />
-        <Text style={styles.label}>GitHub</Text>
+        {loading ? <ActivityIndicator color={colors.white} size="small" /> : <GithubIcon />}
+        <Text style={styles.label}>{loading ? 'Connecting…' : 'GitHub'}</Text>
       </View>
     </Pressable>
   );
