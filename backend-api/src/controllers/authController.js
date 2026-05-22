@@ -207,20 +207,6 @@ async function resetPassword(req, res) {
   }
 }
 
-// TEMP DEBUG — read the newest OTP for an email while email delivery is
-// broken. Remove this handler + its route once Resend is working.
-async function debugLastOtp(req, res) {
-  try {
-    const email = normEmail(req.query.email);
-    if (!validEmail(email)) return fail(res, 400, 'A valid ?email= query param is required');
-    const row = await Otp.findNewestForEmail(email);
-    if (!row) return fail(res, 404, 'No OTP found for that email');
-    return res.json(row);
-  } catch (err) {
-    return serverError(res, err);
-  }
-}
-
 async function me(req, res) {
   try {
     const user = await User.findById(req.user.id);
@@ -271,5 +257,4 @@ module.exports = {
   resetPassword,
   me,
   updateMe,
-  debugLastOtp, // TEMP DEBUG
 };

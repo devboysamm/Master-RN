@@ -38,17 +38,6 @@ async function markConsumed(id) {
   await pool.query(`UPDATE otp_codes SET consumed = 1 WHERE id = ?`, [id]);
 }
 
-// TEMP DEBUG — newest OTP row for an email (any purpose/consumed). Used by
-// the temporary debug endpoint while email delivery is broken. Remove later.
-async function findNewestForEmail(email) {
-  const [rows] = await pool.query(
-    `SELECT code, purpose, expires_at, consumed, created_at
-     FROM otp_codes WHERE email = ? ORDER BY id DESC LIMIT 1`,
-    [email]
-  );
-  return rows[0] || null;
-}
-
 function isExpired(row) {
   return new Date(row.expires_at).getTime() <= Date.now();
 }
@@ -57,7 +46,6 @@ module.exports = {
   TTL_MINUTES,
   findValid,
   findNewestUnconsumed,
-  findNewestForEmail,
   create,
   markConsumed,
   isExpired,

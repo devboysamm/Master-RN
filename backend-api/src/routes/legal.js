@@ -1,11 +1,12 @@
 const express = require('express');
 const ctrl = require('../controllers/legalController');
+const requireAdmin = require('../middlewares/requireAdmin');
 
 const router = express.Router();
 
-// TODO: admin-protect the PUT later (currently open to match the other
-// admin endpoints). GET stays public so the website can render the content.
+// GET stays PUBLIC so the app/website can render Terms & Privacy.
 router.get('/:key', ctrl.get);
-router.put('/:key', ctrl.put);
+// Editing the content is admin-only.
+router.put('/:key', requireAdmin, ctrl.put);
 
 module.exports = router;

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -11,9 +12,20 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Legal from './pages/Legal';
 import Reports from './pages/Reports';
+import Login from './pages/Login';
+import { getAdminToken, setAdminToken, clearAdminToken } from './api/client';
 import { MRN } from './theme/tokens';
 
 export default function App() {
+  const [token, setToken] = useState(() => getAdminToken());
+
+  // No valid admin token → show ONLY the login gate (no sidebar, no pages).
+  if (!token) {
+    return <Login onSuccess={(t) => { setAdminToken(t); setToken(t); }} />;
+  }
+
+  const logout = () => { clearAdminToken(); setToken(null); };
+
   return (
     <BrowserRouter>
       <div style={{
@@ -23,7 +35,7 @@ export default function App() {
         color: MRN.ink,
         fontFamily: MRN.font,
       }}>
-        <Sidebar />
+        <Sidebar onLogout={logout} />
         <main style={{ flex: 1, minWidth: 0, overflowX: 'hidden' }}>
           <Routes>
             <Route path="/"               element={<Dashboard />} />

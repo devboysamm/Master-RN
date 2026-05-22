@@ -20,6 +20,48 @@ axiosRetry(api, {
     error.code === 'ECONNABORTED',
 });
 
+/* ----------------------------------------------------------------------- */
+/* Admin auth token                                                        */
+/* ----------------------------------------------------------------------- */
+const TOKEN_KEY = 'mrn_admin_token';
+
+export function getAdminToken() {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+export function setAdminToken(token) {
+  try { localStorage.setItem(TOKEN_KEY, token); } catch { /* ignore */ }
+}
+export function clearAdminToken() {
+  try { localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ }
+}
+
+// Attach the admin JWT to every request.
+api.interceptors.request.use((config) => {
+  const token = getAdminToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// On 401 (expired/invalid token) clear it and bounce back to the login gate.
+// The login request itself is exempt so bad credentials show inline instead.
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    const url = error?.config?.url || '';
+    if (error?.response?.status === 401 && !url.includes('/api/admin/login')) {
+      clearAdminToken();
+      if (typeof window !== 'undefined') window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const AdminAuth = {
+  login: (username, password) =>
+    api.post('/api/admin/login', { username, password }).then((r) => r.data),
+  me: () => api.get('/api/admin/me').then((r) => r.data),
+};
+
 const unwrap = (res) => (res?.data?.data !== undefined ? res.data.data : res?.data);
 
 export const Modules = {

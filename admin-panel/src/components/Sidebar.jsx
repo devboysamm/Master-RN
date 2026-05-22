@@ -21,7 +21,7 @@ function Icon({ d, size = 18 }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onLogout }) {
   return (
     <aside style={{
       width: 264,
@@ -105,7 +105,7 @@ export default function Sidebar() {
       </nav>
 
       <div style={{ marginTop: 'auto', padding: '14px 10px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 18,
             background: `linear-gradient(135deg, ${MRN.coral}, ${MRN.yellow})`,
@@ -114,9 +114,23 @@ export default function Sidebar() {
           }}>A</div>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700 }}>Admin</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>admin@masterrn.dev</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>Signed in</div>
           </div>
         </div>
+        <button
+          onClick={onLogout}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '10px 14px', borderRadius: 10, cursor: 'pointer',
+            background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.85)',
+            border: '1px solid rgba(255,255,255,0.12)', fontSize: 14, fontWeight: 700,
+            fontFamily: MRN.font,
+          }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          Log out
+        </button>
       </div>
     </aside>
   );

@@ -1,10 +1,12 @@
 const express = require('express');
 const ctrl = require('../controllers/usersController');
+const requireAdmin = require('../middlewares/requireAdmin');
 
 const router = express.Router();
 
-// TODO: protect all of these with admin auth (currently open to match the
-// other admin endpoints).
+// All user-management endpoints are admin-only.
+router.use(requireAdmin);
+
 router.get('/', ctrl.list);
 router.get('/:id', ctrl.getOne);
 router.patch('/:id', ctrl.update);

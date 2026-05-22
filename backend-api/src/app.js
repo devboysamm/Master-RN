@@ -12,6 +12,7 @@ const usersRoutes = require('./routes/users');
 const legalRoutes = require('./routes/legal');
 const chatRoutes = require('./routes/chat');
 const problemReportsRoutes = require('./routes/problemReports');
+const adminRoutes = require('./routes/admin');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -58,6 +59,7 @@ app.get('/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
 });
 
+app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/modules', modulesRoutes);
