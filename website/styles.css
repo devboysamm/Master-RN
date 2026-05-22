@@ -153,8 +153,8 @@ section { padding: 86px 0; }
 .shots .section-head h2 { color: #fff; }
 .shots .section-head p { color: rgba(255, 255, 255, 0.6); }
 .shot-row {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px;
-  max-width: 960px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px;
+  max-width: 840px; margin: 0 auto;
 }
 .phone {
   position: relative; aspect-ratio: 9 / 19;
@@ -166,14 +166,6 @@ section { padding: 86px 0; }
   width: 42%; height: 16px; background: #2c2620; border-radius: 0 0 12px 12px; z-index: 2;
 }
 .phone img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.phone .placeholder {
-  position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 8px;
-  background: linear-gradient(160deg, #2a221d 0%, #1c1714 100%);
-  color: rgba(255, 255, 255, 0.3); text-align: center; padding: 12px;
-}
-.phone .placeholder .pn { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
-.phone .placeholder .pf { font-size: 9px; font-weight: 600; opacity: 0.7; }
 
 /* ==========================================================================
    CTA band
@@ -243,7 +235,7 @@ section { padding: 86px 0; }
    ========================================================================== */
 @media (max-width: 880px) {
   .feature-grid { grid-template-columns: repeat(2, 1fr); }
-  .shot-row { grid-template-columns: repeat(2, 1fr); max-width: 460px; }
+  .shot-row { grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 600px; }
 }
 @media (max-width: 620px) {
   .nav-links { gap: 16px; }
@@ -251,6 +243,6 @@ section { padding: 86px 0; }
   section { padding: 64px 0; }
   .hero { padding: 72px 20px 80px; }
   .feature-grid { grid-template-columns: 1fr; }
-  .shot-row { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .shot-row { grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 380px; }
   .footer .wrap { flex-direction: column; align-items: flex-start; }
 }
