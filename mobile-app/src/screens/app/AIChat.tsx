@@ -507,8 +507,8 @@ function TypingBubble() {
       <View style={[styles.aiBubble, styles.typingBubble]}>
         <View style={styles.dotsRow}>
           <Dot delay={0} />
-          <Dot delay={200} />
-          <Dot delay={400} />
+          <Dot delay={120} />
+          <Dot delay={240} />
         </View>
       </View>
     </Animated.View>
@@ -518,13 +518,13 @@ function TypingBubble() {
 function Dot({ delay }: { delay: number }) {
   const y = useSharedValue(0);
   useEffect(() => {
-    // Slow, gentle pulse — soft ease in/out, no sharp pop.
+    // Lively "typing…" pulse — ~750ms cycle, soft ease in/out, no harsh blink.
     y.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(-3, { duration: 600, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0,  { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(-3, { duration: 375, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0,  { duration: 375, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
         false,
