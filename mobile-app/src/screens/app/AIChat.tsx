@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TextInput, Pressable, StyleSheet, Keyboard,
-  LayoutChangeEvent, FlatList, ListRenderItem,
+  LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -69,15 +70,20 @@ const QR_ROW_MB = 8;
 const DOT = 7;
 const DOTS_GAP = 6;
 
-/* Composer */
-const COMPOSER_PAD = 7;
-const COMPOSER_RADIUS = 28;
+/* Composer — balanced vertical padding (equal top/bottom) and a slightly
+ * taller input so it's comfortable to tap and read. */
+const COMPOSER_PAD = 8;
+const COMPOSER_RADIUS = 26;
 const COMPOSER_BORDER = 1;
 const INPUT_FS = 15;
-const INPUT_MIN_H = 28;
-const INPUT_MAX_H = 110;           // ~4 lines before scroll
+const INPUT_MIN_H = 40;
+const INPUT_MAX_H = 120;           // ~4-5 lines before scroll
 const SEND_SIZE = 44;
 const SEND_ICON = 19;
+
+/* Animation — calm, slow, no bounce. */
+const BUBBLE_ANIM_MS = 320;
+const TYPING_ANIM_MS = 300;
 
 /* Tab bar is hidden on this screen (useFocusEffect below), so the composer
  * sits at the bottom safe-area edge with a small visual gap. */
@@ -93,11 +99,14 @@ type Message = {
   quickReplies?: string[];
 };
 
-const EXAMPLE_PROMPTS = [
-  'How does useState work?',
-  'Explain useEffect',
-  'When to lift state up?',
-  'Show me a FlatList example',
+// App-relevant starter questions for the empty chat. Tapping one sends it.
+const SUGGESTIONS = [
+  'How do I create my first React Native app?',
+  'Explain useState with a simple example',
+  "What's the difference between View and ScrollView?",
+  'How does navigation work in React Native?',
+  'Help me debug a Flexbox layout',
+  'What is Expo and why use it?',
 ];
 
 function nowStr(): string {
@@ -122,7 +131,12 @@ export default function AIChat() {
   const [loading, setLoading] = useState(false);
   const [kbH, setKbH] = useState(0);
   const [stickyH, setStickyH] = useState(72);   // measured at runtime
-  const listRef = useRef<FlatList<Message>>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  // Y offset of each message within the scroll content (set via onLayout).
+  const offsets = useRef<Record<string, number>>({});
+  // When an AI reply arrives we want to land at its TOP, not the bottom —
+  // stash its id so its onLayout can scroll it to the top of the viewport.
+  const pendingTopId = useRef<string | null>(null);
 
   // Keyboard tracking — composer + pills lift smoothly with the keyboard.
   useEffect(() => {
@@ -131,12 +145,26 @@ export default function AIChat() {
     return () => { showSub.remove(); hideSub.remove(); };
   }, []);
 
-  // FlatList is inverted, so the "bottom" of the visible chat is offset 0.
+  // While the AI is "typing", keep the indicator (and the user's just-sent
+  // message) in view at the bottom. The AI reply itself scrolls to its TOP
+  // (handled in each message's onLayout below), so it reads top-to-bottom.
   useEffect(() => {
-    requestAnimationFrame(() =>
-      listRef.current?.scrollToOffset({ offset: 0, animated: true }),
-    );
-  }, [messages.length, loading]);
+    if (loading) {
+      requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+    }
+  }, [loading]);
+
+  const onMessageLayout = (id: string) => (e: LayoutChangeEvent) => {
+    const y = e.nativeEvent.layout.y;
+    offsets.current[id] = y;
+    if (pendingTopId.current === id) {
+      pendingTopId.current = null;
+      // Land the first line of the AI reply just below the top edge.
+      requestAnimationFrame(() =>
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - 8), animated: true }),
+      );
+    }
+  };
 
   // Map our chat bubbles into the backend's { role, content } history shape.
   const toHistory = (msgs: Message[]): ChatMessage[] =>
@@ -146,15 +174,18 @@ export default function AIChat() {
     try {
       const { reply } = await sendChat(toHistory(history));
       const aiMsg: Message = { id: `a_${Date.now()}`, role: 'ai', text: reply, ts: nowStr() };
+      // Scroll to the TOP of this reply once it lays out.
+      pendingTopId.current = aiMsg.id;
       setMessages((prev) => [...prev, aiMsg]);
     } catch {
       // Network/server error — show a recoverable error bubble, never crash.
       const errMsg: Message = {
         id: `e_${Date.now()}`,
         role: 'ai',
-        text: 'Something went wrong — try again.',
+        text: 'Something went wrong, please try again.',
         ts: nowStr(),
       };
+      pendingTopId.current = errMsg.id;
       setMessages((prev) => [...prev, errMsg]);
     } finally {
       setLoading(false);
@@ -173,8 +204,6 @@ export default function AIChat() {
     setLoading(true);
     runChat(history);
   };
-
-  const fillPrompt = (text: string) => setInput(text);
 
   // Quick replies belong to the most recent AI message.
   const lastAi = useMemo(() => {
@@ -217,14 +246,6 @@ export default function AIChat() {
     const h = e.nativeEvent.layout.height;
     if (Math.abs(h - stickyH) > 1) setStickyH(h);
   };
-
-  // Inverted FlatList wants the newest message at index 0.
-  const inverted = useMemo(() => [...messages].reverse(), [messages]);
-  const renderItem: ListRenderItem<Message> = ({ item }) => (
-    item.role === 'user'
-      ? <UserBubble text={item.text} ts={item.ts} />
-      : <AiBubble   text={item.text} code={item.code} ts={item.ts} />
-  );
 
   // Hard wall for guests: no chat UI, no blur, no dismiss.
   if (isGuest) {
@@ -297,27 +318,27 @@ export default function AIChat() {
 
       {messages.length === 0 ? (
         <View style={[styles.emptyHolder, { paddingBottom: stickyBottom + stickyH + 16 }]}>
-          <EmptyState onPick={fillPrompt} />
+          <EmptyState onSend={send} />
         </View>
       ) : (
-        <FlatList
-          ref={listRef}
-          data={inverted}
-          renderItem={renderItem}
-          keyExtractor={(m) => m.id}
-          inverted
+        <ScrollView
+          ref={scrollRef}
           contentContainerStyle={[
             styles.listContent,
-            { paddingTop: stickyBottom + stickyH + 16 },   // visual BOTTOM in inverted
+            { paddingBottom: stickyBottom + stickyH + 16 },
           ]}
-          // While loading, render the typing bubble as the header — which in
-          // an inverted list shows at the visual BOTTOM, right after the
-          // latest message.
-          ListHeaderComponent={loading ? <TypingBubble /> : null}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-        />
+          keyboardDismissMode="interactive">
+          {messages.map((m) => (
+            <View key={m.id} onLayout={onMessageLayout(m.id)}>
+              {m.role === 'user'
+                ? <UserBubble text={m.text} ts={m.ts} />
+                : <AiBubble text={m.text} code={m.code} ts={m.ts} />}
+            </View>
+          ))}
+          {loading ? <TypingBubble /> : null}
+        </ScrollView>
       )}
 
       {/* Sticky bottom: quick replies + composer.
@@ -354,26 +375,26 @@ export default function AIChat() {
 /* COMPONENTS                                                               */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-function EmptyState({ onPick }: { onPick: (s: string) => void }) {
+function EmptyState({ onSend }: { onSend: (s: string) => void }) {
   return (
     <View style={styles.empty}>
       {/* AtomLogo only — no ring, no ink circle, no outline. */}
       <View style={styles.emptyAvatarSlot}>
         <AtomLogo size={EMPTY_ATOM} strokeWidth={8} showDot />
       </View>
-      <Text style={styles.emptyHead}>Ready when you are.</Text>
+      <Text style={styles.emptyHead}>Ask Native AI</Text>
       <Text style={styles.emptySub}>
-        Ask me anything about React Native — code, concepts, debugging.
+        Your React Native coding tutor. Ask about concepts, code, or debugging.
       </Text>
       <View style={styles.emptyPills}>
-        {EXAMPLE_PROMPTS.map((p) => (
+        {SUGGESTIONS.map((p) => (
           <Pressable
             key={p}
-            onPress={() => onPick(p)}
+            onPress={() => onSend(p)}
             accessibilityRole="button"
-            accessibilityLabel={`Use prompt: ${p}`}
-            style={({ pressed }) => [styles.emptyPill, pressed && { opacity: 0.7 }]}>
-            <Text style={styles.emptyPillText}>{p}</Text>
+            accessibilityLabel={`Ask: ${p}`}
+            style={({ pressed }) => [styles.suggestCard, pressed && { opacity: 0.7 }]}>
+            <Text style={styles.suggestText}>{p}</Text>
           </Pressable>
         ))}
       </View>
@@ -384,11 +405,12 @@ function EmptyState({ onPick }: { onPick: (s: string) => void }) {
 function AiBubble({ text, code, ts }: { text: string; code?: { lang?: string; code: string }; ts?: string }) {
   return (
     <Animated.View
-      entering={FadeInUp.duration(220).springify().damping(16)}
+      entering={FadeInUp.duration(BUBBLE_ANIM_MS).easing(Easing.out(Easing.cubic))}
       style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
       <View style={styles.aiBubble}>
         {/* Assistant replies arrive as markdown — render bold/italic, inline
-            code, headings, lists, and fenced code blocks properly. */}
+            code, headings, lists, and fenced code blocks properly.
+            TODO(follow-up): add a copy button on rendered code blocks. */}
         <Markdown style={markdownStyles} rules={markdownRules}>{text}</Markdown>
         {code ? <CodeBlock language={code.lang} code={code.code} /> : null}
       </View>
@@ -442,7 +464,7 @@ const markdownStyles = StyleSheet.create({
   code_inline: {
     fontFamily: type.family.mono,
     fontSize: 13,
-    color: colors.coralDeep,
+    color: colors.inkSoft,
     backgroundColor: colors.cardAlt,
     borderRadius: 4,
     paddingHorizontal: 4,
@@ -451,13 +473,13 @@ const markdownStyles = StyleSheet.create({
   bullet_list: { marginBottom: 8 },
   ordered_list: { marginBottom: 8 },
   list_item: { marginBottom: 3 },
-  bullet_list_icon: { color: colors.coral },
-  ordered_list_icon: { color: colors.coral, fontWeight: '700' },
-  link: { color: colors.coralDeep, textDecorationLine: 'underline', fontWeight: '700' },
+  bullet_list_icon: { color: colors.mute },
+  ordered_list_icon: { color: colors.mute, fontWeight: '700' },
+  link: { color: colors.inkSoft, textDecorationLine: 'underline', fontWeight: '700' },
   blockquote: {
     backgroundColor: colors.cardAlt,
     borderLeftWidth: 3,
-    borderLeftColor: colors.coral,
+    borderLeftColor: colors.mute,
     paddingHorizontal: 12,
     paddingVertical: 4,
     marginBottom: 8,
@@ -467,7 +489,7 @@ const markdownStyles = StyleSheet.create({
 function UserBubble({ text, ts }: { text: string; ts?: string }) {
   return (
     <Animated.View
-      entering={FadeInUp.duration(220).springify().damping(16)}
+      entering={FadeInUp.duration(BUBBLE_ANIM_MS).easing(Easing.out(Easing.cubic))}
       style={[styles.bubbleRow, { alignItems: 'flex-end' }]}>
       <View style={styles.userBubble}>
         <Text style={styles.userText}>{text}</Text>
@@ -480,13 +502,13 @@ function UserBubble({ text, ts }: { text: string; ts?: string }) {
 function TypingBubble() {
   return (
     <Animated.View
-      entering={FadeInUp.duration(180)}
+      entering={FadeInUp.duration(TYPING_ANIM_MS).easing(Easing.out(Easing.cubic))}
       style={[styles.bubbleRow, { alignItems: 'flex-start' }]}>
       <View style={[styles.aiBubble, styles.typingBubble]}>
         <View style={styles.dotsRow}>
           <Dot delay={0} />
-          <Dot delay={150} />
-          <Dot delay={300} />
+          <Dot delay={200} />
+          <Dot delay={400} />
         </View>
       </View>
     </Animated.View>
@@ -496,12 +518,13 @@ function TypingBubble() {
 function Dot({ delay }: { delay: number }) {
   const y = useSharedValue(0);
   useEffect(() => {
+    // Slow, gentle pulse — soft ease in/out, no sharp pop.
     y.value = withDelay(
       delay,
       withRepeat(
         withSequence(
-          withTiming(-4, { duration: 380 }),
-          withTiming(0,  { duration: 380 }),
+          withTiming(-3, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0,  { duration: 600, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
         false,
@@ -574,11 +597,13 @@ const styles = StyleSheet.create({
     fontFamily: type.family.sans, fontSize: NAME_FS, fontWeight: '800',
     color: colors.ink, letterSpacing: -0.2,
   },
-  dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, backgroundColor: colors.ok },
+  // Coral is reserved as a small accent on this screen — the online dot
+  // and the send button are the only coral elements.
+  dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, backgroundColor: colors.coral },
   aiMeta: { fontFamily: type.family.sans, fontSize: META_FS, fontWeight: '700', color: colors.mute },
 
   /* Lists */
-  listContent: { paddingHorizontal: 16, paddingBottom: 8 },
+  listContent: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
   // Anchor the empty state near the top of the chat area rather than
   // vertically centring it — looks intentional + makes the prompt pills
   // easier to reach without thumb-stretching.
@@ -602,39 +627,43 @@ const styles = StyleSheet.create({
     textAlign: 'center', marginTop: 8, maxWidth: 320,
   },
   emptyPills: {
-    marginTop: 22,
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',
-    gap: EMPTY_PILL_GAP,
+    marginTop: 24,
+    alignSelf: 'stretch',
+    gap: 10,
   },
-  emptyPill: {
-    paddingVertical: EMPTY_PILL_PV,
-    paddingHorizontal: EMPTY_PILL_PH,
-    borderRadius: 999,
-    backgroundColor: colors.card,
+  // Full-width suggestion cards — calm neutral, left-aligned, easy to read.
+  suggestCard: {
+    alignSelf: 'stretch',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: colors.bubbleAi,
     borderWidth: 1, borderColor: colors.rule,
   },
-  emptyPillText: {
+  suggestText: {
     color: colors.ink, fontFamily: type.family.sans,
-    fontSize: EMPTY_PILL_FS, fontWeight: '700',
+    fontSize: EMPTY_PILL_FS, fontWeight: '600', lineHeight: 20,
   },
 
   /* Bubbles */
   bubbleRow: { marginBottom: BUBBLE_GAP },
+  // Clean near-white card, dark ink text — neutral, not tinted.
   aiBubble: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.bubbleAi,
     borderRadius: BUBBLE_RADIUS,
     borderTopLeftRadius: 8,
     padding: BUBBLE_PAD,
-    maxWidth: '85%',
+    maxWidth: '88%',
     borderWidth: 1, borderColor: colors.rule,
   },
+  // Soft neutral grey bubble, dark ink text — calm, not loud orange.
   userBubble: {
-    backgroundColor: colors.coral,
+    backgroundColor: colors.bubbleUser,
     borderRadius: BUBBLE_RADIUS,
     borderTopRightRadius: 8,
-    paddingVertical: BUBBLE_PAD - 3,
+    paddingVertical: BUBBLE_PAD - 2,
     paddingHorizontal: BUBBLE_PAD,
-    maxWidth: '80%',
+    maxWidth: '82%',
   },
   aiText: {
     fontFamily: type.family.sans, fontSize: BUBBLE_FS, lineHeight: BUBBLE_LH,
@@ -642,7 +671,7 @@ const styles = StyleSheet.create({
   },
   userText: {
     fontFamily: type.family.sans, fontSize: BUBBLE_FS, lineHeight: BUBBLE_LH,
-    color: colors.white, fontWeight: '600',
+    color: colors.ink, fontWeight: '600',
   },
   ts: {
     fontFamily: type.family.sans, fontSize: TS_FS, color: colors.mute,
@@ -679,12 +708,14 @@ const styles = StyleSheet.create({
    * text and the send arrow are the same distance from their respective
    * container edges. */
   composerInner: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.bubbleAi,
     borderRadius: COMPOSER_RADIUS,
     borderWidth: COMPOSER_BORDER,
     borderColor: colors.rule,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    // Center the input + send button so vertical space is balanced
+    // (equal top/bottom), fixing the "too much space at the top" gap.
+    alignItems: 'center',
     paddingVertical: COMPOSER_PAD,
     paddingHorizontal: 14,
   },
@@ -694,7 +725,8 @@ const styles = StyleSheet.create({
     fontSize: INPUT_FS,
     color: colors.ink,
     fontWeight: '500',
-    paddingVertical: 8,
+    // Equal top/bottom padding so the caret/text sits centered.
+    paddingVertical: 6,
     minHeight: INPUT_MIN_H,
     maxHeight: INPUT_MAX_H,
   },

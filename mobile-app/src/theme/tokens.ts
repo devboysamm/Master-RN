@@ -17,6 +17,10 @@ export const colors = {
   splashBg:   '#0B0907',
   atomInk:    '#1A1410',
   white:      '#FFFFFF',
+  // Calm, ChatGPT-style chat bubbles: a soft neutral grey for the user's
+  // own messages, a clean near-white card for the assistant.
+  bubbleUser: '#E8E4DD',
+  bubbleAi:   '#FFFFFF',
 } as const;
 
 export const radii = {
