@@ -40,6 +40,7 @@ export type ProfileStackParamList = {
   HelpFeedback: undefined;
   About: undefined;
   EditProfile: undefined;
+  ReportProblem: undefined;
 };
 
 export type AppTabParamList = {

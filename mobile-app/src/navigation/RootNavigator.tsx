@@ -134,6 +134,7 @@ function ProfileTab() {
       <ProfileStack.Screen name="HelpFeedback" component={HelpFeedback} />
       <ProfileStack.Screen name="About" component={About} />
       <ProfileStack.Screen name="EditProfile" component={EditProfile} options={{ animation: 'slide_from_right' }} />
+      <ProfileStack.Screen name="ReportProblem" component={ReportProblem} options={{ animation: 'slide_from_right' }} />
     </ProfileStack.Navigator>
   );
 }

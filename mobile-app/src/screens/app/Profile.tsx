@@ -98,6 +98,7 @@ export default function Profile() {
   };
   const goHelp = () => nav.navigate('HelpFeedback');
   const goAbout = () => nav.navigate('About');
+  const goReportBug = () => nav.navigate('ReportProblem');
   const goEditProfile = () => nav.navigate('EditProfile');
 
   const name = user?.name || (isGuest ? 'Guest' : 'You');
@@ -135,6 +136,7 @@ export default function Profile() {
             <View style={{ gap: ROW_LIST_GAP }}>
               <Row icon={I.bookmark} title="Saved lessons"     meta="0" onPress={goToBookmarks} />
               <Row icon={I.chat}     title="Help and feedback" onPress={goHelp} />
+              <Row icon={I.bell}     title="Report a bug"      onPress={goReportBug} />
               <Row icon={I.shield}   title="About Master RN"   meta="v1.0" onPress={goAbout} />
             </View>
           </View>
@@ -152,6 +154,7 @@ export default function Profile() {
               <Text style={styles.sectionLabel}>SUPPORT</Text>
               <View style={{ gap: ROW_LIST_GAP }}>
                 <Row icon={I.chat}   title="Help and feedback" onPress={goHelp} />
+                <Row icon={I.bell}   title="Report a bug"      onPress={goReportBug} />
                 <Row icon={I.shield} title="About Master RN"   meta="v1.0" onPress={goAbout} />
               </View>
             </View>

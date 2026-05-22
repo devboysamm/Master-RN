@@ -21,6 +21,10 @@ const TAB_ICONS: Record<string, string> = {
   Profile: I.user,
 };
 
+// Inactive tab icons read as near-white (clearly visible on the dark bar)
+// rather than dim grey.
+const INACTIVE_TINT = 'rgba(255,255,255,0.92)';
+
 export default function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, 12);
@@ -59,7 +63,7 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
                     <Text
                       style={[
                         styles.aiText,
-                        { color: focused ? colors.coral : 'rgba(255,255,255,0.45)' },
+                        { color: focused ? colors.coral : INACTIVE_TINT },
                       ]}>
                       AI
                     </Text>
@@ -70,7 +74,7 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
                   <Icon
                     d={TAB_ICONS[route.name] || I.home}
                     size={22}
-                    color={focused ? colors.white : 'rgba(255,255,255,0.45)'}
+                    color={focused ? colors.white : INACTIVE_TINT}
                     strokeWidth={2}
                   />
                 )}
@@ -84,26 +88,27 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
 }
 
 /**
- * Pulsing green status dot for the AI tab. Scale 1 → 1.4 → 1 and
- * opacity 1 → 0.6 → 1 over 1400ms, ease-in-out, infinite.
+ * Subtle pulsing green status dot for the AI tab. Scale 1 → 1.25 → 1 and
+ * opacity 1 → 0.7 → 1 over 1600ms, ease-in-out, infinite — a gentle "alive"
+ * breath rather than a distracting blink.
  */
 function AiPulseDot() {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
   useEffect(() => {
     const ease = Easing.inOut(Easing.ease);
-    const half = 700;
+    const half = 800;
     scale.value = withRepeat(
       withSequence(
-        withTiming(1.4, { duration: half, easing: ease }),
-        withTiming(1,   { duration: half, easing: ease }),
+        withTiming(1.25, { duration: half, easing: ease }),
+        withTiming(1,    { duration: half, easing: ease }),
       ),
       -1,
       false,
     );
     opacity.value = withRepeat(
       withSequence(
-        withTiming(0.6, { duration: half, easing: ease }),
+        withTiming(0.7, { duration: half, easing: ease }),
         withTiming(1,   { duration: half, easing: ease }),
       ),
       -1,
@@ -165,13 +170,22 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.4,
   },
+  // Crisp solid green dot with a ring in the bar colour so it reads as a
+  // clean status badge at the top-right of "AI", plus a subtle green glow.
   aiDot: {
     position: 'absolute',
-    top: -2,
-    right: -8,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    top: -3,
+    right: -9,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.ok,
+    borderWidth: 1.5,
+    borderColor: colors.ink,
+    shadowColor: colors.ok,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });

@@ -85,19 +85,20 @@ export default function ReportProblem() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           {sent ? (
-            <View style={styles.card}>
+            <View style={[styles.card, styles.successCard]}>
               <View style={styles.successIcon}>
                 <Icon d={I.check} size={28} color={colors.white} strokeWidth={2.6} />
               </View>
-              <Text style={styles.successTitle}>Thanks — we got your report</Text>
-              <Text style={styles.intro}>
-                Our team will take a look. We appreciate you helping make Master RN better.
+              <Text style={[styles.successTitle, styles.successCentered]}>Thanks for reporting</Text>
+              <Text style={[styles.intro, styles.successCentered]}>
+                Your report has been sent to our team. We review every report to make Master RN
+                better — thank you for helping out.
               </Text>
               <Pressable
                 onPress={() => nav.goBack()}
                 accessibilityRole="button"
                 accessibilityLabel="Done"
-                style={({ pressed }) => [styles.btn, pressed && { opacity: 0.85 }]}>
+                style={({ pressed }) => [styles.btn, styles.successBtn, pressed && { opacity: 0.85 }]}>
                 <Text style={styles.btnText}>Done</Text>
               </Pressable>
             </View>
@@ -260,6 +261,10 @@ const styles = StyleSheet.create({
     fontSize: BTN_FS,
     fontWeight: '800',
   },
+  // Success state reads as a clean centered confirmation.
+  successCard: { alignItems: 'center' },
+  successCentered: { textAlign: 'center' },
+  successBtn: { alignSelf: 'stretch' },
   successIcon: {
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: colors.ok,
