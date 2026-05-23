@@ -105,3 +105,23 @@ CREATE TABLE IF NOT EXISTS admin_users (
   password_hash VARCHAR(255),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Expo push tokens, one row per device (token is unique so re-registration
+-- updates the existing row rather than duplicating it).
+CREATE TABLE IF NOT EXISTS device_tokens (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT,
+  token VARCHAR(255) UNIQUE,
+  platform VARCHAR(20),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Broadcast notifications composed in the admin panel; also the source for
+-- the app's in-app bell list.
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255),
+  body TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

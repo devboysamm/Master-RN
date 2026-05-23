@@ -112,6 +112,11 @@ export const Users = {
     api.post(`/api/users/${id}/reset-password`, { newPassword }).then(unwrap),
 };
 
+export const Notifications = {
+  list: () => api.get('/api/notifications').then(unwrap),
+  send: (title, body) => api.post('/api/notifications/send', { title, body }).then(unwrap),
+};
+
 export const Reports = {
   list: () => api.get('/api/problem-reports').then(unwrap),
   setStatus: (id, status) => api.patch(`/api/problem-reports/${id}`, { status }).then(unwrap),

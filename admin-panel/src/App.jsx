@@ -12,6 +12,7 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Legal from './pages/Legal';
 import Reports from './pages/Reports';
+import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import { getAdminToken, setAdminToken, clearAdminToken } from './api/client';
 import { MRN } from './theme/tokens';
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/categories"     element={<Categories />} />
             <Route path="/users"          element={<Users />} />
             <Route path="/reports"        element={<Reports />} />
+            <Route path="/notifications"  element={<Notifications />} />
             <Route path="/settings"       element={<Settings />} />
             <Route path="/legal"          element={<Legal />} />
             <Route path="*"               element={<Navigate to="/" replace />} />
