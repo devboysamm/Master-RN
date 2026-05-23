@@ -25,13 +25,24 @@ const ALLOWED_ORIGINS = [
   'https://masterreactnative.dev',
 ];
 
+// Allow localhost / 127.0.0.1 on any port so local admin-panel dev works.
+function isLocalhostOrigin(origin) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+}
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error(`CORS: origin ${origin} not allowed`));
+      // Requests with no Origin header (server-to-server, curl, the import
+      // script, the mobile app) are always allowed.
+      if (!origin) return callback(null, true);
+
+      const allowed = ALLOWED_ORIGINS.includes(origin) || isLocalhostOrigin(origin);
+      // IMPORTANT: never throw and never pass an Error here. A disallowed
+      // origin is a clean rejection (false): the browser blocks the response
+      // and the process stays alive. Passing an Error (or throwing) surfaces
+      // as an uncaught exception that crashes Node and crash-loops PM2.
+      return callback(null, allowed);
     },
     credentials: true,
   })
