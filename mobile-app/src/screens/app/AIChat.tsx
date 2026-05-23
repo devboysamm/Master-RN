@@ -154,6 +154,14 @@ export default function AIChat() {
     }
   }, [loading]);
 
+  // When the composer is focused, drop to the newest content so the latest
+  // reply stays visible above the keyboard. Delayed so it runs after the
+  // keyboard's layout settles. This is the ONLY scroll tied to focus — the
+  // scroll-to-reply-TOP logic (onMessageLayout) is untouched.
+  const handleInputFocus = useCallback(() => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
+  }, []);
+
   const onMessageLayout = (id: string) => (e: LayoutChangeEvent) => {
     const y = e.nativeEvent.layout.y;
     offsets.current[id] = y;
@@ -365,7 +373,7 @@ export default function AIChat() {
             ))}
           </ScrollView>
         )}
-        <Composer value={input} onChange={setInput} onSend={() => send(input)} />
+        <Composer value={input} onChange={setInput} onSend={() => send(input)} onFocus={handleInputFocus} />
       </View>
     </SafeAreaView>
   );
@@ -537,14 +545,15 @@ function Dot({ delay }: { delay: number }) {
 }
 
 function Composer({
-  value, onChange, onSend,
-}: { value: string; onChange: (s: string) => void; onSend: () => void }) {
+  value, onChange, onSend, onFocus,
+}: { value: string; onChange: (s: string) => void; onSend: () => void; onFocus?: () => void }) {
   const canSend = value.trim().length > 0;
   return (
     <View style={styles.composerInner}>
       <TextInput
         value={value}
         onChangeText={onChange}
+        onFocus={onFocus}
         placeholder="Ask anything…"
         placeholderTextColor={colors.mute}
         style={styles.input}

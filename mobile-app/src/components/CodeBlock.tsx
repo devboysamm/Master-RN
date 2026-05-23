@@ -1,5 +1,8 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import Icon from './Icon';
+import { I } from '../theme/icons';
 import { colors, type } from '../theme/tokens';
 
 const RADIUS = 17;
@@ -123,11 +126,14 @@ export default function CodeBlock({ code, language, filename }: Props) {
           <View style={[styles.dot, { backgroundColor: TRAFFIC.full }]} />
         </View>
         <Text style={styles.filename} numberOfLines={1}>{fileLabel}</Text>
-        {langLabel ? (
-          <View style={styles.langBadge}>
-            <Text style={styles.langBadgeText}>{langLabel}</Text>
-          </View>
-        ) : <View style={styles.langSpacer} />}
+        <View style={styles.barRight}>
+          {langLabel ? (
+            <View style={styles.langBadge}>
+              <Text style={styles.langBadgeText}>{langLabel}</Text>
+            </View>
+          ) : null}
+          <CopyButton text={trimmed} />
+        </View>
       </View>
       <ScrollView
         horizontal
@@ -147,6 +153,45 @@ export default function CodeBlock({ code, language, filename }: Props) {
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+// Small "Copy" affordance in the window-chrome bar. Copies the block's full
+// text via expo-clipboard, then shows a checkmark + "Copied" for ~1.5s.
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  const onCopy = async () => {
+    try {
+      await Clipboard.setStringAsync(text);
+      setCopied(true);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard write is best-effort — never crash the lesson/chat over it.
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={onCopy}
+      accessibilityRole="button"
+      accessibilityLabel={copied ? 'Code copied' : 'Copy code'}
+      hitSlop={8}
+      style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.7 }]}>
+      <Icon
+        d={copied ? I.check : I.copy}
+        size={12}
+        color={copied ? TRAFFIC.full : 'rgba(255,255,255,0.6)'}
+        strokeWidth={2}
+      />
+      <Text style={[styles.copyText, copied && { color: TRAFFIC.full }]}>
+        {copied ? 'Copied' : 'Copy'}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -183,12 +228,18 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     fontWeight: '600',
   },
+  // Right cluster of the chrome bar: language badge + copy button.
+  barRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginRight: 12,
+  },
   langBadge: {
     backgroundColor: colors.coral,
     borderRadius: 999,
     paddingHorizontal: 7,
     paddingVertical: 2,
-    marginRight: DOTS_ML,
   },
   langBadgeText: {
     color: colors.white,
@@ -197,7 +248,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.6,
   },
-  langSpacer: { width: DOTS_ML + (DOT_SIZE * 3) + (DOTS_GAP * 2) },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 9,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  copyText: {
+    fontFamily: type.family.mono,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    color: 'rgba(255,255,255,0.6)',
+  },
   // `flexGrow: 0` is the fix for the "huge empty void" bug: by default a
   // nested ScrollView can be sized by its parent's available height; this
   // pins it to its content height instead.
