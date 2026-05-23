@@ -39,6 +39,12 @@
       ],
       "expo-web-browser",
       "expo-notifications"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cc5b00ed-9d8a-431f-a4af-e0b66421ed91"
+      }
+    },
+    "owner": "altsam051"
   }
 }

@@ -1,5 +1,12 @@
-import React, { useEffect } from 'react';
-import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import {
+  NavigationContainer,
+  DefaultTheme,
+  useNavigationContainerRef,
+  type Theme,
+} from '@react-navigation/native';
+import * as ExpoNotifications from 'expo-notifications';
+import { registerForPush } from '../lib/push';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View } from 'react-native';
@@ -194,12 +201,59 @@ function AppTabs() {
   );
 }
 
+// Bridges expo-notifications into the app: registers the Expo push token once
+// per session for a signed-in user (guests are skipped), and opens the bell
+// screen when a notification is tapped. Renders nothing.
+function PushBridge({
+  navigationRef,
+}: {
+  navigationRef: ReturnType<typeof useNavigationContainerRef<RootStackParamList>>;
+}) {
+  const { user, token } = useAuth();
+  const registered = useRef(false);
+
+  useEffect(() => {
+    if (user && token) {
+      if (!registered.current) {
+        registered.current = true;
+        // Best-effort; never blocks or crashes (handles denial/simulator).
+        registerForPush(token);
+      }
+    } else {
+      // Reset so a fresh sign-in re-registers.
+      registered.current = false;
+    }
+  }, [user, token]);
+
+  useEffect(() => {
+    const sub = ExpoNotifications.addNotificationResponseReceivedListener(() => {
+      if (!navigationRef.isReady()) return;
+      try {
+        // Open the bell screen (App → Home tab → Notifications). Cast the
+        // navigate fn since nested params aren't expressible on the typed ref.
+        const navigate = navigationRef.navigate as unknown as (
+          name: string,
+          params?: Record<string, unknown>,
+        ) => void;
+        navigate('App', { screen: 'Home', params: { screen: 'Notifications' } });
+      } catch (e) {
+        console.log('[push] could not open Notifications on tap:', e);
+      }
+    });
+    return () => sub.remove();
+  }, [navigationRef]);
+
+  return null;
+}
+
 export default function RootNavigator() {
   const { user, isGuest, hydrated, pendingAuthMode, pendingReturnTab } = useAuth();
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
   if (!hydrated) return <View style={{ flex: 1, backgroundColor: colors.splashBg }} />;
   const authed = !!user || isGuest;
   return (
     <NavigationContainer
+      ref={navigationRef}
       theme={navTheme}
       // Surface silently-dropped navigation actions (e.g. navigate() to a
       // route name no navigator can handle). React Navigation otherwise
@@ -210,6 +264,7 @@ export default function RootNavigator() {
           JSON.stringify(action),
         );
       }}>
+      <PushBridge navigationRef={navigationRef} />
       <RootStack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.cream } }}>
         {authed ? (
           <RootStack.Screen name="App" component={AppTabs} />
