@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle } from 'react-native-svg';
 import TopHeader from '../../components/TopHeader';
@@ -13,6 +13,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useModules, useModuleLessons, useCategories, useCategoryModules } from '../../api/hooks';
 import { useLastLesson } from '../../storage/lastLesson';
 import { useCompleted } from '../../storage/completed';
+import { getNotifications } from '../../api/notifications';
+import { getLastSeenId } from '../../storage/notificationsSeen';
 import { HomeStackParamList } from '../../navigation/types';
 
 const SCROLL_PAD_H = 16;
@@ -29,11 +31,34 @@ type CategoryChip = { id: number; name: string };
 
 export default function Home() {
   const nav = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, token } = useAuth();
   const { data: modules } = useModules();
   const { data: categories } = useCategories();
   const { lastLesson } = useLastLesson();
   const { completed } = useCompleted();
+
+  // Unread notifications badge for the bell. Guests don't fetch (no badge).
+  // Recomputed whenever Home regains focus, so viewing the bell screen (which
+  // records the newest seen id) clears it.
+  const [unreadCount, setUnreadCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      if (isGuest || !token) { setUnreadCount(0); return; }
+      let cancelled = false;
+      (async () => {
+        try {
+          const [list, lastSeen] = await Promise.all([getNotifications(token), getLastSeenId()]);
+          const arr = Array.isArray(list) ? list : [];
+          const count = arr.filter((n) => n.id > lastSeen).length;
+          if (!cancelled) setUnreadCount(count);
+        } catch {
+          // Network/permission issues → no badge, never crash.
+          if (!cancelled) setUnreadCount(0);
+        }
+      })();
+      return () => { cancelled = true; };
+    }, [isGuest, token]),
+  );
 
   const [activeCatId, setActiveCatId] = useState<number>(ALL_CATEGORY_ID);
   const { data: categoryModules } = useCategoryModules(
@@ -99,6 +124,7 @@ export default function Home() {
         progress={progress}
         onPressBell={handleBell}
         onPressAvatar={openProfile}
+        bellBadge={unreadCount}
       />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <NowPlayingCard

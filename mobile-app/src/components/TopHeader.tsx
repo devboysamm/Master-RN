@@ -11,9 +11,11 @@ type Props = {
   progress?: number;
   onPressBell?: () => void;
   onPressAvatar?: () => void;
+  /** Unread notifications count; shows a badge when > 0 (capped at "9+"). */
+  bellBadge?: number;
 };
 
-export default function TopHeader({ name = 'John', greeting = 'Welcome back', progress = 0.62, onPressBell, onPressAvatar }: Props) {
+export default function TopHeader({ name = 'John', greeting = 'Welcome back', progress = 0.62, onPressBell, onPressAvatar, bellBadge = 0 }: Props) {
   return (
     <View style={styles.wrap}>
       <Pressable
@@ -47,9 +49,14 @@ export default function TopHeader({ name = 'John', greeting = 'Welcome back', pr
       <Pressable
         onPress={onPressBell}
         accessibilityRole="button"
-        accessibilityLabel="Notifications"
+        accessibilityLabel={bellBadge > 0 ? `Notifications, ${bellBadge} unread` : 'Notifications'}
         style={styles.bell}>
         <Icon d={I.bell} size={18} color={colors.ink} />
+        {bellBadge > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{bellBadge > 9 ? '9+' : String(bellBadge)}</Text>
+          </View>
+        ) : null}
       </Pressable>
     </View>
   );
@@ -97,5 +104,28 @@ const styles = StyleSheet.create({
     borderColor: colors.rule,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Coral count badge at the bell's top-right; cream ring separates it from
+  // the icon so it reads cleanly against the header.
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: colors.coral,
+    borderWidth: 2,
+    borderColor: colors.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    color: colors.white,
+    fontFamily: type.family.sans,
+    fontSize: 10,
+    fontWeight: '800',
+    lineHeight: 12,
   },
 });

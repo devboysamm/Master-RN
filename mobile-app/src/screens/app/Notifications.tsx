@@ -7,6 +7,7 @@ import { I } from '../../theme/icons';
 import { colors, type } from '../../theme/tokens';
 import { useAuth } from '../../context/AuthContext';
 import { getNotifications, type AppNotification } from '../../api/notifications';
+import { setLastSeenId } from '../../storage/notificationsSeen';
 
 /* Header sizing — matches HelpFeedback / About / EditProfile. */
 const HEADER_PV = 14;
@@ -42,7 +43,14 @@ export default function Notifications() {
     setLoading(true);
     setError(null);
     getNotifications(token)
-      .then((list) => { if (!cancelled) setItems(Array.isArray(list) ? list : []); })
+      .then((list) => {
+        if (cancelled) return;
+        const arr = Array.isArray(list) ? list : [];
+        setItems(arr);
+        // Mark the newest as seen so the Home bell badge clears (list is
+        // newest-first, so arr[0] has the highest id).
+        if (arr.length) setLastSeenId(arr[0].id);
+      })
       .catch((e: Error) => { if (!cancelled) setError(e.message || 'Could not load notifications'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
