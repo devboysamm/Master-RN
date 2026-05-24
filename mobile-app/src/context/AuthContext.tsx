@@ -53,6 +53,13 @@ type AuthState = {
   updateProfile: (name: string, bio: string) => Promise<void>;
 
   signOut: () => Promise<void>;
+  /**
+   * Permanently delete the signed-in user's account on the server, then clear
+   * the local session (same end state as signOut → back to the auth flow).
+   * Throws if the server delete fails so the caller can show an error and
+   * keep the user logged in.
+   */
+  deleteAccount: () => Promise<void>;
   continueAsGuest: () => Promise<void>;
   /** Drop into AuthFlow and land on Auth with the given mode pre-selected. */
   requestAuth: (mode: AuthMode, opts?: { returnTo?: TabName }) => Promise<void>;
@@ -167,6 +174,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
 
       signOut: async () => {
+        await auth.clearSession();
+        await auth.setGuest(false);
+        setToken(null);
+        setUserState(null);
+        setIsGuest(false);
+        setPendingAuthMode(null);
+        setPendingReturnTab(null);
+      },
+      deleteAccount: async () => {
+        if (!token) throw new Error('You must be signed in to delete your account');
+        // Delete server-side first; if this throws the caller keeps the user
+        // logged in and surfaces the error. Only on success do we clear the
+        // local session (mirrors signOut → returns to the auth flow).
+        await authApi.deleteAccount(token);
         await auth.clearSession();
         await auth.setGuest(false);
         setToken(null);

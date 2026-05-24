@@ -340,6 +340,18 @@ async function githubCallback(req, res) {
   }
 }
 
+// DELETE /api/account — the logged-in user permanently deletes their OWN
+// account and all associated personal data (see User.deleteAccountAndData).
+// Idempotent: if the account is already gone we still report success.
+async function deleteAccount(req, res) {
+  try {
+    await User.deleteAccountAndData(req.user.id);
+    return res.json({ success: true, message: 'Account deleted' });
+  } catch (err) {
+    return serverError(res, err);
+  }
+}
+
 async function updateMe(req, res) {
   try {
     const fields = {};
@@ -380,6 +392,7 @@ module.exports = {
   resetPassword,
   me,
   updateMe,
+  deleteAccount,
   githubStart,
   githubCallback,
 };

@@ -8,6 +8,7 @@ const appContentRoutes = require('./routes/appContent');
 const categoriesRoutes = require('./routes/categories');
 const uploadsRoutes = require('./routes/uploads');
 const authRoutes = require('./routes/auth');
+const accountRoutes = require('./routes/account');
 const usersRoutes = require('./routes/users');
 const legalRoutes = require('./routes/legal');
 const chatRoutes = require('./routes/chat');
@@ -73,6 +74,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/account', accountRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/modules', modulesRoutes);
 app.use('/api', lessonsRoutes);

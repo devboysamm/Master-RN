@@ -49,6 +49,10 @@ export const updateMe = (
     body: fields,
   });
 
+// Permanently delete the signed-in user's own account and all personal data.
+export const deleteAccount = (token: string) =>
+  request<MessageResponse>('/api/account', { method: 'DELETE', token });
+
 /* -------------------------------------------------------------------------- */
 /* GitHub OAuth                                                               */
 /* -------------------------------------------------------------------------- */

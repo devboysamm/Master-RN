@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View, Text, ScrollView, Pressable, StyleSheet, Alert,
+  View, Text, ScrollView, Pressable, StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, CommonActions } from '@react-navigation/native';
@@ -70,11 +70,16 @@ const SECTION_LABEL_LS = 1.2;
 const SECTION_LABEL_MB = 8;
 const SECTION_MT = 22;
 
+/* Destructive action (Delete account) — a clear red against the warm palette. */
+const DANGER = '#C2453B';
+const DANGER_TINT = 'rgba(194,69,59,0.10)';
+
 export default function Profile() {
   const nav = useNavigation<any>();
-  const { user, isGuest, signOut, requestAuth } = useAuth();
+  const { user, isGuest, signOut, requestAuth, deleteAccount } = useAuth();
   const { bookmarks } = useBookmarks();
   const { completed } = useCompleted();
+  const [deleting, setDeleting] = useState(false);
 
   const totalMinutes = useMemo(() => {
     // Without lesson lookup we can't be exact — estimate 5 min per completed.
@@ -100,6 +105,38 @@ export default function Profile() {
   const goAbout = () => nav.navigate('About');
   const goReportBug = () => nav.navigate('ReportProblem');
   const goEditProfile = () => nav.navigate('EditProfile');
+
+  // Apple requires account creation to come with in-app account deletion.
+  // Confirm explicitly, then permanently delete the account + all data. On
+  // success the auth state flips and the app returns to the login flow; on
+  // failure we keep the user signed in and surface the error.
+  const confirmDeleteAccount = () => {
+    if (deleting) return;
+    Alert.alert(
+      'Delete account?',
+      'This permanently deletes your account and all of your data, including your saved lessons and progress. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteAccount();
+              // Component unmounts as the auth flow takes over — nothing else.
+            } catch (err: any) {
+              setDeleting(false);
+              Alert.alert(
+                'Could not delete account',
+                err?.message || 'Something went wrong. Please try again.',
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const name = user?.name || (isGuest ? 'Guest' : 'You');
   const email = user?.email || 'Guest account';
@@ -157,6 +194,28 @@ export default function Profile() {
                 <Row icon={I.bell}   title="Report a bug"      onPress={goReportBug} />
                 <Row icon={I.shield} title="About Master RN"   meta="v1.0" onPress={goAbout} />
               </View>
+            </View>
+
+            <View style={{ marginTop: SECTION_MT }}>
+              <Pressable
+                onPress={confirmDeleteAccount}
+                disabled={deleting}
+                accessibilityRole="button"
+                accessibilityLabel="Delete account"
+                style={({ pressed }) => [
+                  styles.row, styles.dangerRow,
+                  (pressed || deleting) && { opacity: 0.7 },
+                ]}>
+                <View style={[styles.rowIcon, styles.dangerIcon]}>
+                  <Icon d={I.trash} size={ROW_ICON_SIZE} color={DANGER} strokeWidth={2} />
+                </View>
+                <Text style={[styles.rowTitle, styles.dangerTitle]}>Delete account</Text>
+                {deleting ? (
+                  <ActivityIndicator size="small" color={DANGER} />
+                ) : (
+                  <Icon d={I.arrowR} size={16} color={DANGER} strokeWidth={2.2} />
+                )}
+              </Pressable>
             </View>
           </>
         )}
@@ -404,5 +463,10 @@ const styles = StyleSheet.create({
   },
   rowTitle: { flex: 1, fontFamily: type.family.sans, fontSize: ROW_TITLE_FS, fontWeight: '700', color: colors.ink },
   rowMeta: { fontFamily: type.family.sans, fontSize: ROW_META_FS, color: colors.mute, fontWeight: '700' },
+
+  /* Destructive row */
+  dangerRow: { borderColor: 'rgba(194,69,59,0.25)' },
+  dangerIcon: { backgroundColor: DANGER_TINT },
+  dangerTitle: { color: DANGER },
 
 });

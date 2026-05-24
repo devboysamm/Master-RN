@@ -107,6 +107,44 @@ async function remove(id) {
   return result.affectedRows;
 }
 
+// Self-service account deletion: permanently remove the user and ALL of their
+// personal data in a single all-or-nothing transaction. Touches every table
+// keyed to the account — device_tokens (by user_id), otp_codes (by the
+// account email), and finally the users row itself. Idempotent: deleting an
+// already-gone account simply removes 0 rows and still resolves. Returns the
+// number of users rows removed (1, or 0 if it was already deleted).
+async function deleteAccountAndData(id) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // Grab the email up front so we can clear email-keyed rows (OTP codes)
+    // before the users row is gone.
+    const [rows] = await conn.query('SELECT email FROM users WHERE id = ? LIMIT 1', [id]);
+    const email = rows[0]?.email || null;
+
+    await conn.query('DELETE FROM device_tokens WHERE user_id = ?', [id]);
+    if (email) {
+      await conn.query('DELETE FROM otp_codes WHERE email = ?', [email]);
+      // Keep the bug report text (operationally useful) but strip the email
+      // so no personal identifier survives the account deletion.
+      await conn.query(
+        "UPDATE problem_reports SET user_email = 'deleted-user' WHERE user_email = ?",
+        [email]
+      );
+    }
+    const [result] = await conn.query('DELETE FROM users WHERE id = ?', [id]);
+
+    await conn.commit();
+    return result.affectedRows;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
 // Update only the provided profile fields; returns the fresh row.
 async function updateProfile(id, fields) {
   const sets = [];
@@ -145,5 +183,6 @@ module.exports = {
   updateProfile,
   adminUpdate,
   remove,
+  deleteAccountAndData,
   publicShape,
 };
