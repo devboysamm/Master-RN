@@ -17,9 +17,12 @@
       "**/*"
     ],
     "ios": {
-      "bundleIdentifier": "dev.masterreactnative.app",
+      "bundleIdentifier": "dev.masterreactnative.masterrn",
       "buildNumber": "1",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "dev.masterreactnative.app",
