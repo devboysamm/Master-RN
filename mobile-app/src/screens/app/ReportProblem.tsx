@@ -14,17 +14,17 @@ import { submitProblemReport } from '../../api/problemReports';
 const HEADER_PV = 14;
 const HEADER_PH = 19;
 const BACK_SIZE = 41;
-const HEADER_TITLE_FS = 19;
+const HEADER_TITLE_FS = 22;   // 19 × 1.15
 
 const CARD_RADIUS = 22;
 const CARD_PAD = 24;
-const INTRO_FS = 16;
-const LABEL_FS = 12;
+const INTRO_FS = 18;          // 16 × 1.15
+const LABEL_FS = 14;          // 12 × 1.15
 const LABEL_LS = 1.2;
 const TEXTAREA_MIN_H = 168;
-const TEXTAREA_FS = 16;
+const TEXTAREA_FS = 18;       // 16 × 1.15
 const BTN_PV = 17;
-const BTN_FS = 16;
+const BTN_FS = 18;            // 16 × 1.15
 const BTN_RADIUS = 17;
 
 // App version is a plain JS constant (matches app.json) — no native module.
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     fontFamily: type.family.sans,
     fontSize: INTRO_FS,
     fontWeight: '500',
-    lineHeight: 24,
+    lineHeight: 28,
   },
   label: {
     color: colors.mute,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: {
     color: colors.inkSoft, fontFamily: type.family.sans,
-    fontSize: 13, fontWeight: '700',
+    fontSize: 15, fontWeight: '700',
   },
   chipTextActive: { color: colors.white },
   textarea: {
@@ -237,14 +237,14 @@ const styles = StyleSheet.create({
     fontFamily: type.family.sans,
     fontSize: TEXTAREA_FS,
     fontWeight: '500',
-    lineHeight: 22,
+    lineHeight: 25,
   },
   error: {
     color: colors.coralDeep,
     fontFamily: type.family.sans,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    lineHeight: 20,
+    lineHeight: 23,
   },
   btn: {
     flexDirection: 'row',
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   successTitle: {
     color: colors.ink,
     fontFamily: type.family.sans,
-    fontSize: 20,
+    fontSize: 23,
     fontWeight: '800',
     letterSpacing: -0.3,
   },

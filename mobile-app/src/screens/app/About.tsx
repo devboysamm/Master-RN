@@ -16,19 +16,19 @@ import { ProfileStackParamList } from '../../navigation/types';
 const HEADER_PV = 14;
 const HEADER_PH = 19;
 const BACK_SIZE = 41;
-const HEADER_TITLE_FS = 19;
+const HEADER_TITLE_FS = 22;   // 19 × 1.15
 
 /* Version label */
-const VERSION_FS = 12;
+const VERSION_FS = 14;        // 12 × 1.15
 const VERSION_LS = 1.4;
 const VERSION_MB = 14;
 
 /* HTML body sizing — matches HelpFeedback. */
-const BODY_FS = 15;
+const BODY_FS = 17;           // 15 × 1.15
 const BODY_LH = Math.round(BODY_FS * 1.7);
 
 /* Footer links */
-const FOOTER_LINK_FS = 14;
+const FOOTER_LINK_FS = 16;    // 14 × 1.15
 const FOOTER_GAP = 10;
 const FOOTER_MT = 28;
 
@@ -43,9 +43,9 @@ const baseStyle: MixedStyleDeclaration = {
 };
 
 const tagsStyles = {
-  h1: { fontFamily: type.family.sans, fontSize: 24, fontWeight: '800' as const, color: colors.ink, marginTop: 16, marginBottom: 8 },
-  h2: { fontFamily: type.family.sans, fontSize: 22, fontWeight: '800' as const, color: colors.ink, marginTop: 14, marginBottom: 8 },
-  h3: { fontFamily: type.family.sans, fontSize: 18, fontWeight: '800' as const, color: colors.ink, marginTop: 12, marginBottom: 6 },
+  h1: { fontFamily: type.family.sans, fontSize: 28, fontWeight: '800' as const, color: colors.ink, marginTop: 16, marginBottom: 8 },
+  h2: { fontFamily: type.family.sans, fontSize: 25, fontWeight: '800' as const, color: colors.ink, marginTop: 14, marginBottom: 8 },
+  h3: { fontFamily: type.family.sans, fontSize: 21, fontWeight: '800' as const, color: colors.ink, marginTop: 12, marginBottom: 6 },
   p:  { fontFamily: type.family.sans, fontSize: BODY_FS, lineHeight: BODY_LH, color: colors.inkSoft, marginBottom: 10 },
   li: { fontFamily: type.family.sans, fontSize: BODY_FS, lineHeight: BODY_LH, color: colors.inkSoft, marginBottom: 4 },
   ul: { marginBottom: 10, paddingLeft: 8 },
@@ -53,7 +53,7 @@ const tagsStyles = {
   a:  { color: colors.coralDeep, textDecorationLine: 'underline' as const, fontWeight: '700' as const },
   strong: { fontWeight: '800' as const, color: colors.ink },
   em: { fontStyle: 'italic' as const },
-  code: { fontFamily: type.family.mono, fontSize: 13, color: colors.coralDeep, backgroundColor: colors.cardAlt, paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
+  code: { fontFamily: type.family.mono, fontSize: 15, color: colors.coralDeep, backgroundColor: colors.cardAlt, paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
 };
 
 export default function About() {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: colors.mute,
     fontFamily: type.family.sans,
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '600',
   },
 
