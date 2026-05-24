@@ -50,8 +50,8 @@ export const mockAppContent: AppContent = {
   featured_module_id: 3,
   premium_title: null,
   premium_description: null,
-  support_email: 'info@masterreactnative.dev',
-  contact_url: 'https://masterreactnative.dev/contact-us',
+  support_email: 'support@masterreactnative.dev',
+  contact_url: 'https://masterreactnative.dev/support',
   help_content: null,
 };
 

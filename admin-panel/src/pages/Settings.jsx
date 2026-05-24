@@ -332,7 +332,7 @@ export default function Settings() {
                   className="input"
                   value={content.support_email}
                   onChange={set('support_email')}
-                  placeholder="info@masterreactnative.dev"
+                  placeholder="support@masterreactnative.dev"
                 />
                 <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
                   Displayed under “Help and feedback”.
@@ -359,7 +359,7 @@ export default function Settings() {
                 rows={10}
                 value={content.help_content}
                 onChange={set('help_content')}
-                placeholder={'<h2>Need a hand?</h2>\n<p>Email us at <a href="mailto:info@masterreactnative.dev">info@masterreactnative.dev</a></p>\n<h3>Report a bug</h3>\n<p>…</p>'}
+                placeholder={'<h2>Need a hand?</h2>\n<p>Email us at <a href="mailto:support@masterreactnative.dev">support@masterreactnative.dev</a></p>\n<h3>Report a bug</h3>\n<p>…</p>'}
                 style={{ fontFamily: MRN.mono }}
               />
               <div style={{ fontSize: 12, color: MRN.mute, marginTop: 4 }}>
