@@ -6,17 +6,26 @@
  * module named in the content file; other modules are never affected.
  *
  * Usage:
- *   node scripts/import-module.js <base-url> <content-file> [--dry-run] [--admin]
+ *   node scripts/import-module.js <base-url> <content-file> [--dry-run] [auth options]
+ *
+ * Lesson write endpoints require admin auth. Supply credentials non-interactively
+ * via flags or env, or use --admin alone to be prompted. The password is never logged.
  *
  * Examples:
- *   # Preview the plan, change nothing:
+ *   # Preview the plan, change nothing (no auth needed for a dry run):
  *   node scripts/import-module.js https://api.masterreactnative.dev content/module-01-javascript-essentials.js --dry-run
  *
- *   # Actually import module 1:
- *   node scripts/import-module.js https://api.masterreactnative.dev content/module-01-javascript-essentials.js
+ *   # Import with credentials passed as flags (non-interactive):
+ *   node scripts/import-module.js https://api.masterreactnative.dev content/module-01-javascript-essentials.js --username admin --password secret
  *
- *   # If the lesson write endpoints are ever locked behind admin auth, add
- *   # --admin to log in first (prompts for username + password, never hardcoded):
+ *   # Import using an existing admin JWT (skips login):
+ *   node scripts/import-module.js https://api.masterreactnative.dev content/module-01-javascript-essentials.js --token eyJ...
+ *
+ *   # Import using env vars (non-interactive):
+ *   MRN_ADMIN_USERNAME=admin MRN_ADMIN_PASSWORD=secret \\
+ *     node scripts/import-module.js https://api.masterreactnative.dev content/module-01-javascript-essentials.js
+ *
+ *   # Interactive fallback (prompts for username + password):
  *   node scripts/import-module.js https://api.masterreactnative.dev content/module-01-javascript-essentials.js --admin
  *
  * Requires Node 18+ for built-in fetch.
@@ -34,17 +43,53 @@
 const path = require('path');
 const readline = require('readline');
 
-const args = process.argv.slice(2);
-const flags = new Set(args.filter((a) => a.startsWith('--')));
-const positional = args.filter((a) => !a.startsWith('--'));
+// Flags that take a value (as "--key value" or "--key=value").
+const VALUE_FLAGS = ['username', 'password', 'token'];
+
+// Parse argv into positionals, boolean flags, and value flags.
+const rawArgs = process.argv.slice(2);
+const positional = [];
+const boolFlags = new Set();
+const valueFlags = {};
+for (let i = 0; i < rawArgs.length; i++) {
+  const a = rawArgs[i];
+  if (!a.startsWith('--')) {
+    positional.push(a);
+    continue;
+  }
+  const eq = a.indexOf('=');
+  if (eq !== -1) {
+    valueFlags[a.slice(2, eq)] = a.slice(eq + 1); // --key=value
+  } else {
+    const key = a.slice(2);
+    if (VALUE_FLAGS.includes(key) && i + 1 < rawArgs.length && !rawArgs[i + 1].startsWith('--')) {
+      valueFlags[key] = rawArgs[++i]; // --key value
+    } else {
+      boolFlags.add(key); // --dry-run, --admin
+    }
+  }
+}
+
 const baseUrl = positional[0];
 const contentArg = positional[1];
-const DRY_RUN = flags.has('--dry-run');
-const USE_ADMIN = flags.has('--admin');
+const DRY_RUN = boolFlags.has('dry-run');
+const USE_ADMIN = boolFlags.has('admin');
+
+// Admin credentials may come from flags or environment. Password is never logged.
+const ADMIN_USERNAME = valueFlags.username || process.env.MRN_ADMIN_USERNAME || '';
+const ADMIN_PASSWORD = valueFlags.password || process.env.MRN_ADMIN_PASSWORD || '';
+const ADMIN_TOKEN = valueFlags.token || process.env.MRN_ADMIN_TOKEN || '';
 
 if (!baseUrl || !contentArg) {
-  console.error('Usage: node scripts/import-module.js <base-url> <content-file> [--dry-run] [--admin]');
-  console.error('Example: node scripts/import-module.js http://localhost:5000 content/module-01-javascript-essentials.js --dry-run');
+  console.error('Usage: node scripts/import-module.js <base-url> <content-file> [options]');
+  console.error('Options:');
+  console.error('  --dry-run                 preview the plan, write nothing');
+  console.error('  --admin                   authenticate as admin before writing');
+  console.error('  --username <name>         admin username (implies admin auth)');
+  console.error('  --password <pass>         admin password (implies admin auth)');
+  console.error('  --token <jwt>             use an existing admin JWT directly, skip login');
+  console.error('  (env: MRN_ADMIN_USERNAME, MRN_ADMIN_PASSWORD, MRN_ADMIN_TOKEN)');
+  console.error('Example: node scripts/import-module.js https://api.masterreactnative.dev content/module-02-react-fundamentals.js --username admin --password secret');
   process.exit(1);
 }
 
@@ -113,12 +158,30 @@ function askHidden(query) {
   });
 }
 
-async function adminLogin() {
-  const username = (await ask('Admin username: ')).trim();
-  const password = await askHidden('Admin password: ');
+async function loginWith(username, password) {
   const result = await api('POST', '/api/admin/login', { username, password });
   if (!result || !result.token) throw new Error('Login did not return a token');
   authToken = result.token;
+}
+
+// Resolve the admin Bearer token. Order: explicit token, then
+// username + password (flags or env, non-interactive), then an interactive
+// prompt as a last resort. The password is never logged.
+async function authenticate() {
+  if (ADMIN_TOKEN) {
+    authToken = ADMIN_TOKEN;
+    console.log('Using provided admin token.\n');
+    return;
+  }
+  if (ADMIN_USERNAME && ADMIN_PASSWORD) {
+    await loginWith(ADMIN_USERNAME.trim(), ADMIN_PASSWORD);
+    console.log(`Logged in as admin (${ADMIN_USERNAME.trim()}).\n`);
+    return;
+  }
+  // Fallback: interactive prompt (only when nothing was supplied).
+  const username = (await ask('Admin username: ')).trim();
+  const password = await askHidden('Admin password: ');
+  await loginWith(username, password);
   console.log('Logged in as admin.\n');
 }
 
@@ -127,8 +190,11 @@ async function run() {
   console.log(`\nModule: "${content.moduleTitle}"  (${content.lessons.length} lessons)`);
   console.log(`Target: ${ROOT}${DRY_RUN ? '   [DRY RUN, no writes]' : ''}\n`);
 
-  if (USE_ADMIN && !DRY_RUN) {
-    await adminLogin();
+  // Authenticate when admin auth was requested, either explicitly (--admin)
+  // or implicitly by supplying a token or username + password.
+  const wantAuth = USE_ADMIN || !!ADMIN_TOKEN || (!!ADMIN_USERNAME && !!ADMIN_PASSWORD);
+  if (wantAuth && !DRY_RUN) {
+    await authenticate();
   }
 
   // 1. Find the module by exact title.
