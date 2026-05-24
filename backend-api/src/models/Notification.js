@@ -27,4 +27,10 @@ async function findRecent(limit = 50) {
   return rows;
 }
 
-module.exports = { create, findById, findRecent };
+// Delete a single notification (history entry). Returns rows removed (0 or 1).
+async function remove(id) {
+  const [result] = await pool.query(`DELETE FROM notifications WHERE id = ?`, [id]);
+  return result.affectedRows;
+}
+
+module.exports = { create, findById, findRecent, remove };

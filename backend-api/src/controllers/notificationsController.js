@@ -34,6 +34,24 @@ async function list(req, res, next) {
   }
 }
 
+// DELETE /api/notifications/:id — ADMIN ONLY. Removes the history entry only;
+// it does not unsend anything already delivered to devices.
+async function remove(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid notification id' });
+    }
+    const affected = await Notification.remove(id);
+    if (!affected) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+    res.json({ success: true, data: { id } });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // POST /api/notifications/send — ADMIN ONLY. Persist the notification, then
 // broadcast it to every registered device via Expo. Never crashes — the row
 // is saved first, and delivery failures are summarised, not thrown.
@@ -109,4 +127,4 @@ async function pushToExpo(tokens, title, body) {
   return { sent, failed };
 }
 
-module.exports = { registerToken, list, send };
+module.exports = { registerToken, list, send, remove };

@@ -11,5 +11,7 @@ router.get('/', requireAuth, ctrl.list);
 
 // ADMIN ONLY — compose + broadcast a notification.
 router.post('/send', requireAdmin, ctrl.send);
+// ADMIN ONLY — delete a single history entry (does not unsend).
+router.delete('/:id', requireAdmin, ctrl.remove);
 
 module.exports = router;

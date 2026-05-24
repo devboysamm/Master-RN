@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Notifications as NotificationsAPI } from '../api/client';
 import { MRN } from '../theme/tokens';
+import Modal from '../components/Modal';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -18,6 +19,9 @@ export default function NotificationsPage() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
+
+  const [toDelete, setToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -61,6 +65,23 @@ export default function NotificationsPage() {
       setErr(e?.response?.data?.message || e.message || 'Could not send notification');
     } finally {
       setSending(false);
+    }
+  };
+
+  // Removes the history entry only — it does not unsend anything delivered.
+  const doDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    setErr(null);
+    try {
+      await NotificationsAPI.remove(toDelete.id);
+      setToDelete(null);
+      flash('Notification removed from history.');
+      load();
+    } catch (e) {
+      setErr(e?.response?.data?.message || e.message || 'Delete failed');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -124,6 +145,7 @@ export default function NotificationsPage() {
                 <th style={{ width: 280 }}>Title</th>
                 <th>Message</th>
                 <th style={{ width: 190 }}>Sent</th>
+                <th style={{ width: 90 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -134,12 +156,38 @@ export default function NotificationsPage() {
                     {n.body || '—'}
                   </td>
                   <td style={{ fontFamily: MRN.mono, color: MRN.mute, fontSize: 13 }}>{formatDate(n.created_at)}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <button className="btn danger sm" onClick={() => setToDelete(n)}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* Delete confirm */}
+      <Modal
+        open={!!toDelete}
+        onClose={() => setToDelete(null)}
+        title="Delete notification"
+        footer={
+          <>
+            <button className="btn ghost" onClick={() => setToDelete(null)} disabled={deleting}>Cancel</button>
+            <button
+              className="btn"
+              style={{ background: MRN.coralDeep, borderColor: MRN.coralDeep }}
+              onClick={doDelete}
+              disabled={deleting}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          </>
+        }>
+        <div style={{ fontSize: 15, color: MRN.inkSoft, lineHeight: 1.6 }}>
+          Delete <strong style={{ color: MRN.ink }}>{toDelete?.title}</strong> from the history?
+          This only removes the record here — it does not unsend the notification from any device.
+        </div>
+      </Modal>
     </div>
   );
 }

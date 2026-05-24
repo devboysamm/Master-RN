@@ -115,6 +115,7 @@ export const Users = {
 export const Notifications = {
   list: () => api.get('/api/notifications').then(unwrap),
   send: (title, body) => api.post('/api/notifications/send', { title, body }).then(unwrap),
+  remove: (id) => api.delete(`/api/notifications/${id}`).then(unwrap),
 };
 
 export const Reports = {
