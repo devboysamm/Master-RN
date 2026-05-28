@@ -39,12 +39,6 @@ type AuthState = {
   verifyOtp: (email: string, code: string) => Promise<() => Promise<void>>;
   /** Log in with email + password → stores token+user → authenticated. */
   signIn: (email: string, password: string) => Promise<void>;
-  /**
-   * Finalize login from an already-issued JWT (e.g. the GitHub OAuth flow):
-   * fetch the user via /me, store token+user, and flip to authenticated —
-   * the same end state as an email sign-in.
-   */
-  finalizeTokenLogin: (token: string) => Promise<void>;
   /** Request a password-reset OTP. */
   forgotPassword: (email: string) => Promise<void>;
   /** Complete a password reset with the emailed OTP. */
@@ -151,12 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn: async (email, password) => {
         const resp = await authApi.login(email, password);
         await applySession(resp);
-      },
-      finalizeTokenLogin: async (jwt) => {
-        // Validate the token + load the canonical user, then reuse the exact
-        // same session-applying path as email login.
-        const { user: fresh } = await authApi.me(jwt);
-        await applySession({ token: jwt, user: fresh });
       },
       forgotPassword: async (email) => {
         await authApi.forgotPassword(email);

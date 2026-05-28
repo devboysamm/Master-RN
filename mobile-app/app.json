@@ -40,7 +40,6 @@
           "backgroundColor": "#0B0907"
         }
       ],
-      "expo-web-browser",
       "expo-notifications"
     ],
     "extra": {

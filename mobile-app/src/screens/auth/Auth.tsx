@@ -9,11 +9,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AtomLogo from '../../components/AtomLogo';
 import RadialGlow from '../../components/RadialGlow';
-import SocialBtn from '../../components/SocialBtn';
 import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { useAuth } from '../../context/AuthContext';
-import { runGithubAuth } from '../../api/auth';
 import { colors, type } from '../../theme/tokens';
 import { AuthStackParamList } from '../../navigation/types';
 
@@ -77,15 +75,6 @@ const CTA_PAD_H = 22;        // 18 × 1.2
 const CTA_FS = 17;           // 14 × 1.2
 const CTA_ARROW = 19;        // 16 × 1.2
 
-const DIV_MT = 17;           // 14 × 1.2 (gap from CTA to divider)
-const DIV_MB = 12;           // 10 × 1.2
-const DIV_GAP = 14;          // 12 × 1.2
-const OR_FS = 11;            // 9 × 1.2
-const OR_LS = 1.7;           // 1.4 × 1.2
-
-const SOCIAL_MT = 12;        // 10 × 1.2
-const SOCIAL_GAP = 10;       // 8 × 1.2
-
 const GUEST_MT = 22;         // 18 × 1.2
 const GUEST_PAD = 8;
 const GUEST_FS = 14;         // 12 × 1.2
@@ -98,25 +87,7 @@ export default function Auth() {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [showPw, setShowPw] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [ghLoading, setGhLoading] = useState(false);
-  const { signIn, signUp, continueAsGuest, cancelAuth, finalizeTokenLogin } = useAuth();
-
-  // GitHub OAuth: browser flow → finalize login (flips into the authed tabs).
-  // Cancels are silent; failures reuse the inline serverError banner.
-  const onGithub = async () => {
-    setServerError(null);
-    setGhLoading(true);
-    try {
-      const res = await runGithubAuth();
-      if (res.type === 'cancel') return;
-      if (res.type === 'error') { setServerError(res.message); return; }
-      await finalizeTokenLogin(res.token);
-    } catch (e: any) {
-      setServerError(e?.message || 'GitHub sign-in failed. Please try again.');
-    } finally {
-      setGhLoading(false);
-    }
-  };
+  const { signIn, signUp, continueAsGuest, cancelAuth } = useAuth();
 
   // Unified back handler: when `returnTo` is set, we entered AuthFlow
   // from inside the app — cancel and return the user to that tab.
@@ -299,17 +270,6 @@ export default function Auth() {
               ? <ActivityIndicator color={colors.white} />
               : <Icon d={I.arrowR} size={CTA_ARROW} color={colors.white} strokeWidth={2.2} />}
           </Pressable>
-
-          {/* Divider + social */}
-          <View style={styles.dividerRow}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <SocialBtn loading={ghLoading} onPress={onGithub} />
-          </View>
 
           {/* Guest footer */}
           <Pressable onPress={continueAsGuest} accessibilityRole="link" accessibilityLabel="Continue as guest" style={styles.guestWrap}>
@@ -531,19 +491,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   ctaText: { color: colors.white, fontFamily: type.family.sans, fontSize: CTA_FS, fontWeight: '800' },
-  dividerRow: {
-    flexDirection: 'row', alignItems: 'center', gap: DIV_GAP,
-    marginTop: DIV_MT, marginBottom: DIV_MB,
-  },
-  divider: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.10)' },
-  dividerText: {
-    fontFamily: type.family.mono,
-    fontSize: OR_FS,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: OR_LS,
-  },
-  socialRow: { flexDirection: 'row', gap: SOCIAL_GAP, marginTop: SOCIAL_MT },
   guestWrap: {
     marginTop: GUEST_MT,
     padding: GUEST_PAD,

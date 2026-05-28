@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AtomLogo from '../../components/AtomLogo';
 import RadialGlow from '../../components/RadialGlow';
-import SocialBtn from '../../components/SocialBtn';
 import Icon from '../../components/Icon';
 import { I } from '../../theme/icons';
 import { useAuth } from '../../context/AuthContext';
-import { runGithubAuth } from '../../api/auth';
 import { useAppContent } from '../../api/hooks';
 import { colors, type } from '../../theme/tokens';
 import { AuthStackParamList } from '../../navigation/types';
@@ -33,12 +31,6 @@ const BUTTON_PH = 22;    // 18 × 1.2
 const BUTTON_FS = 17;    // 14 × 1.2
 const BUTTONS_GAP = 12;  // 10 × 1.2
 const ARROW = 19;        // 16 × 1.2
-const DIV_MT = 7;        // 6 × 1.2
-const DIV_MB = 5;        // 4 × 1.2
-const DIV_GAP = 14;      // 12 × 1.2
-const OR_FS = 11;        // 9 × 1.2
-const OR_LS = 1.7;       // 1.4 × 1.2
-const SOCIAL_GAP = 10;   // 8 × 1.2
 const GUEST_MT = 5;      // 4 × 1.2
 const GUEST_P = 10;      // 8 × 1.2
 const GUEST_FS = 16;     // 13 × 1.2
@@ -52,29 +44,8 @@ const DEFAULT_PRIVACY_URL = 'https://masterreactnative.dev/privacy';
 
 export default function Welcome() {
   const nav = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const { continueAsGuest, finalizeTokenLogin } = useAuth();
+  const { continueAsGuest } = useAuth();
   const { data: content } = useAppContent();
-
-  const [ghLoading, setGhLoading] = useState(false);
-  const [ghError, setGhError] = useState<string | null>(null);
-
-  // GitHub OAuth: open the browser flow → on success finalize login (which
-  // flips the app into the authed tabs). Cancels are silent; real failures
-  // show an inline message. Never crashes.
-  const onGithub = async () => {
-    setGhError(null);
-    setGhLoading(true);
-    try {
-      const res = await runGithubAuth();
-      if (res.type === 'cancel') return;
-      if (res.type === 'error') { setGhError(res.message); return; }
-      await finalizeTokenLogin(res.token);
-    } catch (e: any) {
-      setGhError(e?.message || 'GitHub sign-in failed. Please try again.');
-    } finally {
-      setGhLoading(false);
-    }
-  };
 
   const subtitle = content?.welcome_subtitle?.trim() || DEFAULT_SUBTITLE;
   const footerPrefix = content?.welcome_footer?.trim() || DEFAULT_FOOTER_PREFIX;
@@ -103,18 +74,6 @@ export default function Welcome() {
         <View style={styles.actions}>
           <BigBtn label="Create account" variant="primary" onPress={() => nav.navigate('AuthMain', { mode: 'signup' })} />
           <BigBtn label="Sign in"        variant="glass"   onPress={() => nav.navigate('AuthMain', { mode: 'signin' })} />
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <SocialBtn loading={ghLoading} onPress={onGithub} />
-          </View>
-
-          {ghError ? <Text style={styles.socialErr}>{ghError}</Text> : null}
 
           <Pressable
             onPress={continueAsGuest}
@@ -209,27 +168,6 @@ const styles = StyleSheet.create({
   bigBtnPrimary: { backgroundColor: colors.coral },
   bigBtnGlass:   { backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
   bigBtnText: { color: colors.white, fontFamily: type.family.sans, fontSize: BUTTON_FS, fontWeight: '800' },
-  dividerRow: {
-    flexDirection: 'row', alignItems: 'center', gap: DIV_GAP,
-    marginTop: DIV_MT, marginBottom: DIV_MB,
-  },
-  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
-  dividerText: {
-    fontFamily: type.family.mono,
-    fontSize: OR_FS,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.4)',
-    letterSpacing: OR_LS,
-  },
-  socialRow: { flexDirection: 'row', gap: SOCIAL_GAP },
-  socialErr: {
-    marginTop: 8,
-    color: colors.coral,
-    fontFamily: type.family.sans,
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
   guestWrap: { marginTop: GUEST_MT, padding: GUEST_P, alignItems: 'center' },
   guestText: {
     color: 'rgba(255,255,255,0.6)',
