@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Terms &amp; Conditions — Master React Native</title>
+  <title>Terms &amp; Conditions · Master React Native</title>
   <meta name="description" content="The Terms of Service for the Master React Native app and website." />
   <meta name="theme-color" content="#161311" />
 
@@ -30,15 +30,42 @@
         </svg>
         <span class="word">Master <span class="rn">RN</span></span>
       </a>
-      <nav class="nav-links">
-        <a href="/#features" class="hide-sm">Features</a>
-        <a href="/#screenshots" class="hide-sm">Screenshots</a>
-        <a href="/support">Support</a>
-        <a href="/terms-condition">Terms</a>
-        <a href="/privacy">Privacy</a>
-      </nav>
+      <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="7" x2="20" y2="7"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+      </button>
     </div>
   </header>
+
+  <!-- ════════════════════════════ DRAWER ════════════════════════════ -->
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Site menu">
+    <div class="drawer-head">
+      <span class="drawer-title mono">Menu</span>
+      <button class="drawer-close" type="button" aria-label="Close menu" data-drawer-close>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="6" y1="18" x2="18" y2="6"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="drawer-links">
+      <a href="/#features">Features</a>
+      <a href="/#curriculum">Curriculum</a>
+      <a href="/#ai-tutor">AI tutor</a>
+      <a href="/#screenshots">Screenshots</a>
+      <a href="/#faq">FAQ</a>
+      <a href="/support">Support</a>
+      <a href="/terms-condition">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+    <a class="drawer-cta" href="https://apps.apple.com/us/app/master-rn/id6772712374" target="_blank" rel="noopener">
+      Download on the App Store
+    </a>
+  </aside>
 
   <!-- ════════════════════════════ HEADER ════════════════════════════ -->
   <section class="legal-hero">
@@ -84,5 +111,6 @@
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
   <script src="../legal.js"></script>
+  <script src="../nav.js"></script>
 </body>
 </html>

@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Master React Native — Learn to ship apps with confidence</title>
-  <meta name="description" content="Master React Native is a mobile-first course: structured lessons, real code examples and an AI tutor that helps you ship React Native apps with confidence. Coming soon to the App Store." />
+  <title>Master React Native. Learn to ship apps with confidence</title>
+  <meta name="description" content="Master React Native is a mobile-first course: structured lessons, real code, and a built-in AI tutor that helps you ship React Native apps with confidence. Available on the App Store." />
   <meta name="theme-color" content="#161311" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="Master React Native" />
-  <meta property="og:description" content="Structured lessons, real code, and an AI tutor — learn React Native and ship apps with confidence." />
+  <meta property="og:description" content="Structured lessons, real code, and an AI tutor. Learn React Native and ship apps with confidence." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://masterreactnative.dev/" />
 
@@ -36,15 +36,42 @@
         </svg>
         <span class="word">Master <span class="rn">RN</span></span>
       </a>
-      <nav class="nav-links">
-        <a href="#features" class="hide-sm">Features</a>
-        <a href="#screenshots" class="hide-sm">Screenshots</a>
-        <a href="/support">Support</a>
-        <a href="/terms-condition">Terms</a>
-        <a href="/privacy">Privacy</a>
-      </nav>
+      <button class="hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="7" x2="20" y2="7"/>
+          <line x1="4" y1="12" x2="20" y2="12"/>
+          <line x1="4" y1="17" x2="20" y2="17"/>
+        </svg>
+      </button>
     </div>
   </header>
+
+  <!-- ════════════════════════════ DRAWER ════════════════════════════ -->
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="Site menu">
+    <div class="drawer-head">
+      <span class="drawer-title mono">Menu</span>
+      <button class="drawer-close" type="button" aria-label="Close menu" data-drawer-close>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="6" y1="18" x2="18" y2="6"/>
+        </svg>
+      </button>
+    </div>
+    <nav class="drawer-links">
+      <a href="#features">Features</a>
+      <a href="#curriculum">Curriculum</a>
+      <a href="#ai-tutor">AI tutor</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#faq">FAQ</a>
+      <a href="/support">Support</a>
+      <a href="/terms-condition">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+    <a class="drawer-cta" href="https://apps.apple.com/us/app/master-rn/id6772712374" target="_blank" rel="noopener">
+      Download on the App Store
+    </a>
+  </aside>
 
   <!-- ════════════════════════════ HERO ════════════════════════════ -->
   <section class="hero">
@@ -61,25 +88,23 @@
 
       <div class="eyebrow mono"><span class="acc">//</span> LEARN <span class="acc">·</span> SHIP <span class="acc">·</span> NATIVE</div>
 
-      <h1>Master React Native —<br>ship apps with <span class="rn">confidence</span></h1>
+      <h1>Master React Native.<br>Ship apps with <span class="rn">confidence</span>.</h1>
       <p class="lede">
         A mobile-first course that takes you from your first component to a
-        production-ready app — with structured lessons, real code, and an AI
-        tutor in your pocket.
+        production-ready app. Structured lessons, real code, and an AI tutor in
+        your pocket.
       </p>
 
-      <!-- "Coming soon" App Store badge — NOT a live link (app not published yet) -->
-      <span class="appstore-badge" role="img" aria-label="Coming soon to the App Store">
+      <a class="appstore-badge" href="https://apps.apple.com/us/app/master-rn/id6772712374" target="_blank" rel="noopener" aria-label="Download Master RN on the App Store">
         <svg class="apple" width="26" height="26" viewBox="0 0 24 24" fill="#161311" aria-hidden="true">
           <path d="M16.36 12.78c.02 2.47 2.16 3.29 2.18 3.3-.02.06-.34 1.17-1.12 2.32-.68.99-1.38 1.98-2.49 2-1.09.02-1.44-.64-2.68-.64-1.24 0-1.63.62-2.66.66-1.07.04-1.88-1.07-2.57-2.06-1.4-2.03-2.47-5.73-1.03-8.23.71-1.24 1.99-2.03 3.38-2.05 1.05-.02 2.05.71 2.69.71.64 0 1.85-.88 3.12-.75.53.02 2.02.21 2.98 1.62-.08.05-1.78 1.04-1.76 3.11M14.3 6.13c.57-.69.95-1.65.85-2.6-.82.03-1.81.55-2.4 1.24-.53.61-.99 1.58-.87 2.51.91.07 1.85-.46 2.42-1.15"/>
         </svg>
         <span class="txt">
-          <span class="small">Coming soon to the</span>
+          <span class="small">Download on the</span>
           <span class="big">App&nbsp;Store</span>
         </span>
-        <span class="soon mono">Soon</span>
-      </span>
-      <div class="note">iOS launch is on the way — Android to follow.</div>
+      </a>
+      <div class="note">Now available on iOS. Android coming soon.</div>
     </div>
   </section>
 
@@ -87,7 +112,7 @@
   <section class="features" id="features">
     <div class="wrap">
       <div class="section-head">
-        <div class="label mono">What's inside</div>
+        <div class="label mono">Features</div>
         <h2>Everything you need to go from zero to shipped</h2>
         <p>No fluff, no 12-hour videos. Just a clear path and the tools to walk it.</p>
       </div>
@@ -99,7 +124,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           </div>
           <h3>Structured lessons</h3>
-          <p>A guided curriculum that builds module by module — each lesson sets up the next, so you always know what comes after.</p>
+          <p>A guided curriculum that builds module by module, with each lesson setting up the next, so you always know what comes after.</p>
         </div>
 
         <!-- Real code examples -->
@@ -108,7 +133,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           </div>
           <h3>Real code examples</h3>
-          <p>Every concept comes with copy-ready, syntax-highlighted snippets you can read, run and adapt — not pseudocode.</p>
+          <p>Every concept comes with copy-ready, syntax-highlighted snippets you can read, run, and adapt. No pseudocode.</p>
         </div>
 
         <!-- AI tutor -->
@@ -117,7 +142,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
           </div>
           <h3>An AI tutor in your pocket</h3>
-          <p>Stuck on a concept? Ask the built-in AI tutor for an explanation, an example, or a nudge in the right direction — any time.</p>
+          <p>Stuck on a concept? Ask the built-in AI tutor for an explanation, an example, or a nudge in the right direction, any time.</p>
         </div>
 
         <!-- Learn at your own pace -->
@@ -145,6 +170,65 @@
           </div>
           <h3>Save &amp; revisit</h3>
           <p>Bookmark the lessons and cheatsheets you'll want again. Your personal reference library, always one tap away.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════ CURRICULUM ════════════════════════════ -->
+  <section class="curriculum" id="curriculum">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="label mono">What's inside</div>
+        <h2>A complete React Native curriculum</h2>
+        <p>17 modules, 304 lessons, from JavaScript essentials to App Store deployment.</p>
+      </div>
+
+      <ol class="curriculum-grid">
+        <li><span class="num mono">01</span><span class="title">JavaScript Essentials</span></li>
+        <li><span class="num mono">02</span><span class="title">React Fundamentals</span></li>
+        <li><span class="num mono">03</span><span class="title">Getting Started with Expo</span></li>
+        <li><span class="num mono">04</span><span class="title">Core Components &amp; Layout</span></li>
+        <li><span class="num mono">05</span><span class="title">Styling &amp; Theming</span></li>
+        <li><span class="num mono">06</span><span class="title">Navigation</span></li>
+        <li><span class="num mono">07</span><span class="title">State Management</span></li>
+        <li><span class="num mono">08</span><span class="title">Lists &amp; Data</span></li>
+        <li><span class="num mono">09</span><span class="title">Forms &amp; Input</span></li>
+        <li><span class="num mono">10</span><span class="title">Networking &amp; APIs</span></li>
+        <li><span class="num mono">11</span><span class="title">Local Storage</span></li>
+        <li><span class="num mono">12</span><span class="title">Animations &amp; Gestures</span></li>
+        <li><span class="num mono">13</span><span class="title">Native Device Features</span></li>
+        <li><span class="num mono">14</span><span class="title">Authentication &amp; Security</span></li>
+        <li><span class="num mono">15</span><span class="title">Testing &amp; Debugging</span></li>
+        <li><span class="num mono">16</span><span class="title">Performance</span></li>
+        <li><span class="num mono">17</span><span class="title">App Store Deployment</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════ AI TUTOR ════════════════════════════ -->
+  <section class="ai-tutor" id="ai-tutor">
+    <div class="wrap ai-grid">
+      <div class="ai-copy">
+        <div class="label mono">Your AI tutor</div>
+        <h2>A native AI tutor on every lesson</h2>
+        <p>Master RN has an AI tutor built into the app. Ask a question on any lesson and get a plain-language answer with runnable code, in seconds.</p>
+        <ul class="ai-bullets">
+          <li><span class="dot"></span>Plain-language explanations of any concept</li>
+          <li><span class="dot"></span>Runnable code you can paste straight into your project</li>
+          <li><span class="dot"></span>Available on every lesson, not bolted on as an afterthought</li>
+        </ul>
+      </div>
+      <div class="ai-chat" aria-hidden="true">
+        <div class="chat-bubble user">
+          How does <code>useEffect</code> cleanup work?
+        </div>
+        <div class="chat-bubble ai">
+          <p>useEffect can return a cleanup function. React runs it before the next effect and again on unmount.</p>
+<pre><code>useEffect(() =&gt; {
+  const id = setInterval(tick, 1000);
+  return () =&gt; clearInterval(id);
+}, []);</code></pre>
         </div>
       </div>
     </div>
@@ -199,21 +283,48 @@
     </div>
   </section>
 
-  <!-- ════════════════════════════ CTA ════════════════════════════ -->
-  <section class="cta">
+  <!-- ════════════════════════════ FAQ ════════════════════════════ -->
+  <section class="faq" id="faq">
     <div class="wrap">
-      <h2>Be first in line</h2>
-      <p>Master RN is launching on iOS soon. The badge below goes live the day we ship.</p>
-      <span class="appstore-badge" role="img" aria-label="Coming soon to the App Store">
+      <div class="section-head">
+        <div class="label mono">FAQ</div>
+        <h2>Questions, answered</h2>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>Is it free?</summary>
+          <p>Yes. The full curriculum is free with an account.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I need prior experience?</summary>
+          <p>No. The course starts from JavaScript basics and walks you up to shipping a React Native app.</p>
+        </details>
+        <details class="faq-item">
+          <summary>What platforms is the app on?</summary>
+          <p>Master RN is on iOS now. Android is coming soon.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Is there an AI tutor?</summary>
+          <p>Yes. A native AI tutor is built in and available on every lesson.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════ CTA ════════════════════════════ -->
+  <section class="cta" id="get-app">
+    <div class="wrap">
+      <h2>Start learning today</h2>
+      <p>Master RN is free, with the full curriculum and the AI tutor included.</p>
+      <a class="appstore-badge" href="https://apps.apple.com/us/app/master-rn/id6772712374" target="_blank" rel="noopener" aria-label="Download Master RN on the App Store">
         <svg class="apple" width="26" height="26" viewBox="0 0 24 24" fill="#161311" aria-hidden="true">
           <path d="M16.36 12.78c.02 2.47 2.16 3.29 2.18 3.3-.02.06-.34 1.17-1.12 2.32-.68.99-1.38 1.98-2.49 2-1.09.02-1.44-.64-2.68-.64-1.24 0-1.63.62-2.66.66-1.07.04-1.88-1.07-2.57-2.06-1.4-2.03-2.47-5.73-1.03-8.23.71-1.24 1.99-2.03 3.38-2.05 1.05-.02 2.05.71 2.69.71.64 0 1.85-.88 3.12-.75.53.02 2.02.21 2.98 1.62-.08.05-1.78 1.04-1.76 3.11M14.3 6.13c.57-.69.95-1.65.85-2.6-.82.03-1.81.55-2.4 1.24-.53.61-.99 1.58-.87 2.51.91.07 1.85-.46 2.42-1.15"/>
         </svg>
         <span class="txt">
-          <span class="small">Coming soon to the</span>
+          <span class="small">Download on the</span>
           <span class="big">App&nbsp;Store</span>
         </span>
-        <span class="soon mono">Soon</span>
-      </span>
+      </a>
     </div>
   </section>
 
@@ -245,6 +356,9 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 
+  <!-- Drawer (sidebar menu) -->
+  <script src="nav.js"></script>
+
   <!-- Screenshots slider: arrows, scroll-snap sync, dot indicators -->
   <script>
     (function () {
@@ -256,7 +370,7 @@
       var phones = [].slice.call(track.querySelectorAll('.phone'));
       if (!phones.length) return;
 
-      // Width of one phone + the flex gap = how far one "step" scrolls.
+      // Width of one phone + the flex gap = how far one step scrolls.
       function step() {
         var cs = getComputedStyle(track);
         var gap = parseFloat(cs.columnGap || cs.gap) || 0;
